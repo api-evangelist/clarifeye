@@ -1,0 +1,35 @@
+generated: '2026-07-18'
+method: searched
+source: openapi/clarifeye-backoffice-openapi-original.yaml, openapi/clarifeye-openapi-original.yaml
+docs: https://docs.clarifeye.ai/guides/mcp-authentication
+summary:
+  types:
+  - apiKey
+  - http
+  - oauth2
+  api_key_in:
+  - header
+  oauth2_flows:
+  - authorizationCode
+  notes: >
+    REST API uses a user token sent as either `Authorization: Bearer <token>`
+    or `Authorization: Token <token>`. The hosted MCP server additionally
+    supports OAuth 2.0 (authorizationCode + PKCE S256, Dynamic Client
+    Registration) with scopes claudeai / openid / offline_access. See
+    scopes/clarifeye-scopes.yml.
+schemes:
+- name: BearerAuth
+  type: http
+  scheme: bearer
+  description: 'Use Authorization: Bearer <token>'
+  sources:
+  - openapi/clarifeye-backoffice-openapi-original.yaml
+  - openapi/clarifeye-openapi-original.yaml
+- name: TokenAuth
+  type: apiKey
+  in: header
+  parameter: Authorization
+  description: 'Use Authorization: Token <token>'
+  sources:
+  - openapi/clarifeye-backoffice-openapi-original.yaml
+  - openapi/clarifeye-openapi-original.yaml
