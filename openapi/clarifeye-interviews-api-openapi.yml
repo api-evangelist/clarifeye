@@ -1,0 +1,492 @@
+openapi: 3.0.3
+info:
+  title: Clarifeye Platform Agent Settings Interviews API
+  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token <token_key>`
+
+    - `Authorization: Bearer <token_key>`
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+    '
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Interviews
+  description: Assign and review structured interview conversations
+paths:
+  /projects/{project_id}/interviews/:
+    get:
+      tags:
+      - Interviews
+      summary: List interviews
+      description: 'Retrieve interviews for a project.
+
+
+        - Admins see all interviews in the project.
+
+        - Other members see only interviews assigned to them or that they created.
+
+        '
+      operationId: listInterviews
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: assigned_to
+        in: query
+        description: Set to "me" to return only interviews assigned to (or created by) the requesting user.
+        schema:
+          type: string
+          enum:
+          - me
+      - name: status
+        in: query
+        description: Filter by status. Comma-separated for multiple values (e.g. "pending,in_progress").
+        schema:
+          type: string
+      - name: text
+        in: query
+        description: Case-insensitive search over the interview name and transcript.
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/InterviewListItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interviews/assign/:
+    post:
+      tags:
+      - Interviews
+      summary: Create and assign interviews
+      description: 'Create and assign one interview per assignee. **Admin only.**
+
+
+        Provide existing project members via `assignee_ids` and/or new people to
+
+        invite via `invite_emails` (at least one is required). Invitees are added
+
+        as non-admin Contributors. A separate interview is created for each
+
+        assignee and the response is the list of created interviews.
+
+
+        `write_scope` defaults to `local`. A `global` write scope requires every
+
+        assignee to already be a project admin and cannot be combined with
+
+        `invite_emails`.
+
+        '
+      operationId: assignInterviews
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assignee_ids:
+                  type: array
+                  description: UUIDs of existing project members to interview (must be tech/contributor members).
+                  items:
+                    type: string
+                    format: uuid
+                invite_emails:
+                  type: array
+                  description: Email addresses of people to invite on the fly as non-admin Contributors and assign an interview.
+                  items:
+                    type: string
+                    format: email
+                topic:
+                  type: string
+                  description: The interview focus. Used to auto-name the interview and seed its first question.
+                write_scope:
+                  type: string
+                  description: Whether interview edits stay local to the conversation or write to the shared knowledge store.
+                  enum:
+                  - local
+                  - global
+                  default: local
+            example:
+              assignee_ids:
+              - 3fa85f64-5717-4562-b3fc-2c963f66afa6
+              invite_emails:
+              - newperson@example.com
+              topic: Q4 planning and roadmap review
+              write_scope: local
+      responses:
+        '201':
+          description: Interviews created and assigned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Interview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interviews/{interview_id}/:
+    get:
+      tags:
+      - Interviews
+      summary: Retrieve interview content
+      description: 'Retrieve a single interview with its full content, including the
+
+        complete `chat_history` transcript and `chat_memory`.
+
+
+        Non-admins can only retrieve interviews assigned to them or that they
+
+        created; admins can retrieve any interview in the project.
+
+        '
+      operationId: getInterview
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: interview_id
+        in: path
+        required: true
+        description: UUID of the interview
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interview'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ValidationError'
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+  schemas:
+    InterviewListItem:
+      type: object
+      description: Lightweight interview representation used in list responses (omits the transcript).
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          nullable: true
+        created_by:
+          type: string
+          format: uuid
+          readOnly: true
+        created_by_email:
+          type: string
+          format: email
+          nullable: true
+          readOnly: true
+        type:
+          type: string
+        assigned_to:
+          type: string
+          format: uuid
+          nullable: true
+          readOnly: true
+        assigned_by:
+          type: string
+          format: uuid
+          nullable: true
+          readOnly: true
+        assigned_to_email:
+          type: string
+          format: email
+          nullable: true
+          readOnly: true
+        assigned_by_email:
+          type: string
+          format: email
+          nullable: true
+          readOnly: true
+        is_pending_invite:
+          type: boolean
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+          enum:
+          - pending
+          - in_progress
+          - completed
+        write_scope:
+          type: string
+          enum:
+          - local
+          - global
+        first_message_preview:
+          type: string
+          description: Truncated preview of the first user message in the transcript.
+        message_count:
+          type: integer
+          description: Number of conversational messages in the transcript.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    ValidationError:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email:
+        - This field is required.
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to next page of results
+        previous:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    Interview:
+      type: object
+      description: A structured interview conversation, including its full transcript.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          nullable: true
+          description: Interview title (auto-generated from the topic when not provided).
+        created_by:
+          type: string
+          format: uuid
+          readOnly: true
+          description: UUID of the user who created the interview.
+        type:
+          type: string
+          description: Conversation type. Always "interview" for interviews.
+        type_additional_parameters:
+          type: object
+          description: Free-form parameters associated with the conversation type.
+        chat_history:
+          type: array
+          description: Ordered list of transcript entries (messages, tool calls, etc.).
+          items:
+            type: object
+        chat_memory:
+          type: object
+          description: Assistant memory state accumulated over the conversation.
+        local_documents:
+          type: array
+          readOnly: true
+          description: UUIDs of documents scoped locally to this interview.
+          items:
+            type: string
+            format: uuid
+        assigned_to:
+          type: string
+          format: uuid
+          nullable: true
+          readOnly: true
+          description: UUID of the assigned user (null while a pending invite has not yet joined).
+        assigned_by:
+          type: string
+          format: uuid
+          nullable: true
+          readOnly: true
+          description: UUID of the user who created the assignment.
+        assigned_to_email:
+          type: string
+          format: email
+          nullable: true
+          readOnly: true
+          description: Assignee email, falling back to the invite email for not-yet-joined invitees.
+        assigned_by_email:
+          type: string
+          format: email
+          nullable: true
+          readOnly: true
+        is_pending_invite:
+          type: boolean
+          readOnly: true
+          description: True when assigned to someone who has not yet joined the project.
+        status:
+          type: string
+          readOnly: true
+          enum:
+          - pending
+          - in_progress
+          - completed
+        write_scope:
+          type: string
+          enum:
+          - local
+          - global
+          description: Whether edits stay local to the conversation or write to the shared knowledge store.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use Authorization: Bearer <token>'
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'

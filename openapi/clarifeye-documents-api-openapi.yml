@@ -1,0 +1,955 @@
+openapi: 3.0.3
+info:
+  title: Clarifeye Platform Agent Settings Documents API
+  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token <token_key>`
+
+    - `Authorization: Bearer <token_key>`
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+    '
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Documents
+  description: Manage documents within a project
+paths:
+  /projects/{project_id}/documents/bulk-upload/:
+    post:
+      tags:
+      - Documents
+      summary: Bulk upload documents
+      description: Upload multiple documents at once. Optionally skip the automatic parsing pipeline.
+      operationId: bulkUploadDocuments
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: One or more files to upload
+                skip_parsing:
+                  type: string
+                  enum:
+                  - 'true'
+                  - 'false'
+                  default: 'false'
+                  description: Set to "true" to skip automatic parsing pipeline
+      responses:
+        '201':
+          description: Documents uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+        '400':
+          description: Bad request - no files uploaded or invalid file format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/documents/{document_id}/:
+    delete:
+      tags:
+      - Documents
+      summary: Delete document
+      description: 'Delete a document from the project. Deletion is performed asynchronously -
+
+        the document is marked as "deleting" and removed in the background.
+
+        '
+      operationId: deleteDocument
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/DocumentId'
+      responses:
+        '204':
+          description: Document deletion initiated
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/documents/get-without-file/:
+    get:
+      tags:
+      - Documents
+      summary: List documents without file data
+      description: Retrieve document metadata without file URLs for faster response times.
+      operationId: listDocumentsWithoutFile
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/DocumentMinimal'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/documents/filter-by-tag/:
+    post:
+      tags:
+      - Documents
+      summary: Filter documents by tag values
+      description: 'Retrieve documents that match one or more tag values (case-insensitive).
+
+        Pass tag values as a JSON array to avoid delimiter issues with values containing commas.
+
+        '
+      operationId: filterDocumentsByTag
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - tag_values
+              properties:
+                tag_values:
+                  type: array
+                  items:
+                    type: string
+                  description: List of tag values to filter by (OR logic, case-insensitive).
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/DocumentMinimal'
+        '400':
+          description: Missing or invalid tag_values array
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/documents/filter-by-metadata/:
+    post:
+      tags:
+      - Documents
+      summary: Filter documents by metadata values
+      description: 'Retrieve documents whose metadata contains one or more of the given values (case-insensitive, OR logic).
+
+
+        Document metadata is stored as a list of `[key, value]` pairs. This endpoint matches against the
+
+        **value** part of each pair. For example, if a document has metadata `[["category", "Finance"]]`,
+
+        passing `metadata_values: ["finance"]` will match it.
+
+
+        > **Note:** This endpoint requires documents to have metadata set. See the metadata management
+
+        > endpoints below to add metadata to documents.
+
+        '
+      operationId: filterDocumentsByMetadata
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - metadata_values
+              properties:
+                metadata_values:
+                  type: array
+                  items:
+                    type: string
+                  description: List of metadata values to filter by (OR logic, case-insensitive).
+            example:
+              metadata_values:
+              - Finance
+              - Legal
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/DocumentMinimal'
+        '400':
+          description: Missing or invalid metadata_values array
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/available-document-tags/:
+    get:
+      tags:
+      - Documents
+      summary: List available document tags
+      description: 'Retrieve all available document tag names and their possible values for the project.
+
+
+        Values are aggregated from both the tag extractor configuration (predefined possible values)
+
+        and actual tag data already extracted from documents. Results are deduplicated and sorted.
+
+
+        Document tags are **LLM-inferred** by tag extractors during pipeline runs,
+
+        whereas document metadata is **user-entered** (supplied at upload time or edited
+
+        via the metadata endpoints).
+
+        '
+      operationId: getAvailableDocumentTags
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+                description: 'Map of tag names to their available values.
+
+                  '
+              example:
+                document_type:
+                - Contract
+                - Invoice
+                - Report
+                language:
+                - English
+                - French
+                - German
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/available-document-metadata/:
+    get:
+      tags:
+      - Documents
+      summary: List available document metadata
+      description: 'Retrieve all metadata keys and their distinct values across all active documents in the project.
+
+
+        This is useful for building filter UIs or understanding what metadata has been applied to documents.
+
+
+        Document metadata is **user-entered** (supplied at upload time or edited via the metadata endpoints),
+
+        whereas document tags are **LLM-inferred** by tag extractors during pipeline runs.
+
+
+        > **Note:** Document metadata requires the project to use the **auto-sync** data versioning option.
+
+        '
+      operationId: getAvailableDocumentMetadata
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+                description: 'Map of metadata keys to their distinct values (sorted).
+
+                  '
+              example:
+                tag:
+                - Finance
+                - Legal
+                source_path:
+                - /path/to/document.pdf
+                - /path/to/document.docx
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/document-tags-by-document/:
+    get:
+      tags:
+      - Documents
+      summary: Get document tags grouped by document
+      description: 'Retrieve all document tags for the project, grouped by document ID.
+
+        Optionally filter by specific document IDs.
+
+
+        Each tag includes its name, value, and origin information (which table/row it came from).
+
+        '
+      operationId: getDocumentTagsByDocument
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: document_ids
+        in: query
+        required: false
+        description: Comma-separated list of document UUIDs to filter by. If omitted, returns tags for all documents.
+        schema:
+          type: string
+        example: 550e8400-e29b-41d4-a716-446655440000,6ba7b810-9dad-11d1-80b4-00c04fd430c8
+      - name: include_deleted_rows
+        in: query
+        required: false
+        description: Whether to include soft-deleted tag rows. Defaults to false.
+        schema:
+          type: string
+          enum:
+          - 'true'
+          - 'false'
+          default: 'false'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    tags:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          tag_name:
+                            type: string
+                          tag_value:
+                            type: string
+                          origin:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  description: Row ID
+                                table:
+                                  type: string
+                                  format: uuid
+                                  description: Table ID
+                                table_version_id:
+                                  type: string
+                                  format: uuid
+                                  description: Table version ID
+                description: 'Map of document IDs to their tags with origin information.
+
+                  '
+              example:
+                550e8400-e29b-41d4-a716-446655440000:
+                  tags:
+                  - tag_name: document_type
+                    tag_value: Contract
+                    origin:
+                    - id: row-1
+                      table: table-uuid
+                      table_version_id: version-uuid
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/documents/{document_id}/metadata-add/:
+    post:
+      tags:
+      - Documents
+      summary: Add metadata to a document
+      description: 'Add a key-value metadata pair to a document. The pair is appended to the document''s
+
+        existing metadata list.
+
+
+        Metadata is stored as a list of `[key, value]` string pairs. A document can have
+
+        multiple values for the same key.
+
+
+        > **Requires** the project to use the **auto-sync** data versioning option.
+
+        '
+      operationId: addDocumentMetadata
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/DocumentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetadataKeyValue'
+            example:
+              key: category
+              value: Finance
+      responses:
+        '200':
+          description: Metadata added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          description: Invalid request body
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/documents/{document_id}/metadata-remove-pair/:
+    post:
+      tags:
+      - Documents
+      summary: Remove a specific metadata pair
+      description: 'Remove a specific key-value pair from a document''s metadata. Both key and value
+
+        must match exactly for the pair to be removed.
+
+
+        > **Requires** the project to use the **auto-sync** data versioning option.
+
+        '
+      operationId: removeDocumentMetadataPair
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/DocumentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetadataKeyValue'
+            example:
+              key: category
+              value: Finance
+      responses:
+        '200':
+          description: Operation completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  removed:
+                    type: boolean
+                    description: Whether the pair was found and removed
+                  document:
+                    $ref: '#/components/schemas/Document'
+        '400':
+          description: Invalid request body
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/documents/{document_id}/metadata-remove-key/:
+    post:
+      tags:
+      - Documents
+      summary: Remove all metadata pairs for a key
+      description: 'Remove all metadata pairs matching the given key from a document, regardless
+
+        of their values.
+
+
+        > **Requires** the project to use the **auto-sync** data versioning option.
+
+        '
+      operationId: removeDocumentMetadataKey
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/DocumentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - key
+              properties:
+                key:
+                  type: string
+                  description: The metadata key to remove
+            example:
+              key: category
+      responses:
+        '200':
+          description: Operation completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  removed_count:
+                    type: integer
+                    description: Number of pairs removed
+                  document:
+                    $ref: '#/components/schemas/Document'
+        '400':
+          description: Invalid request body
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/documents/{document_id}/metadata-values/:
+    get:
+      tags:
+      - Documents
+      summary: Get metadata values for a key
+      description: 'Retrieve all values associated with a given metadata key on a document.
+
+
+        > **Requires** the project to use the **auto-sync** data versioning option.
+
+        '
+      operationId: getDocumentMetadataValues
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/DocumentId'
+      - name: key
+        in: query
+        required: true
+        description: The metadata key to retrieve values for
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: The requested metadata key
+                  values:
+                    type: array
+                    items:
+                      type: string
+                    description: All values for the given key
+              example:
+                key: category
+                values:
+                - Finance
+                - Legal
+        '400':
+          description: Missing query parameter 'key'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/documents/indexing-status/:
+    get:
+      tags:
+      - Documents
+      summary: Get document indexing status
+      description: 'Returns the indexing status for each `(document, extractor node)` pair in the project.
+
+        Callers poll this endpoint until documents reach `active` (queryable by AI) or `deleted`.
+
+
+        **States:**
+
+        | Value | Meaning |
+
+        |---|---|
+
+        | `created` | Document saved, processing not yet started |
+
+        | `indexing` | Processing pipeline running |
+
+        | `ready_to_publish` | Pipeline done, waiting for publish |
+
+        | `active` | Published to search backends — queryable by AI |
+
+        | `failed` | Document could not be parsed; will not be retried automatically |
+
+        | `pending_delete` | Delete requested, blocking new pipeline steps |
+
+        | `deleting` | Warehouse rows being cleared |
+
+        | `deleted` | Fully removed from warehouse and search indexes |
+
+        '
+      operationId: getDocumentIndexingStatus
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: document_ids
+        in: query
+        required: false
+        description: 'Comma-separated list of document UUIDs to filter the response.
+
+          When omitted, returns statuses for all documents in the project.
+
+          '
+        schema:
+          type: string
+        example: 550e8400-e29b-41d4-a716-446655440000,660e8400-e29b-41d4-a716-446655440001
+      responses:
+        '200':
+          description: Indexing statuses for the requested documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    document_id:
+                      type: string
+                      format: uuid
+                    extractor_type:
+                      type: string
+                      description: Extractor node type (e.g. "TagExtractor", "ObjectExtractor")
+                    extractor_id:
+                      type: string
+                      format: uuid
+                    extractor_version_id:
+                      type: string
+                      format: uuid
+                    status:
+                      type: string
+                      enum:
+                      - created
+                      - indexing
+                      - ready_to_publish
+                      - active
+                      - failed
+                      - pending_delete
+                      - deleting
+                      - deleted
+              example:
+              - document_id: 550e8400-e29b-41d4-a716-446655440000
+                extractor_type: TagExtractor
+                extractor_id: 660e8400-e29b-41d4-a716-446655440001
+                extractor_version_id: 770e8400-e29b-41d4-a716-446655440002
+                status: active
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    DocumentId:
+      name: document_id
+      in: path
+      required: true
+      description: UUID of the document
+      schema:
+        type: string
+        format: uuid
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+  schemas:
+    MetadataKeyValue:
+      type: object
+      required:
+      - key
+      - value
+      properties:
+        key:
+          type: string
+          description: Metadata key
+        value:
+          type: string
+          description: Metadata value
+    DocumentMinimal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Document filename
+        content_type:
+          type: string
+          description: MIME type of the document
+        page_count:
+          type: integer
+          nullable: true
+          description: Number of pages in the document
+        file_size:
+          type: integer
+          nullable: true
+          description: File size in bytes
+        metadata:
+          type: array
+          description: 'List of key-value metadata pairs. Each element is a two-element array `[key, value]`.
+
+            '
+          items:
+            type: array
+            items:
+              type: string
+            minItems: 2
+            maxItems: 2
+        status:
+          type: string
+          enum:
+          - active
+          - deleting
+          - deleted
+          description: Document deletion status
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Document filename
+        file:
+          type: string
+          format: uri
+          description: URL to the document file
+        content_type:
+          type: string
+          description: MIME type of the document
+          example: application/pdf
+        computed_pdf_file:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to generated PDF version (if applicable)
+        source:
+          type: string
+          enum:
+          - upload
+          - connector
+          description: Origin of the document
+        source_metadata:
+          type: object
+          description: Metadata about the document source
+        page_count:
+          type: integer
+          nullable: true
+          description: Number of pages in the document
+        file_size:
+          type: integer
+          nullable: true
+          description: File size in bytes
+        metadata:
+          type: array
+          description: 'List of key-value metadata pairs. Each element is a two-element array `[key, value]`.
+
+            Requires the project to use the **auto-sync** data versioning option.
+
+            '
+          items:
+            type: array
+            items:
+              type: string
+            minItems: 2
+            maxItems: 2
+          example:
+          - - category
+            - Finance
+          - - region
+            - EMEA
+        status:
+          type: string
+          enum:
+          - active
+          - deleting
+          - deleted
+          description: Document deletion status
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to next page of results
+        previous:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use Authorization: Bearer <token>'
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'

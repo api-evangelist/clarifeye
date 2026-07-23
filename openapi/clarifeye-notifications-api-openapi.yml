@@ -1,0 +1,527 @@
+openapi: 3.0.3
+info:
+  title: Clarifeye Platform Agent Settings Notifications API
+  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token <token_key>`
+
+    - `Authorization: Bearer <token_key>`
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+    '
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Notifications
+  description: Manage project-scoped notifications for users
+paths:
+  /projects/{project_id}/notifications/:
+    get:
+      tags:
+      - Notifications
+      summary: List project notifications
+      description: 'List notifications for the effective user (authenticated user or impersonated user).
+
+
+        **Filtering:**
+
+        - Only PROJECT-scoped notifications are returned (not account-level)
+
+        - Returns all unread notifications plus read notifications from the last 7 days
+
+        - Optionally filter by status using the `status` query parameter
+
+
+        **Impersonation:**
+
+        When using the `X-Impersonate-Email` header, returns notifications for the target user
+
+        instead of the authenticated user.
+
+        '
+      operationId: listProjectNotifications
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      - name: status
+        in: query
+        description: Filter by notification status
+        schema:
+          $ref: '#/components/schemas/NotificationStatus'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ProjectScopedNotification'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/notifications/{notification_id}/:
+    get:
+      tags:
+      - Notifications
+      summary: Retrieve a notification
+      description: 'Retrieve details of a single notification for the effective user.
+
+
+        **Impersonation:**
+
+        When using the `X-Impersonate-Email` header, retrieves the notification for the target user.
+
+        '
+      operationId: getProjectNotification
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/NotificationId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectScopedNotification'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+      - Notifications
+      summary: Delete a notification
+      description: 'Delete a single notification for the effective user.
+
+
+        **Impersonation:**
+
+        When using the `X-Impersonate-Email` header, deletes the notification for the target user.
+
+        '
+      operationId: deleteProjectNotification
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/NotificationId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '204':
+          description: Notification deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/notifications/{notification_id}/mark-as-read/:
+    post:
+      tags:
+      - Notifications
+      summary: Mark notification as read
+      description: 'Mark a single notification as read for the effective user.
+
+
+        **Impersonation:**
+
+        When using the `X-Impersonate-Email` header, marks the notification as read for the target user.
+
+        '
+      operationId: markNotificationAsRead
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/NotificationId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: Notification marked as read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectScopedNotification'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/notifications/{notification_id}/mark-as-unread/:
+    post:
+      tags:
+      - Notifications
+      summary: Mark notification as unread
+      description: 'Mark a single notification as unread for the effective user.
+
+
+        **Impersonation:**
+
+        When using the `X-Impersonate-Email` header, marks the notification as unread for the target user.
+
+        '
+      operationId: markNotificationAsUnread
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/NotificationId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: Notification marked as unread
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectScopedNotification'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/notifications/mark-all-as-read/:
+    post:
+      tags:
+      - Notifications
+      summary: Mark all notifications as read
+      description: 'Mark all unread project notifications as read for the effective user.
+
+
+        **Impersonation:**
+
+        When using the `X-Impersonate-Email` header, marks all notifications as read for the target user.
+
+        '
+      operationId: markAllNotificationsAsRead
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: All notifications marked as read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationBulkActionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/notifications/delete-read/:
+    post:
+      tags:
+      - Notifications
+      summary: Delete all read notifications
+      description: 'Delete all read project notifications for the effective user.
+
+
+        **Impersonation:**
+
+        When using the `X-Impersonate-Email` header, deletes all read notifications for the target user.
+
+        '
+      operationId: deleteReadNotifications
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: All read notifications deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationBulkActionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    ImpersonateEmail:
+      name: X-Impersonate-Email
+      in: header
+      required: false
+      description: 'Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.
+
+        If the target user is not found or does not have access to the project, the request
+
+        proceeds as the authenticated user. Contact Clarifeye to enable this permission.
+
+        '
+      schema:
+        type: string
+        format: email
+    NotificationId:
+      name: notification_id
+      in: path
+      required: true
+      description: UUID of the notification
+      schema:
+        type: string
+        format: uuid
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    NotificationBulkActionResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Human-readable message describing the action taken
+          example: Marked 5 notifications as read
+        count:
+          type: integer
+          description: Number of notifications affected by the action
+          example: 5
+    NotificationStatus:
+      type: string
+      enum:
+      - unread
+      - read
+      description: '- `unread`: Notification has not been read
+
+        - `read`: Notification has been read
+
+        '
+    NotificationAccessLevel:
+      type: string
+      enum:
+      - admin
+      - viewer
+      description: '- `admin`: Notification visible only to project admins
+
+        - `viewer`: Notification visible to all project members
+
+        '
+    ProjectScopedNotification:
+      description: 'A project-scoped notification. Returned by project notification endpoints.
+
+        The `scope` is always "project" and `project` is always a non-null UUID.
+
+        '
+      allOf:
+      - $ref: '#/components/schemas/NotificationBase'
+      - type: object
+        required:
+        - scope
+        - project
+        properties:
+          scope:
+            type: string
+            enum:
+            - project
+            description: Always "project" for project-scoped notifications
+          project:
+            type: string
+            format: uuid
+            description: UUID of the project this notification belongs to (always non-null)
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to next page of results
+        previous:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    NotificationBase:
+      type: object
+      description: Base notification properties shared by all notification types
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the notification
+        created_at:
+          type: string
+          format: date-time
+          description: When the notification was created
+        updated_at:
+          type: string
+          format: date-time
+          description: When the notification was last updated
+        user:
+          type: string
+          format: uuid
+          description: ID of the user this notification belongs to
+        status:
+          $ref: '#/components/schemas/NotificationStatus'
+        access_level:
+          $ref: '#/components/schemas/NotificationAccessLevel'
+        title:
+          type: string
+          description: Notification title
+          example: Document processing completed
+        message:
+          type: string
+          description: Notification message body
+          example: Your document 'Q4 Report.pdf' has been processed successfully.
+        notification_type:
+          type: string
+          description: Type/category of the notification
+          example: document_processed
+        actions:
+          type: object
+          description: 'Optional actions that can be taken from the notification.
+
+            Structure may include:
+
+            - `primary`: Primary action with `label` and `type`
+
+            - `secondary`: Array of secondary actions
+
+            '
+          example:
+            primary:
+              label: View Document
+              type: navigate
+              url: /documents/123
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the notification was marked as read (null if unread)
+        source_object_type:
+          type: string
+          description: Type of the source object that triggered this notification
+          example: document
+        source_object_id:
+          type: string
+          description: ID of the source object that triggered this notification
+          example: 550e8400-e29b-41d4-a716-446655440000
+        relative_time:
+          type: string
+          description: Human-readable relative time (e.g., "2 minutes ago", "Yesterday")
+          example: 2 hours ago
+        absolute_time:
+          type: string
+          format: date-time
+          description: ISO format absolute timestamp
+  responses:
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use Authorization: Bearer <token>'
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'

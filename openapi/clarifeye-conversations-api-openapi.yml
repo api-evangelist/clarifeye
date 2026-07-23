@@ -1,0 +1,882 @@
+openapi: 3.0.3
+info:
+  title: Clarifeye Platform Agent Settings Conversations API
+  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token <token_key>`
+
+    - `Authorization: Bearer <token_key>`
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+    '
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Conversations
+  description: Create and interact with AI-powered conversations
+paths:
+  /projects/{project_id}/playground-conversations/:
+    get:
+      tags:
+      - Conversations
+      summary: List conversations
+      description: 'Retrieve all conversations for a project with optional filtering.
+
+
+        **Access Control:**
+
+        - Admins see all conversations (including shared ones)
+
+        - Regular users see only conversations they created (including their own shared ones)
+
+        - Shared conversations from other users are not shown in the list but are accessible via direct URL
+
+
+        **Impersonation:**
+
+        - When using impersonation, returns conversations created by the impersonated user
+
+
+        **Filtering:**
+
+        - Tags filtering uses OR logic (matches any of the provided tags)
+
+        - Text filtering uses AND logic (combined with tag filters)
+
+        '
+      operationId: listConversations
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      - name: tags
+        in: query
+        description: Filter by tags (OR logic). Can be specified multiple times or comma-separated.
+        schema:
+          type: array
+          items:
+            type: string
+        style: form
+        explode: true
+        example:
+        - analysis
+        - review
+      - name: no_tags
+        in: query
+        description: Set to "true" to filter for conversations with no tags
+        schema:
+          type: string
+          enum:
+          - 'true'
+          - 'false'
+      - name: text
+        in: query
+        description: Search text within chat history (case-insensitive)
+        schema:
+          type: string
+      - name: include_archived
+        in: query
+        description: Set to "true" to include archived conversations in results. Defaults to false (active conversations only).
+        schema:
+          type: string
+          enum:
+          - 'true'
+          - 'false'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Conversation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+      - Conversations
+      summary: Create conversation
+      description: 'Create a new AI-powered conversation.
+
+
+        **Impersonation:**
+
+        - When using impersonation, the conversation is created as the impersonated user
+
+        '
+      operationId: createConversation
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - agent_settings
+              properties:
+                name:
+                  type: string
+                  description: Conversation name (auto-generated if not provided)
+                  example: Analysis Session
+                type:
+                  type: string
+                  default: playground
+                  description: Conversation type
+                agent_settings:
+                  type: string
+                  format: uuid
+                  description: ID of the agent settings to use
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: Tags for organizing conversations
+                  example:
+                  - analysis
+                  - review
+                conversation_instructions:
+                  type: string
+                  description: Custom instructions for this conversation
+                  example: Focus on financial data extraction
+      responses:
+        '201':
+          description: Conversation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/playground-conversations/{conversation_id}/:
+    get:
+      tags:
+      - Conversations
+      summary: Get conversation
+      description: 'Retrieve a conversation with its complete chat history.
+
+
+        **Access Control:**
+
+        - Admins can access any conversation
+
+        - Regular users can access their own conversations
+
+        - All project members can access shared conversations via direct URL
+
+        '
+      operationId: getConversation
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ConversationId'
+      - name: include_archived
+        in: query
+        description: Set to "true" to allow retrieving an archived conversation. Defaults to false.
+        schema:
+          type: string
+          enum:
+          - 'true'
+          - 'false'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+      - Conversations
+      summary: Archive conversation
+      description: 'Soft-archive a conversation. The conversation is hidden from default list/get endpoints
+
+        but is preserved in the database along with all linked feedback.
+
+
+        To permanently delete an archived conversation, use the `permanent_delete` action.
+
+        To restore an archived conversation, use the `unarchive` action.
+
+
+        **Access Control:**
+
+        - Admins can archive any conversation
+
+        - Regular users can only archive conversations they created
+
+
+        **Impersonation:**
+
+        - When using impersonation, the ownership check is performed against the impersonated user
+
+        '
+      operationId: archiveConversation
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ConversationId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '204':
+          description: Conversation archived successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden - user does not own this conversation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/playground-conversations/{conversation_id}/unarchive/:
+    post:
+      tags:
+      - Conversations
+      summary: Unarchive conversation
+      description: 'Restore a previously archived conversation back to active status.
+
+
+        **Access Control:**
+
+        - Admins can unarchive any conversation
+
+        - Regular users can only unarchive conversations they created
+
+        '
+      operationId: unarchiveConversation
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ConversationId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '204':
+          description: Conversation unarchived successfully
+        '400':
+          description: Conversation is not archived
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/playground-conversations/{conversation_id}/permanent_delete/:
+    post:
+      tags:
+      - Conversations
+      summary: Permanently delete conversation
+      description: 'Permanently delete an archived conversation and all its associated feedbacks.
+
+        This action is irreversible.
+
+
+        The conversation must be archived first (via the DELETE endpoint) before it can be permanently deleted.
+
+
+        **Access Control:**
+
+        - Superusers only, or project members with `CAN_PERFORM_ADMIN_ACTIONS` permission
+
+        '
+      operationId: permanentDeleteConversation
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ConversationId'
+      responses:
+        '204':
+          description: Conversation permanently deleted
+        '400':
+          description: Conversation is not archived
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden - admin permission required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/playground-conversations/{conversation_id}/send_message_stream/:
+    post:
+      tags:
+      - Conversations
+      summary: Send message (streaming)
+      description: 'Send a message and receive a streaming response using Server-Sent Events (SSE).
+
+
+        The response is a stream of newline-delimited JSON events. Use this endpoint for both
+
+        initial messages and follow-up messages - conversation context is automatically preserved.
+
+
+        **Access Control:**
+
+        - For shared conversations, only the creator or admins can send messages
+
+        - Other project members can view shared conversations but cannot send messages
+
+
+        **Impersonation:**
+
+        - When using impersonation, the message is sent as the impersonated user
+
+
+        ## Streaming Event Types
+
+
+        | Type | Description |
+
+        |------|-------------|
+
+        | `streaming_in_progress` | Intermediate event during response generation |
+
+        | `streaming_error` | Error occurred during streaming |
+
+        | `streaming_completed` | Final event with complete chat history |
+
+
+        ## Payload Types (within streaming_in_progress)
+
+
+        | Payload Type | Description |
+
+        |--------------|-------------|
+
+        | `start_token_streaming` | Stream is starting |
+
+        | `token_streaming` | Text token being streamed |
+
+        | `tool_call_request` | Tool is being invoked |
+
+        | `tool_call` | Tool execution results |
+
+        | `reasoning` | Reasoning step |
+
+        '
+      operationId: sendMessageStream
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ConversationId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - message
+              properties:
+                message:
+                  type: string
+                  description: The user message to send
+                  example: What information do you have about product pricing?
+      responses:
+        '200':
+          description: Server-Sent Events stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              examples:
+                streaming:
+                  summary: Example streaming response
+                  value: 'data: {"type_streaming": "streaming_in_progress", "payload": {"type": "start_token_streaming", "content": ""}}
+
+
+                    data: {"type_streaming": "streaming_in_progress", "payload": {"type": "token_streaming", "content": "The"}}
+
+
+                    data: {"type_streaming": "streaming_in_progress", "payload": {"type": "token_streaming", "content": "The document"}}
+
+
+                    data: {"type_streaming": "streaming_in_progress", "payload": {"type": "tool_call", "tool_type": "semantic_chunks", "results": [...]}}
+
+
+                    data: {"type_streaming": "streaming_completed", "payload": {"conversation_id": "uuid", "chat_history": [...]}}
+
+                    '
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/playground-conversations/all-tags/:
+    get:
+      tags:
+      - Conversations
+      summary: Get all conversation tags
+      description: 'Retrieve all unique tags used across conversations in the project.
+
+
+        **Access Control:**
+
+        - Admins see tags from all conversations
+
+        - Regular users see only tags from conversations they created
+
+
+        **Impersonation:**
+
+        - When using impersonation, returns tags from conversations created by the impersonated user
+
+        '
+      operationId: getAllConversationTags
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                    description: List of unique tags sorted alphabetically
+                    example:
+                    - analysis
+                    - important
+                    - review
+                  count:
+                    type: integer
+                    description: Total number of unique tags
+                    example: 3
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/playground-conversations/{conversation_id}/share/:
+    post:
+      tags:
+      - Conversations
+      summary: Share conversation
+      description: 'Share a conversation with all workspace members.
+
+
+        When shared:
+
+        - The conversation becomes accessible to all project members via direct URL
+
+        - The conversation is hidden from the conversation list (to reduce clutter)
+
+        - Only the creator and admins can send messages (read-only for others)
+
+
+        **Access Control:**
+
+        - Only the conversation creator or project admins can share a conversation
+
+        '
+      operationId: shareConversation
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ConversationId'
+      responses:
+        '200':
+          description: Conversation shared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  is_shared:
+                    type: boolean
+                    example: true
+        '400':
+          description: Conversation is already shared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Permission denied - only creator or admin can share
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/playground-conversations/{conversation_id}/unshare/:
+    post:
+      tags:
+      - Conversations
+      summary: Unshare conversation
+      description: 'Remove sharing from a conversation.
+
+
+        When unshared:
+
+        - The conversation returns to the creator''s conversation list
+
+        - Other project members lose access to the conversation
+
+
+        **Access Control:**
+
+        - Only the conversation creator or project admins can unshare a conversation
+
+        '
+      operationId: unshareConversation
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ConversationId'
+      responses:
+        '200':
+          description: Conversation unshared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  is_shared:
+                    type: boolean
+                    example: false
+        '400':
+          description: Conversation is not shared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Permission denied - only creator or admin can unshare
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ValidationError'
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    ConversationId:
+      name: conversation_id
+      in: path
+      required: true
+      description: UUID of the conversation
+      schema:
+        type: string
+        format: uuid
+    ImpersonateEmail:
+      name: X-Impersonate-Email
+      in: header
+      required: false
+      description: 'Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.
+
+        If the target user is not found or does not have access to the project, the request
+
+        proceeds as the authenticated user. Contact Clarifeye to enable this permission.
+
+        '
+      schema:
+        type: string
+        format: email
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    ChatMessage:
+      type: object
+      description: 'A message in the conversation. The `query_id` groups all messages from a single
+
+        user interaction (user message, assistant response, tool calls).
+
+        '
+      properties:
+        role:
+          type: string
+          enum:
+          - user
+          - assistant
+        content:
+          type: string
+        type:
+          type: string
+          enum:
+          - message
+          - tool_call
+          - reasoning_flow
+        query_id:
+          type: integer
+          description: 'Unique identifier for this query. All messages from one interaction share the same query_id.
+
+            Use this value when submitting feedback on a specific message.
+
+            '
+        user_id:
+          type: string
+          format: uuid
+        used_tokens_input:
+          type: integer
+        used_tokens_output:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        tool_type:
+          type: string
+          description: Type of tool (only for tool_call messages)
+        input_parameters:
+          type: object
+          description: Tool input parameters (only for tool_call messages)
+        results:
+          type: array
+          items: {}
+          description: Tool results (only for tool_call messages)
+    ValidationError:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email:
+        - This field is required.
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+        created_by:
+          type: string
+          format: uuid
+          description: ID of the user who created the conversation
+        chat_history:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+        agent_settings:
+          type: string
+          format: uuid
+        agent_settings_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        message_count:
+          type: integer
+        tool_call_count:
+          type: integer
+        tokens:
+          type: object
+          properties:
+            input:
+              type: integer
+            output:
+              type: integer
+            total:
+              type: integer
+        tags:
+          type: array
+          items:
+            type: string
+        conversation_instructions:
+          type: string
+          nullable: true
+        is_shared:
+          type: boolean
+          description: Whether the conversation is shared with all workspace members
+          default: false
+        can_send_messages:
+          type: boolean
+          description: 'Whether the current user can send messages to this conversation.
+
+            For shared conversations, only the creator and admins can send messages.
+
+            '
+        is_archived:
+          type: boolean
+          description: Whether the conversation has been soft-archived
+          default: false
+        archived_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when the conversation was archived, null if not archived
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to next page of results
+        previous:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use Authorization: Bearer <token>'
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'

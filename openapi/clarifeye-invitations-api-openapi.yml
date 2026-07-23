@@ -1,0 +1,350 @@
+openapi: 3.0.3
+info:
+  title: Clarifeye Platform Agent Settings Invitations API
+  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token <token_key>`
+
+    - `Authorization: Bearer <token_key>`
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+    '
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Invitations
+  description: Manage project invitations
+paths:
+  /projects/{project_id}/invites/:
+    get:
+      tags:
+      - Invitations
+      summary: List invitations
+      description: Retrieve all invitations for a project with optional filtering by status.
+      operationId: listInvitations
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: status
+        in: query
+        description: Filter by invitation status
+        schema:
+          $ref: '#/components/schemas/InvitationStatus'
+      - name: search
+        in: query
+        description: Filter by email (case-insensitive partial match)
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ProjectInvite'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/invites/invite/:
+    post:
+      tags:
+      - Invitations
+      summary: Invite user to project
+      description: 'Invite a user to join the project.
+
+        - For new users (not registered): Creates a pending invite and sends an email.
+
+        - For existing users: Automatically accepts the invite and sends a notification.
+
+        '
+      operationId: inviteUser
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - permissions
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email address of the user to invite
+                  example: user@example.com
+                permissions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PermissionType'
+                  description: Permissions to grant to the user
+                  example:
+                  - CAN_VIEW_DATA
+                  - CAN_RUN_TASKS
+      responses:
+        '201':
+          description: Invitation created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/ProjectInvite'
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - new_user
+                      - existing_user
+                      description: '- `new_user`: User not registered, invite is pending
+
+                        - `existing_user`: User exists, invite auto-accepted
+
+                        '
+        '400':
+          description: Bad request - invalid permissions, user already invited, or user already has access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/invites/{invite_id}/:
+    delete:
+      tags:
+      - Invitations
+      summary: Cancel invitation
+      description: Cancel a pending invitation. Only pending invitations can be cancelled.
+      operationId: cancelInvitation
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: invite_id
+        in: path
+        required: true
+        description: UUID of the invitation
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '204':
+          description: Invitation cancelled successfully
+        '400':
+          description: Cannot cancel non-pending invitation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  schemas:
+    ProjectInvite:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionType'
+        status:
+          $ref: '#/components/schemas/InvitationStatus'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        invited_by:
+          $ref: '#/components/schemas/User'
+    InvitationStatus:
+      type: string
+      enum:
+      - pending
+      - accepted
+      - cancelled
+      description: '- `pending`: Invitation sent, awaiting response
+
+        - `accepted`: User accepted the invitation
+
+        - `cancelled`: Invitation was cancelled
+
+        '
+    PermissionType:
+      type: string
+      enum:
+      - CAN_PERFORM_ADMIN_ACTIONS
+      - CAN_VIEW_DATA
+      - CAN_RUN_TASKS
+      - CAN_VIEW_TECHNICAL_INTERFACE
+      - CAN_IMPERSONATE_OTHER_USERS
+      description: '- `CAN_PERFORM_ADMIN_ACTIONS`: Full administrative access
+
+        - `CAN_VIEW_DATA`: Read-only access to project data
+
+        - `CAN_RUN_TASKS`: Execute background tasks and pipelines
+
+        - `CAN_VIEW_TECHNICAL_INTERFACE`: Access to technical features
+
+        - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls (contact Clarifeye to enable)
+
+        '
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to next page of results
+        previous:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        date_joined:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use Authorization: Bearer <token>'
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'

@@ -1,0 +1,259 @@
+openapi: 3.0.3
+info:
+  title: Clarifeye Platform Agent Settings API
+  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token <token_key>`
+
+    - `Authorization: Bearer <token_key>`
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+    '
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Agent Settings
+  description: Manage AI agent configurations
+paths:
+  /projects/{project_id}/agent-settings/:
+    get:
+      tags:
+      - Agent Settings
+      summary: List agent settings
+      description: 'Retrieve all agent settings (AI agent configurations) for a project.
+
+        Results are ordered by most recently updated first.
+
+        '
+      operationId: listAgentSettings
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/AgentSettings'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+  schemas:
+    AgentSettings:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Name of the agent configuration
+        description:
+          type: string
+          description: Description of the agent
+        created_by:
+          type: string
+          format: uuid
+          description: ID of the user who created the agent settings
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        readonly:
+          type: boolean
+          description: Whether the agent settings are read-only
+        additional_instructions:
+          type: string
+          description: Additional instructions for the agent
+        agent_conversation_starter:
+          type: string
+          description: Default conversation starter message
+        model:
+          type: string
+          description: LLM model to use
+          example: claude-3-5-sonnet
+        project_brief:
+          type: string
+          description: Project context/brief for the agent
+        knowledge_graph_mode:
+          type: string
+          description: Knowledge graph usage mode
+        knowledge_graph_parameters:
+          type: object
+          description: Knowledge graph configuration parameters
+        tags_hierarchies_mode:
+          type: string
+          description: Tag hierarchies usage mode
+        tags_hierarchies_parameters:
+          type: object
+          description: Tag hierarchies configuration parameters
+        selected_workflows_mode:
+          type: string
+          description: Reasoning workflows selection mode
+        selected_workflows:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of selected reasoning workflow IDs
+        agent_mode:
+          type: string
+          description: Agent operation mode
+        tools:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of tool IDs available to the agent
+        last_conversation_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date of the most recent conversation using this agent (read-only)
+        local_documents:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of local document IDs attached to the agent (read-only)
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to next page of results
+        previous:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use Authorization: Bearer <token>'
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'

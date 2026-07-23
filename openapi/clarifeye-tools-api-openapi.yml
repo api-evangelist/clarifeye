@@ -1,0 +1,537 @@
+openapi: 3.0.3
+info:
+  title: Clarifeye Platform Agent Settings Tools API
+  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token <token_key>`
+
+    - `Authorization: Bearer <token_key>`
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+    '
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Tools
+  description: Execute configured AI tools with custom parameters
+paths:
+  /projects/{project_id}/tools/{tool_id}/run/:
+    post:
+      tags:
+      - Tools
+      summary: Run a tool
+      description: 'Execute a configured tool with provided parameters.
+
+
+        The request body varies based on the tool type. Most tools accept a `query` parameter
+
+        and optional parameters like `top_k` for controlling result count.
+
+        '
+      operationId: runTool
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ToolId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToolRunRequest'
+            examples:
+              retrieval:
+                summary: Retrieval tool example
+                value:
+                  query: What are the key findings about revenue growth?
+                  top_k: 10
+              document_retrieval:
+                summary: Document retrieval example
+                value:
+                  query: financial reports
+                  top_k: 5
+      responses:
+        '200':
+          description: Tool execution successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolRunResponse'
+        '400':
+          description: Invalid syntax or query errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Tool or index not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolError'
+        '500':
+          description: Database or internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolError'
+  /projects/{project_id}/tools/:
+    get:
+      tags:
+      - Tools
+      summary: List tools
+      description: 'List all tools available to the project, including tools owned by the
+
+        project (`category: local`) and tools imported from other projects
+
+        (`category: imported`).
+
+
+        Use the returned `id` together with
+
+        [`getToolParameters`](#operation/getToolParameters) to discover the
+
+        request body schema for a given tool, then call
+
+        [`runTool`](#operation/runTool) to execute it.
+
+        '
+      operationId: listTools
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: tool_type
+        in: query
+        description: Filter by tool type
+        schema:
+          $ref: '#/components/schemas/ToolType'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Tool'
+              example:
+                count: 2
+                next: null
+                previous: null
+                results:
+                - id: 4f4a0a36-2c3d-4e6c-9a3b-2b1f0f1a2c11
+                  name: Search financial chunks
+                  description: Semantic search over chunks tagged as financial reports.
+                  tool_type: retrieval
+                  retrieval_mode: semantic-chunks
+                  category: local
+                  owner_project_id: 9c2b1c0a-7a1d-4d1d-8e3a-1d2b3c4d5e6f
+                  owner_project_name: Finance Analytics
+                  readonly: false
+                  created_at: '2026-04-12T10:21:33Z'
+                  updated_at: '2026-05-02T08:44:01Z'
+                - id: c1a7f2e0-6e8f-4f0a-9d11-8b6e5d4c3b2a
+                  name: Document retrieval (annual reports)
+                  description: Retrieve documents by name or tag.
+                  tool_type: document_retrieval
+                  retrieval_mode: semantic-chunks
+                  category: imported
+                  owner_project_id: 11111111-2222-3333-4444-555555555555
+                  owner_project_name: Shared Tools
+                  readonly: true
+                  created_at: '2026-03-08T15:02:11Z'
+                  updated_at: '2026-04-22T11:30:00Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/tools/{tool_id}/parameters/:
+    get:
+      tags:
+      - Tools
+      summary: Get tool parameters schema
+      description: 'Return the JSON schema describing the parameters accepted by
+
+        [`runTool`](#operation/runTool) for this tool.
+
+
+        The schema is a list of parameter specs (`id`, `type`, `description`,
+
+        `required`, and an optional `default`). The exact list depends on the
+
+        tool''s `tool_type` and configuration — for example a retrieval tool
+
+        configured with `auto_include` tags exposes an extra `included_tags`
+
+        parameter.
+
+
+        Use the `id` of each entry as the key in the JSON body sent to
+
+        [`runTool`](#operation/runTool).
+
+        '
+      operationId: getToolParameters
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ToolId'
+      responses:
+        '200':
+          description: JSON schema describing the tool's run parameters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ToolParameterSpec'
+              examples:
+                retrieval:
+                  summary: Retrieval tool (search on chunks)
+                  value:
+                  - id: query
+                    type: string
+                    description: Query to search for chunks.
+                    default: ''
+                    required: false
+                  - id: top_k
+                    type: integer
+                    description: 'Number of objects to retrieve. For initial search use the default top_k value : 10.'
+                    default: 10
+                    required: false
+                document_retrieval:
+                  summary: Document retrieval tool
+                  value:
+                  - id: mode
+                    type: string
+                    description: The mode to use. Can be name, content, tag, id.
+                    required: true
+                  - id: document_name_search_string
+                    type: string
+                    description: Search string within document names
+                    required: true
+                  - id: search_query_within_documents
+                    type: string
+                    description: The text used to identify parts of documents
+                    required: true
+                  - id: document_ids
+                    type: string
+                    description: A comma-separated list of ID strings (uuid) of documents to search within
+                    required: true
+                  - id: tag_list
+                    type: string
+                    description: A comma-separated list of tag IDs to search for documents
+                    required: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    ToolId:
+      name: tool_id
+      in: path
+      required: true
+      description: UUID of the tool
+      schema:
+        type: string
+        format: uuid
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    ToolRunResponse:
+      type: array
+      description: Array of tool execution results
+      items:
+        type: object
+        description: Individual result object (structure varies by tool type)
+        additionalProperties: true
+    Tool:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        tool_type:
+          $ref: '#/components/schemas/ToolType'
+        retrieval_mode:
+          type: string
+          description: 'For tools with `tool_type: retrieval`, the specific retrieval
+
+            variant (e.g. `semantic-chunks`, `semantic-objects`,
+
+            `templated-query`). Ignored for other tool types.
+
+            '
+        category:
+          type: string
+          enum:
+          - local
+          - imported
+          description: '- `local`: tool is owned by the current project.
+
+            - `imported`: tool is owned by another project and exported into the current one.
+
+            '
+        owner_project_id:
+          type: string
+          format: uuid
+          description: UUID of the project that owns the tool.
+        owner_project_name:
+          type: string
+          nullable: true
+          description: Name of the project that owns the tool.
+        readonly:
+          type: boolean
+          description: When true, the tool cannot be modified through the API.
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      example:
+        id: 4f4a0a36-2c3d-4e6c-9a3b-2b1f0f1a2c11
+        name: Search financial chunks
+        description: Semantic search over chunks tagged as financial reports.
+        tool_type: retrieval
+        retrieval_mode: semantic-chunks
+        category: local
+        owner_project_id: 9c2b1c0a-7a1d-4d1d-8e3a-1d2b3c4d5e6f
+        owner_project_name: Finance Analytics
+        readonly: false
+        created_at: '2026-04-12T10:21:33Z'
+        updated_at: '2026-05-02T08:44:01Z'
+    ToolParameterSpec:
+      type: object
+      description: 'Specification for a single parameter accepted by a tool''s `run`
+
+        endpoint. Use `id` as the key in the JSON body sent to
+
+        [`runTool`](#operation/runTool).
+
+        '
+      properties:
+        id:
+          type: string
+          description: Parameter name (used as the JSON key when calling `runTool`).
+        type:
+          type: string
+          enum:
+          - string
+          - integer
+          - number
+          - boolean
+          - array
+          - object
+          description: JSON type of the parameter value.
+        description:
+          type: string
+          description: Human-readable description of the parameter.
+        required:
+          type: boolean
+          description: Whether the parameter must be supplied when running the tool.
+        default:
+          description: Default value when the parameter is omitted. Type matches `type`.
+      example:
+        id: query
+        type: string
+        description: The search query for the tool.
+        required: false
+        default: ''
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to next page of results
+        previous:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    ToolRunRequest:
+      type: object
+      description: 'Request body for running a tool. Parameters vary by tool type.
+
+        Most tools accept a `query` parameter and optional `top_k` for result count.
+
+        '
+      properties:
+        query:
+          type: string
+          description: The search query or input for the tool
+          example: What are the key findings about revenue growth?
+        top_k:
+          type: integer
+          description: Maximum number of results to return
+          default: 10
+          example: 10
+      additionalProperties: true
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    ToolType:
+      type: string
+      enum:
+      - retrieval
+      - math
+      - document_retrieval
+      - data_statistics
+      - websearch
+      - sub_agent
+      description: 'Category of tool, which controls how it is executed and what
+
+        parameters it accepts. The `retrieval` family additionally exposes a
+
+        `retrieval_mode` field (e.g. `semantic-chunks`, `semantic-objects`,
+
+        `templated-query`).
+
+        '
+    ToolError:
+      type: object
+      description: Error response from tool execution
+      properties:
+        error_type:
+          type: string
+          description: Category of the error
+          example: syntax_error
+        error_code:
+          type: string
+          description: Specific error code
+          example: INVALID_QUERY
+        status:
+          type: string
+          description: Error status
+          example: error
+        message:
+          type: string
+          description: Human-readable error message
+          example: Invalid query syntax
+  responses:
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use Authorization: Bearer <token>'
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'

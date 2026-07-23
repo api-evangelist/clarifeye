@@ -1,0 +1,411 @@
+openapi: 3.0.3
+info:
+  title: Clarifeye Platform Agent Settings Extraction Flows API
+  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token <token_key>`
+
+    - `Authorization: Bearer <token_key>`
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+    '
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Extraction Flows
+  description: Manage extraction flows (auto-sync DAGs) — list, run, inspect statistics, update, and publish
+paths:
+  /projects/{project_id}/extraction-flows/:
+    get:
+      tags:
+      - Extraction Flows
+      summary: List extraction flows
+      description: 'List all extraction flows for the project, ordered by most recently updated.
+
+        '
+      operationId: listExtractionFlows
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExtractionFlow'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/extraction-flows/{flow_id}/:
+    patch:
+      tags:
+      - Extraction Flows
+      summary: Update an extraction flow
+      description: "Partially update an extraction flow. The most common use is to switch its\n**publish mode** between `auto_publish` and `manual_publish`.\n\n**Publish modes:**\n- `auto_publish` — Each successful flow run automatically publishes the\n  extracted data. No separate publish step\n  is required.\n- `manual_publish` — Flow runs only compute and persist extracted data in\n  the warehouse. Publishing to downstream indexes must be triggered\n  explicitly via the `publish` action. Use this when you want to review\n  the results of a run before exposing them to search / agents.\n"
+      operationId: updateExtractionFlow
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/FlowId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Human-readable name of the flow
+                publish_mode:
+                  type: string
+                  enum:
+                  - auto_publish
+                  - manual_publish
+                  description: 'Controls whether extracted data is pushed to downstream indexes
+
+                    automatically after each run (`auto_publish`) or only on an
+
+                    explicit `publish` call (`manual_publish`).
+
+                    '
+                dag:
+                  type: object
+                  description: DAG definition (`name` + `nodes`) for the extraction flow.
+            example:
+              publish_mode: manual_publish
+      responses:
+        '200':
+          description: Flow updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtractionFlow'
+        '400':
+          description: Invalid payload (e.g. malformed DAG or unknown publish_mode)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/extraction-flows/{flow_id}/run-sync/:
+    post:
+      tags:
+      - Extraction Flows
+      summary: Run an extraction flow
+      description: 'Queue a pipeline run that executes the flow''s DAG across the given
+
+        documents (or all project documents if `document_ids` is omitted).
+
+
+        Returns the `pipeline_run_id` you can poll to track progress.
+
+        '
+      operationId: runExtractionFlow
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/FlowId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                document_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: 'Optional list of document UUIDs to run the flow on. If omitted
+
+                    or empty, the flow runs against all documents in the project.
+
+                    '
+            example:
+              document_ids:
+              - 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Sync started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sync started.
+                  pipeline_run_id:
+                    type: string
+                    format: uuid
+        '400':
+          description: Flow DAG is empty, inconsistent, or document_ids are invalid
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/extraction-flows/{flow_id}/node-stats/:
+    post:
+      tags:
+      - Extraction Flows
+      summary: Get extraction flow statistics
+      description: 'Dry-run cache simulation of the flow — returns, per DAG node, how many
+
+        inputs would be reused from cache vs. recomputed, without actually
+
+        executing any extraction. Useful to preview the cost/impact of a run.
+
+        '
+      operationId: getExtractionFlowStatistics
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/FlowId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                document_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: 'Optional list of document UUIDs to scope the simulation to.
+
+                    When omitted, statistics are computed over all documents in
+
+                    the project.
+
+                    '
+            example:
+              document_ids:
+              - 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Per-node statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                description: 'Map of DAG node names to their cache/recompute statistics.
+
+                  '
+                additionalProperties:
+                  type: object
+        '400':
+          description: Flow DAG is empty, inconsistent, or document_ids are invalid
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/extraction-flows/{flow_id}/publish/:
+    post:
+      tags:
+      - Extraction Flows
+      summary: Publish an extraction flow
+      description: 'Queue a pipeline run that publishes previously-extracted data to the
+
+        downstream indexes without re-running extraction.
+
+
+        > **Only valid for flows whose `publish_mode` is `manual_publish`.**
+
+        > For `auto_publish` flows, publishing happens automatically at the end
+
+        > of each `run-sync`, so calling this endpoint is unnecessary.
+
+        '
+      operationId: publishExtractionFlow
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/FlowId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                document_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: 'Optional list of document UUIDs to scope publishing to. When
+
+                    omitted, publishing covers all documents in the project.
+
+                    '
+            example:
+              document_ids:
+              - 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Publish started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Publish started.
+                  pipeline_run_id:
+                    type: string
+                    format: uuid
+        '400':
+          description: Flow DAG is empty or inconsistent
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    FlowId:
+      name: flow_id
+      in: path
+      required: true
+      description: UUID of the extraction flow
+      schema:
+        type: string
+        format: uuid
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    ExtractionFlowPublishMode:
+      type: string
+      enum:
+      - auto_publish
+      - manual_publish
+      description: '- `auto_publish` — runs automatically push extracted data to downstream indexes.
+
+        - `manual_publish` — publishing is triggered explicitly via the `publish` action.
+
+        '
+    ExtractionFlow:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        publish_mode:
+          $ref: '#/components/schemas/ExtractionFlowPublishMode'
+        dag:
+          type: object
+          description: DAG definition (`name` + `nodes`) describing the extractor pipeline.
+        tpuf_namespaces:
+          type: object
+          description: Per-namespace-type TurboPuffer namespace mapping populated on publish.
+        last_pushed_to_tpuf:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use Authorization: Bearer <token>'
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'

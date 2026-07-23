@@ -1,0 +1,853 @@
+openapi: 3.0.3
+info:
+  title: Clarifeye Platform Agent Settings Feedback API
+  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token <token_key>`
+
+    - `Authorization: Bearer <token_key>`
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+    '
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Feedback
+  description: Submit feedback on conversation messages
+paths:
+  /projects/{project_id}/feedbacks/:
+    get:
+      tags:
+      - Feedback
+      summary: List feedback
+      description: 'Retrieve all feedback for a project with optional filtering.
+
+
+        **Access Control:**
+
+        - Admins see all feedback in the project
+
+        - Regular users see only feedback they submitted
+
+
+        **Impersonation:**
+
+        - When using impersonation, returns feedback submitted by the impersonated user
+
+
+        **Sorting:**
+
+        - Results are ordered by most recently updated first (`updated_at` field)
+
+
+        **Note:** For grouped views by conversation, use `/projects/{project_id}/feedbacks/grouped_by_conversation/`
+
+        '
+      operationId: listFeedback
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      - name: status
+        in: query
+        description: Filter by feedback status
+        schema:
+          $ref: '#/components/schemas/FeedbackStatus'
+      - name: is_positive
+        in: query
+        description: Filter by sentiment
+        schema:
+          type: boolean
+      - name: search
+        in: query
+        description: Search in feedback text or user email (case-insensitive)
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      description: Array of Feedback objects
+                      items:
+                        $ref: '#/components/schemas/Feedback'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+      - Feedback
+      summary: Submit feedback on a message
+      description: 'Provide feedback on a specific message in a conversation.
+
+
+        **Impersonation:**
+
+        - When using impersonation, the feedback is submitted as the impersonated user
+
+
+        ## Feedback Types
+
+
+        | Type | is_positive Value | Description |
+
+        |------|-------------------|-------------|
+
+        | Thumbs up | `true` | Positive feedback |
+
+        | Thumbs down | `false` | Negative feedback |
+
+        | Neutral | `null` | Neutral or no sentiment |
+
+
+        ## Query ID
+
+
+        The `query_id` identifies a specific user query and all related responses.
+
+        It can be obtained from:
+
+        - The streaming response (each message contains `query_id`)
+
+        - The `streaming_completed` event''s `chat_history`
+
+        - The conversation retrieval endpoint
+
+        '
+      operationId: submitFeedback
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - context
+              properties:
+                feedback:
+                  type: string
+                  description: Text comment (can be empty for quick feedback)
+                  example: This answer was helpful and accurate
+                context:
+                  type: object
+                  required:
+                  - conversation_id
+                  - query_id
+                  - source
+                  properties:
+                    conversation_id:
+                      type: string
+                      format: uuid
+                      description: ID of the conversation
+                    query_id:
+                      type: integer
+                      description: Query ID of the message to provide feedback on
+                      example: 0
+                    source:
+                      type: string
+                      enum:
+                      - PlaygroundConversation
+                      description: Source of the feedback
+                is_positive:
+                  type: boolean
+                  nullable: true
+                  description: '- `true`: Positive feedback (thumbs up)
+
+                    - `false`: Negative feedback (thumbs down)
+
+                    - `null`: Neutral feedback
+
+                    '
+                  example: true
+      responses:
+        '201':
+          description: Feedback submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/feedbacks/{feedback_id}/:
+    patch:
+      tags:
+      - Feedback
+      summary: Update feedback status
+      description: 'Mark feedback as reviewed or update other fields.
+
+
+        **Access Control:**
+
+        - Admins can update any feedback
+
+        - Regular users can only update feedback they submitted
+
+
+        **Impersonation:**
+
+        - When using impersonation, the ownership check is performed against the impersonated user
+
+        - This allows updating feedback submitted by the impersonated user
+
+        '
+      operationId: updateFeedback
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: feedback_id
+        in: path
+        required: true
+        description: UUID of the feedback
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  $ref: '#/components/schemas/FeedbackStatus'
+                feedback:
+                  type: string
+                  description: Updated feedback text
+                is_positive:
+                  type: boolean
+                  nullable: true
+                  description: Updated sentiment
+      responses:
+        '200':
+          description: Feedback updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden - user does not own this feedback
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+      - Feedback
+      summary: Delete feedback
+      description: 'Remove feedback.
+
+
+        **Access Control:**
+
+        - Admins can delete any feedback
+
+        - Regular users can only delete feedback they submitted
+
+
+        **Impersonation:**
+
+        - When using impersonation, the ownership check is performed against the impersonated user
+
+        - This allows deleting feedback submitted by the impersonated user
+
+        '
+      operationId: deleteFeedback
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: feedback_id
+        in: path
+        required: true
+        description: UUID of the feedback
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '204':
+          description: Feedback deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden - user does not own this feedback
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/feedbacks/grouped_by_conversation/:
+    get:
+      tags:
+      - Feedback
+      summary: Get feedbacks grouped by conversation
+      description: 'Retrieve feedbacks grouped by their associated playground conversation with unified pagination and sorting.
+
+
+        **Access Control:**
+
+        - Admins see all feedback in the project
+
+        - Regular users see only feedback they submitted
+
+
+        **Grouping Logic:**
+
+        - Feedbacks are grouped by their `conversation` field (FK to PlaygroundConversation)
+
+        - Conversation groups and ungrouped feedbacks are returned in a single flat array
+
+        - Ungrouped feedbacks appear as single-item groups with `conversation_id: null`
+
+        - Each group includes status counts and all associated feedbacks
+
+
+        **Pagination:**
+
+        - Paginates across the unified list of conversation groups and ungrouped feedbacks
+
+        - Use `limit` and `offset` parameters to page through results
+
+        - The `count` field reflects the total number of displayable groups (conversations + ungrouped)
+
+
+        **Status Filtering:**
+
+        - `status=to_review`: Groups with ANY unreviewed feedback
+
+        - `status=reviewed`: Groups where ALL feedbacks are reviewed
+
+        - No status filter: All groups
+
+
+        **Sorting:**
+
+        - All groups are sorted together by the most recent feedback update time
+
+        - With `status=to_review`: Sorted by the most recent "to_review" feedback update
+
+        - With `status=reviewed`: Sorted by the most recent "reviewed" feedback update
+
+        - Without status filter: Sorted by the most recent feedback update (any status)
+
+        - Feedbacks within each group are ordered by most recently updated first
+
+
+        **Impersonation:**
+
+        - When using impersonation, returns feedback submitted by the impersonated user
+
+        '
+      operationId: getGroupedFeedbacks
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      - name: status
+        in: query
+        description: Filter by conversation status (based on feedback statuses)
+        schema:
+          $ref: '#/components/schemas/FeedbackStatus'
+      - name: search
+        in: query
+        description: Search in feedback text or user email (case-insensitive)
+        schema:
+          type: string
+      - name: include_archived
+        in: query
+        description: Set to "true" to include feedbacks from archived conversations. Defaults to false.
+        schema:
+          type: string
+          enum:
+          - 'true'
+          - 'false'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      description: 'Flat array of conversation groups and ungrouped feedbacks, sorted by last updated feedback.
+
+                        Ungrouped feedbacks appear as single-item groups with `conversation_id: null`.
+
+                        '
+                      items:
+                        $ref: '#/components/schemas/ConversationFeedbackGroup'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/feedbacks/mark_conversation_reviewed/:
+    post:
+      tags:
+      - Feedback
+      summary: Mark all feedbacks in a conversation as reviewed
+      description: 'Update the status of all feedbacks associated with a specific conversation to "reviewed".
+
+
+        **Access Control:**
+
+        - Admins can update all feedbacks in the project
+
+        - Regular users can only update feedback they submitted
+
+
+        **Impersonation:**
+
+        - When using impersonation, only updates feedback submitted by the impersonated user
+
+        '
+      operationId: markConversationReviewed
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - conversation_id
+              properties:
+                conversation_id:
+                  type: string
+                  format: uuid
+                  description: ID of the conversation whose feedbacks should be marked as reviewed
+                  example: 123e4567-e89b-12d3-a456-426614174000
+            example:
+              conversation_id: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        '200':
+          description: Feedbacks updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated_count:
+                    type: integer
+                    description: Number of feedbacks updated
+                    example: 3
+                  conversation_id:
+                    type: string
+                    format: uuid
+                    description: ID of the conversation whose feedbacks were updated
+                    example: 123e4567-e89b-12d3-a456-426614174000
+                  new_status:
+                    type: string
+                    description: The new status that was applied to the feedbacks
+                    example: reviewed
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/feedbacks/counts/:
+    get:
+      tags:
+      - Feedback
+      summary: Get feedback counts by status
+      description: 'Retrieve comprehensive counts of feedbacks split by status, conversation grouping, and ungrouped feedbacks.
+
+
+        **Access Control:**
+
+        - Admins see counts for all feedback in the project
+
+        - Regular users see counts only for feedback they submitted
+
+
+        **Impersonation:**
+
+        - When using impersonation, returns counts for feedback submitted by the impersonated user
+
+        '
+      operationId: getFeedbackCounts
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  to_review:
+                    type: integer
+                    description: Total count of individual feedbacks with status "to_review"
+                    example: 28
+                  reviewed:
+                    type: integer
+                    description: Total count of individual feedbacks with status "reviewed"
+                    example: 45
+                  conversations_to_review:
+                    type: integer
+                    description: Count of conversations with at least one unreviewed feedback
+                    example: 12
+                  conversations_reviewed:
+                    type: integer
+                    description: Count of conversations where ALL feedbacks are reviewed
+                    example: 8
+                  ungrouped_to_review:
+                    type: integer
+                    description: Count of feedbacks without a conversation that are "to_review"
+                    example: 4
+                  ungrouped_reviewed:
+                    type: integer
+                    description: Count of feedbacks without a conversation that are "reviewed"
+                    example: 2
+              examples:
+                ungrouped:
+                  summary: Individual feedback counts
+                  value:
+                    to_review: 8
+                    reviewed: 15
+                grouped:
+                  summary: Conversation counts
+                  value:
+                    to_review: 3
+                    reviewed: 7
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ValidationError'
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    ImpersonateEmail:
+      name: X-Impersonate-Email
+      in: header
+      required: false
+      description: 'Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.
+
+        If the target user is not found or does not have access to the project, the request
+
+        proceeds as the authenticated user. Contact Clarifeye to enable this permission.
+
+        '
+      schema:
+        type: string
+        format: email
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    ConversationFeedbackGroup:
+      type: object
+      description: A group of feedbacks from the same playground conversation
+      properties:
+        conversation_id:
+          type: string
+          format: uuid
+          description: ID of the playground conversation
+        conversation_title:
+          type: string
+          description: Title of the conversation
+          example: Product pricing discussion
+        conversation_created_at:
+          type: string
+          format: date-time
+          description: When the conversation was created
+        agent_name:
+          type: string
+          nullable: true
+          description: Name of the agent settings used in this conversation
+          example: Customer Support Assistant
+        conversation_is_archived:
+          type: boolean
+          description: Whether the associated conversation is archived
+          default: false
+        to_review_count:
+          type: integer
+          description: Number of feedbacks with status "to_review" in this conversation
+          example: 3
+        reviewed_count:
+          type: integer
+          description: Number of feedbacks with status "reviewed" in this conversation
+          example: 1
+        feedbacks:
+          type: array
+          description: All feedbacks from this conversation, ordered by most recently updated first (by `updated_at` field)
+          items:
+            $ref: '#/components/schemas/Feedback'
+      example:
+        conversation_id: 123e4567-e89b-12d3-a456-426614174000
+        conversation_title: Product pricing discussion
+        conversation_created_at: '2026-03-01T10:30:00Z'
+        agent_name: Customer Support Assistant
+        conversation_is_archived: false
+        to_review_count: 3
+        reviewed_count: 1
+        feedbacks:
+        - id: abc-123
+          status: to_review
+          feedback: The answer was inaccurate
+          is_positive: false
+        - id: abc-124
+          status: to_review
+          feedback: This needs more detail
+          is_positive: false
+        - id: abc-125
+          status: to_review
+          feedback: Missing citation for this claim
+          is_positive: false
+        - id: abc-126
+          status: reviewed
+          feedback: Great explanation!
+          is_positive: true
+        status_summary: mixed
+        feedback_count: 4
+        latest_updated_at: '2026-02-26T10:30:00Z'
+        has_unreviewed: true
+    ValidationError:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email:
+        - This field is required.
+    FeedbackStatus:
+      type: string
+      enum:
+      - to_review
+      - reviewed
+      description: '- `to_review`: Feedback pending review (default)
+
+        - `reviewed`: Feedback has been reviewed
+
+        '
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to next page of results
+        previous:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    Feedback:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        given_by:
+          type: object
+          description: User who submitted the feedback
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+        status:
+          $ref: '#/components/schemas/FeedbackStatus'
+        feedback:
+          type: string
+          description: Feedback text comment
+        context:
+          type: object
+          description: Legacy context object (conversation_id is now available as a direct field)
+          properties:
+            conversation_id:
+              type: string
+              format: uuid
+              deprecated: true
+              description: Use the top-level `conversation` field instead
+            query_id:
+              type: integer
+            source:
+              type: string
+        is_positive:
+          type: boolean
+          nullable: true
+          description: '- `true`: Positive feedback
+
+            - `false`: Negative feedback
+
+            - `null`: Neutral
+
+            '
+        user_message:
+          type: string
+          description: The user message that was responded to (computed field)
+        conversation_title:
+          type: string
+          description: Title of the conversation (computed field)
+        suggested_action_type:
+          type: string
+          nullable: true
+          description: Auto-generated suggested action type
+        suggested_action_data:
+          type: object
+          description: Auto-generated suggested action data
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use Authorization: Bearer <token>'
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'

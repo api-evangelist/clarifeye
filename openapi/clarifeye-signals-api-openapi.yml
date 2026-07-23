@@ -1,0 +1,439 @@
+openapi: 3.0.3
+info:
+  title: Clarifeye Platform Agent Settings Signals API
+  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token <token_key>`
+
+    - `Authorization: Bearer <token_key>`
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+    '
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Signals
+  description: Submit signals about the project's content for domain experts to review
+paths:
+  /projects/{project_id}/signals/:
+    get:
+      tags:
+      - Signals
+      summary: List signals
+      description: 'Retrieve all signals for a project with optional filtering.
+
+
+        **Access Control:**
+
+        - Admins see all signals in the project
+
+        - Regular users see only signals they submitted
+
+
+        **Sorting:**
+
+        - Results are ordered by most recently updated first (`updated_at` field)
+
+
+        **Note:** For grouped views by conversation, use `/projects/{project_id}/signals/grouped_by_conversation/`'
+      operationId: listSignals
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: status
+        in: query
+        description: Filter by signal status
+        schema:
+          $ref: '#/components/schemas/SignalStatus'
+      - name: is_positive
+        in: query
+        description: Filter by sentiment
+        schema:
+          type: boolean
+      - name: search
+        in: query
+        description: Search in signal text or user email (case-insensitive)
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      description: Array of signal objects
+                      items:
+                        $ref: '#/components/schemas/Signal'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+      - Signals
+      summary: Submit a signal
+      description: 'Submit a signal about the project''s content: the signal text itself,
+
+        plus optional `context.additional_details` with extra context for the
+
+        reviewer. The signal shows up in the review UI for domain experts.
+
+
+        ## Signal Types
+
+
+        | Type | is_positive Value | Description |
+
+        |------|-------------------|-------------|
+
+        | Thumbs up | `true` | Positive signal |
+
+        | Thumbs down | `false` | Negative signal |
+
+        | Neutral | `null` | Neutral or no sentiment |'
+      operationId: submitSignal
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - context
+              properties:
+                feedback:
+                  type: string
+                  description: The signal text
+                  example: We need to cover the EU refund rules in the knowledge base
+                context:
+                  type: object
+                  additionalProperties: true
+                  properties:
+                    additional_details:
+                      type: string
+                      description: 'Optional extra context provided alongside the signal.
+
+                        Displayed in the review UI.'
+                is_positive:
+                  type: boolean
+                  nullable: true
+                  description: '- `true`: Positive signal (thumbs up)
+
+                    - `false`: Negative signal (thumbs down)
+
+                    - `null`: Neutral signal
+
+                    '
+                  example: false
+            example:
+              feedback: We need to cover the EU refund rules in the knowledge base
+              is_positive: false
+              context:
+                additional_details: Several customer calls last week asked about EU refunds and we had nothing to point them to.
+      responses:
+        '201':
+          description: Signal submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Signal'
+              example:
+                id: 8f14e45f-ceea-467f-a8d9-23ad7f6b3a90
+                created_at: '2026-06-11T09:30:00Z'
+                updated_at: '2026-06-11T09:30:00Z'
+                given_by:
+                  id: 1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed
+                  email: expert@example.com
+                status: to_review
+                feedback: We need to cover the EU refund rules in the knowledge base
+                context:
+                  additional_details: Several customer calls last week asked about EU refunds and we had nothing to point them to.
+                is_positive: false
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/signals/{signal_id}/:
+    patch:
+      tags:
+      - Signals
+      summary: Update signal status
+      description: 'Mark a signal as reviewed or update other fields.
+
+
+        **Access Control:**
+
+        - Admins can update any signal
+
+        - Regular users can only update signals they submitted'
+      operationId: updateSignal
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: signal_id
+        in: path
+        required: true
+        description: UUID of the signal
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  $ref: '#/components/schemas/SignalStatus'
+                feedback:
+                  type: string
+                  description: Updated signal text
+                is_positive:
+                  type: boolean
+                  nullable: true
+                  description: Updated sentiment
+      responses:
+        '200':
+          description: Signal updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Signal'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden - user does not own this signal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ValidationError'
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+  schemas:
+    ValidationError:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email:
+        - This field is required.
+    Signal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        given_by:
+          type: object
+          description: User who submitted the signal
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+        status:
+          $ref: '#/components/schemas/SignalStatus'
+        feedback:
+          type: string
+          description: Signal text comment
+        context:
+          type: object
+          additionalProperties: true
+          description: Free-form context, echoed back as submitted at creation
+          properties:
+            additional_details:
+              type: string
+              description: Extra context provided alongside the signal
+        is_positive:
+          type: boolean
+          nullable: true
+          description: '- `true`: Positive signal
+
+            - `false`: Negative signal
+
+            - `null`: Neutral
+
+            '
+        user_message:
+          type: string
+          description: The user message that was responded to (computed field)
+        conversation_title:
+          type: string
+          description: Title of the conversation (computed field)
+        suggested_action_type:
+          type: string
+          nullable: true
+          description: Auto-generated suggested action type
+        suggested_action_data:
+          type: object
+          description: Auto-generated suggested action data
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to next page of results
+        previous:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    SignalStatus:
+      type: string
+      enum:
+      - to_review
+      - reviewed
+      description: '- `to_review`: Signal pending review (default)
+
+        - `reviewed`: Signal has been reviewed
+
+        '
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use Authorization: Bearer <token>'
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'
