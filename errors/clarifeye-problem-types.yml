@@ -1,0 +1,40 @@
+generated: '2026-07-18'
+method: derived
+source: openapi/clarifeye-openapi-original.yaml, openapi/clarifeye-backoffice-openapi-original.yaml
+format: json-object   # NOT RFC 9457 — envelope is {"error": "<message>"} (see Error schema)
+envelope:
+  shape: '{"error": "<message>"}'
+  schema: Error
+  validation_shape: '{"<field>": ["<message>", ...]}'   # ValidationError (DRF-style, on 400)
+  tool_error_shape: '{"error_type","error_code","status","message"}'   # ToolError (from run_tool)
+problems:
+- status: 400
+  title: Bad request
+  description: Invalid payload — malformed body, missing/invalid array parameter, or (backoffice) empty/inconsistent flow DAG or unknown publish_mode.
+  body: ValidationError or Error
+- status: 401
+  title: Unauthorized
+  description: Missing or invalid Authorization header (Bearer or Token). Present on every operation.
+  body: Error
+- status: 403
+  title: Forbidden
+  description: Authenticated but lacks permission — admin-only operation, resource not owned by caller, or insufficient project permission.
+  body: Error
+- status: 404
+  title: Not found
+  description: Referenced resource (project, document, tool/index, interview, signal, conversation, invite) does not exist.
+  body: Error
+- status: 500
+  title: Internal server error
+  description: Unhandled server or database error.
+  body: Error
+tool_errors:
+  field: error_type + error_code
+  examples:
+  - error_type: syntax_error
+    error_code: INVALID_QUERY
+notes: >
+  Clarifeye does not use application/problem+json. API errors return a flat
+  {"error": "..."} object; 400 validation errors return a field->messages map
+  (DRF serializer style); run_tool returns a structured ToolError with
+  error_type/error_code for tool-execution failures.

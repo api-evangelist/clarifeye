@@ -1,8 +1,30 @@
 aid: clarifeye
 name: Clarifeye
-description: 'Clarifeye is a company surfaced as a portfolio company of eqt-ventures and added to the
-  API Evangelist network as a stub for enrichment. Sector: artificial-intelligence. This profile is a
-  lead awaiting the enrichment pipeline.'
+description: >-
+  Clarifeye is an AI-native knowledge infrastructure platform that captures the
+  undocumented knowledge locked in people's heads. Its AI interviewer, Clara,
+  runs document-aware interviews with subject-matter experts, surfaces
+  contradictions, and structures the results into versioned, reusable knowledge
+  artifacts — briefs, playbooks, mental maps, and ontologies. That captured
+  knowledge is exposed to AI clients such as Claude, ChatGPT, and Microsoft
+  Copilot through a hosted Model Context Protocol (MCP) server and a REST API,
+  so agents answer grounded in an organization's own logic with references back
+  to source. Clarifeye targets regulated industries where undocumented processes
+  create key-person risk, offers EU and US data localization with PII redaction
+  at ingestion, and is SOC 2 Type II certified. Backed by EQT Ventures.
+accessModel:
+  pricing: unknown
+  onboarding: self-serve
+  trial: false
+  try_now: false
+  public: false
+  label: Self-serve signup
+  confidence: medium
+  source:
+  - authentication
+  generated: '2026-07-22'
+  method: derived
+image: https://www.clarifeye.ai/_astro/og-default.BHhQt8Bo.png
 url: https://raw.githubusercontent.com/api-evangelist/clarifeye/refs/heads/main/apis.yml
 x-type: company
 x-source: vc-portfolio
@@ -12,11 +34,150 @@ x-tier: stub
 x-tier-reason: portfolio-lead
 specificationVersion: '0.20'
 created: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-18'
 tags:
 - Company
 - Artificial Intelligence
-apis: []
+- Knowledge Management
+- Model Context Protocol
+- Document Intelligence
+- Agents
+- Enterprise AI
+- Retrieval
+apis:
+- aid: clarifeye:clarifeye-agent-settings-api
+  name: Clarifeye Agent Settings API
+  description: Manage AI agent configurations
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Agent Settings
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-agent-settings-api-openapi.yml
+- aid: clarifeye:clarifeye-conversations-api
+  name: Clarifeye Conversations API
+  description: Create and interact with AI-powered conversations
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Conversations
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-conversations-api-openapi.yml
+- aid: clarifeye:clarifeye-documents-api
+  name: Clarifeye Documents API
+  description: Manage documents within a project
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Documents
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-documents-api-openapi.yml
+- aid: clarifeye:clarifeye-extraction-flows-api
+  name: Clarifeye Extraction Flows API
+  description: >-
+    Manage extraction flows (auto-sync DAGs) — list, run, inspect statistics, update, and publish
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Extraction Flows
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-extraction-flows-api-openapi.yml
+- aid: clarifeye:clarifeye-feedback-api
+  name: Clarifeye Feedback API
+  description: Submit feedback on conversation messages
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Feedback
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-feedback-api-openapi.yml
+- aid: clarifeye:clarifeye-interviews-api
+  name: Clarifeye Interviews API
+  description: Assign and review structured interview conversations
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Interviews
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-interviews-api-openapi.yml
+- aid: clarifeye:clarifeye-invitations-api
+  name: Clarifeye Invitations API
+  description: Manage project invitations
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Invitations
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-invitations-api-openapi.yml
+- aid: clarifeye:clarifeye-notifications-api
+  name: Clarifeye Notifications API
+  description: Manage project-scoped notifications for users
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Notifications
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-notifications-api-openapi.yml
+- aid: clarifeye:clarifeye-pipeline-runs-api
+  name: Clarifeye Pipeline Runs API
+  description: >-
+    Inspect pipeline runs queued by extraction flows or other pipeline triggers — list runs and fetch
+    the details/status of a single run
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Pipeline Runs
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-pipeline-runs-api-openapi.yml
+- aid: clarifeye:clarifeye-signals-api
+  name: Clarifeye Signals API
+  description: Submit signals about the project's content for domain experts to review
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Signals
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-signals-api-openapi.yml
+- aid: clarifeye:clarifeye-tables-api
+  name: Clarifeye Tables API
+  description: Perform CRUD operations on warehouse tables
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Tables
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-tables-api-openapi.yml
+- aid: clarifeye:clarifeye-tools-api
+  name: Clarifeye Tools API
+  description: Execute configured AI tools with custom parameters
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Tools
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-tools-api-openapi.yml
+- aid: clarifeye:clarifeye-users-api
+  name: Clarifeye Users API
+  description: Manage users within a project
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Users
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-users-api-openapi.yml
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
@@ -25,3 +186,62 @@ maintainers:
 common:
 - type: Website
   url: https://www.clarifeye.ai/
+- type: DeveloperPortal
+  url: https://docs.clarifeye.ai/
+- type: Documentation
+  url: https://docs.clarifeye.ai/
+- type: APIReference
+  url: https://docs.clarifeye.ai/api-reference
+- type: GettingStarted
+  url: https://docs.clarifeye.ai/guides/quickstart
+- type: Quickstart
+  url: https://docs.clarifeye.ai/guides/quickstart
+- type: Blog
+  url: https://www.clarifeye.ai/blog
+- type: Support
+  url: https://www.clarifeye.ai/contact-us
+- type: Pricing
+  url: https://www.clarifeye.ai/pricing
+- type: SignUp
+  url: https://us.app.clarifeye.ai/
+- type: Login
+  url: https://us.app.clarifeye.ai/
+- type: TermsOfService
+  url: https://www.clarifeye.ai/legal/terms-of-service
+- type: PrivacyPolicy
+  url: https://www.clarifeye.ai/legal/privacy-policy
+- type: LinkedIn
+  url: https://www.linkedin.com/company/clarifeyeai/
+- type: Compliance
+  url: https://www.clarifeye.ai/technology
+- type: MCPServer
+  url: mcp/clarifeye-mcp.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: Authentication
+  url: authentication/clarifeye-authentication.yml
+- type: OAuthScopes
+  url: scopes/clarifeye-scopes.yml
+- type: WellKnown
+  url: well-known/clarifeye-well-known.yml
+- type: ErrorCatalog
+  url: errors/clarifeye-problem-types.yml
+- type: Conventions
+  url: conventions/clarifeye-conventions.yml
+- type: Lifecycle
+  url: lifecycle/clarifeye-lifecycle.yml
+- type: Conformance
+  url: conformance/clarifeye-conformance.yml
+- type: DataModel
+  url: data-model/clarifeye-data-model.yml
+- type: LLMsTxt
+  url: llms/clarifeye-llms.txt
+- type: DomainSecurity
+  url: security/clarifeye-domain-security.yml
+- type: AgenticAccess
+  url: agentic-access/clarifeye-agentic-access.yml
+x-enrichment:
+  date: '2026-07-19'
+  status: backfilled
+  pass: local-v1
+  note: backfilled from .gitignore signal + verified work evidence

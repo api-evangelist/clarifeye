@@ -1,0 +1,70 @@
+generated: '2026-07-18'
+method: searched
+status: published
+source: https://docs.clarifeye.ai/guides/mcp
+server:
+  name: clarifeye
+  transport: http
+  urls:
+  - region: EU
+    url: https://eu.app.clarifeye.ai/mcp
+  - region: US
+    url: https://us.app.clarifeye.ai/mcp
+  auth:
+    type: oauth2
+    flow: authorizationCode
+    dcr: true            # Dynamic Client Registration supported
+    pkce: S256
+    authorization_url: https://eu.app.clarifeye.ai/o/authorize/
+    token_url: https://eu.app.clarifeye.ai/o/token/
+    scopes: [claudeai, openid, offline_access]
+    also_supported: 'user-token (Authorization: Bearer <token>)'
+  protected_resource: https://eu.app.clarifeye.ai/.well-known/oauth-protected-resource
+description: >
+  Clarifeye publishes a hosted, per-knowledge-store MCP server that exposes an
+  organization's captured knowledge (briefs, playbooks, mental maps, tags,
+  objects) to AI clients (Claude, ChatGPT, Microsoft Copilot, or any MCP-capable
+  client). Installed alongside a downloadable "Clarifeye skill" from the Deploy
+  tab. Tools are workflow-shaped across discover / inspect / run / feedback /
+  review / edit stages.
+tools:
+- name: list_knowledge_stores
+  description: List the knowledge stores the current token can access; returns [{id, name, brief}].
+- name: whoami
+  description: Return the currently authenticated user (wraps REST users/me).
+- name: list_knowledge
+  description: Unified overview of a store (brief, tag hierarchies, object classes, playbook summaries).
+- name: get_knowledge
+  description: Drill into one item (kind=playbook|object_class|tag|mental_map).
+- name: list_tools
+  description: Brief catalogue of a store's tools; returns [{id, name, tool_type}].
+- name: get_tool
+  description: Read a tool's full metadata and live input schema.
+- name: run_tool
+  description: Execute a configured tool with parameters.
+- name: create_feedback
+  description: Push a signal / correction into the store's feedback queue.
+- name: list_feedback
+  description: List feedback for triage.
+- name: get_feedback
+  description: Read one feedback item in detail.
+- name: resolve_feedback
+  description: Close the loop on an addressed feedback item.
+- name: list_conversations
+  description: List playground conversations for review.
+- name: get_conversation
+  description: Retrieve a conversation with its chat history.
+- name: list_interviews
+  description: List interviews for a project.
+- name: get_interview
+  description: Retrieve a single interview with full content.
+- name: edit_brief
+  description: Edit the business brief artifact (admin).
+- name: edit_general_knowledge
+  description: Edit the general-knowledge artifact (admin).
+- name: edit_corpus_description
+  description: Edit the document-library (corpus) description (admin).
+- name: edit_playbook
+  description: Batch-edit a playbook artifact (admin).
+- name: edit_mental_map
+  description: Batch-edit the mental map / ontology (admin).

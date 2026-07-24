@@ -1,0 +1,39 @@
+generated: '2026-07-18'
+method: searched
+source: https://eu.app.clarifeye.ai/.well-known/
+hosts:
+- host: https://eu.app.clarifeye.ai
+  documents:
+  - path: /.well-known/oauth-authorization-server   # RFC 8414
+    status: 200
+    file: clarifeye-oauth-authorization-server.json
+  - path: /.well-known/oauth-protected-resource      # RFC 9728
+    status: 200
+    file: clarifeye-oauth-protected-resource.json
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+- host: https://us.app.clarifeye.ai
+  documents:
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    file: null   # identical shape to EU host, issuer https://us.app.clarifeye.ai
+  - path: /.well-known/oauth-protected-resource
+    status: 200
+    file: null
+- host: https://www.clarifeye.ai
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+- host: https://docs.clarifeye.ai
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+notes: >
+  Clarifeye's OAuth authorization server (Django OAuth Toolkit style) is
+  discoverable at each regional app host and backs the hosted MCP server
+  advertised via /.well-known/oauth-protected-resource (resource
+  https://eu.app.clarifeye.ai/mcp). No security.txt is published.

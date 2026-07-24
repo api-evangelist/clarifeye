@@ -1,0 +1,72 @@
+generated: '2026-07-18'
+method: derived
+source: openapi/clarifeye-openapi-original.yaml, openapi/clarifeye-backoffice-openapi-original.yaml
+root: Project
+note: >
+  Almost every operation is scoped to /projects/{project_id}/... — a Project
+  (a.k.a. "knowledge store") is the aggregate root that owns all other
+  entities. Derived from OpenAPI paths and component schemas.
+entities:
+- name: Project
+  aka: KnowledgeStore
+  id: project_id
+  description: Aggregate root / knowledge store; owns documents, interviews, signals, tools, conversations, users.
+- name: Document
+  belongs_to: Project
+  schema: Document
+  notes: Uploaded corpus files; metadata + tags; async indexing status; grouped into collections.
+- name: DocumentCollection
+  belongs_to: Project
+  notes: Named bucket of documents (slug derived server-side); documents fall back to "Default".
+- name: Interview
+  belongs_to: Project
+  schema: Interview
+  notes: Clara-run expert interview; has chat_history transcript + chat_memory; assigned per user.
+- name: Signal
+  belongs_to: Project
+  schema: Signal
+  notes: A flag/correction about the project's content; has a review status.
+- name: Feedback
+  belongs_to: Project
+  optional_ref: Conversation
+  notes: Direct or conversation-linked feedback; can be submitted by an agent via MCP.
+- name: Tool
+  belongs_to: Project
+  schema: Tool
+  via: owner_project_id
+  notes: Executable tool (category local or imported); parameters schema; run via runTool.
+- name: Conversation
+  belongs_to: Project
+  schema: Conversation
+  has_many: ChatMessage
+  notes: Playground conversation with chat_history; shareable; archivable.
+- name: User
+  belongs_to: Project
+  schema: User
+  join: ProjectPermission
+  notes: Project members with permissions.
+- name: ProjectInvite
+  belongs_to: Project
+  schema: ProjectInvite
+  notes: Pending/accepted invitations by email with a status.
+- name: ExtractionFlow
+  belongs_to: Project
+  notes: DAG of extractors run over documents (backoffice); versioned nodes.
+- name: Extractor
+  belongs_to: ExtractionFlow
+  variants: [ChunksExtractor, ChunkTagFilterExtractor, DocumentFilterExtractor, DocumentTagExtractor, ImportedObjectExtractor, ObjectAlertsExtractor]
+  notes: Version-bearing pipeline nodes (each update auto-creates a new version).
+- name: Notification
+  belongs_to: Project
+  notes: Per effective-user notifications; read/unread.
+relationships:
+- {from: Document, to: Project, kind: belongs_to, via: project_id}
+- {from: Document, to: DocumentCollection, kind: belongs_to, via: collection}
+- {from: Interview, to: Project, kind: belongs_to, via: project_id}
+- {from: Signal, to: Project, kind: belongs_to, via: project_id}
+- {from: Feedback, to: Conversation, kind: belongs_to, via: conversation}
+- {from: Tool, to: Project, kind: belongs_to, via: owner_project_id}
+- {from: Conversation, to: Project, kind: belongs_to, via: project_id}
+- {from: ChatMessage, to: Conversation, kind: belongs_to, via: query_id}
+- {from: ProjectPermission, to: User, kind: belongs_to, via: user}
+- {from: Extractor, to: ExtractionFlow, kind: belongs_to}

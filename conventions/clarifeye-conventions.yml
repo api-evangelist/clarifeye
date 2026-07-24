@@ -1,0 +1,45 @@
+generated: '2026-07-18'
+method: derived
+source: openapi/clarifeye-openapi-original.yaml, openapi/clarifeye-backoffice-openapi-original.yaml, https://docs.clarifeye.ai/
+authentication:
+  styles:
+  - 'Authorization: Bearer <token>'
+  - 'Authorization: Token <token>'
+  oauth2: MCP server only (authorizationCode, PKCE S256, DCR)
+  ref: authentication/clarifeye-authentication.yml
+base_url:
+  scheme: uri-path
+  regions:
+  - https://eu.app.clarifeye.ai/api/v1
+  - https://us.app.clarifeye.ai/api/v1
+  project_scoped: true   # nearly all operations are /projects/{project_id}/...
+versioning:
+  scheme: uri-path
+  current: v1
+pagination:
+  style: page-number     # DRF PaginatedResponse
+  schema: PaginatedResponse
+  response_fields: [count, next, previous, results]
+  next_previous: absolute URLs (nullable)
+filtering:
+  query_params: [search, status, text, assigned_to, document_ids, is_positive, tool_type]
+  post_filters: [filter-by-tag, filter-by-metadata]   # complex filters use POST bodies
+idempotency:
+  supported: false       # no Idempotency-Key header or parameter documented in either spec
+streaming:
+  server_sent_events: true   # backoffice send-message-streaming uses SSE
+  ref: backoffice/conversations/send-message-streaming
+error_envelope:
+  shape: '{"error": "<message>"}'
+  validation_shape: '{"<field>": ["<message>"]}'
+  rfc9457: false
+  ref: errors/clarifeye-problem-types.yml
+impersonation:
+  supported: true        # backoffice supports acting as an impersonated ("effective") user
+rate_limiting:
+  documented: false      # no published rate-limit headers or limits found
+notes: >
+  Cross-cutting semantics derived from the two published OpenAPI documents and
+  the developer docs. No idempotency contract is documented, so no Idempotency
+  pointer is emitted. Async deletion is used for documents (marked deleting,
+  removed in background).

@@ -1,0 +1,38 @@
+{
+  "provider": "clarifeye",
+  "sources": [
+    "clarifeye-agent-settings-api-openapi.yml",
+    "clarifeye-conversations-api-openapi.yml",
+    "clarifeye-documents-api-openapi.yml",
+    "clarifeye-extraction-flows-api-openapi.yml",
+    "clarifeye-feedback-api-openapi.yml",
+    "clarifeye-interviews-api-openapi.yml",
+    "clarifeye-invitations-api-openapi.yml",
+    "clarifeye-notifications-api-openapi.yml",
+    "clarifeye-pipeline-runs-api-openapi.yml",
+    "clarifeye-signals-api-openapi.yml",
+    "clarifeye-tables-api-openapi.yml",
+    "clarifeye-tools-api-openapi.yml",
+    "clarifeye-users-api-openapi.yml"
+  ],
+  "outputs": [
+    "clarifeye-agent-settings-api-openapi.yml",
+    "clarifeye-conversations-api-openapi.yml",
+    "clarifeye-documents-api-openapi.yml",
+    "clarifeye-extraction-flows-api-openapi.yml",
+    "clarifeye-feedback-api-openapi.yml",
+    "clarifeye-interviews-api-openapi.yml",
+    "clarifeye-invitations-api-openapi.yml",
+    "clarifeye-notifications-api-openapi.yml",
+    "clarifeye-pipeline-runs-api-openapi.yml",
+    "clarifeye-signals-api-openapi.yml",
+    "clarifeye-tables-api-openapi.yml",
+    "clarifeye-tools-api-openapi.yml",
+    "clarifeye-users-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [],
+  "warnings": [],
+  "notes": [],
+  "skipped": []
+}

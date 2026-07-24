@@ -1,0 +1,21 @@
+generated: '2026-07-18'
+method: generated
+source: openapi/clarifeye-openapi-original.yaml
+note: >
+  Generated Agent Skills grounded in verified operationIds from the Clarifeye
+  Public API. Clarifeye also publishes a downloadable "Clarifeye skill" per
+  knowledge store (from the Deploy tab) that wires an AI client to the hosted
+  MCP server; that package is gated and not fetched here.
+skills:
+- file: clarifeye-manage-documents.md
+  name: Ingest and manage knowledge-store documents
+  api: openapi/clarifeye-openapi-original.yaml
+  operations: [bulkUploadDocuments, getDocumentIndexingStatus, listDocumentsWithoutFile, filterDocumentsByTag, filterDocumentsByMetadata, deleteDocument]
+- file: clarifeye-run-tool.md
+  name: Discover and run a knowledge-store tool
+  api: openapi/clarifeye-openapi-original.yaml
+  operations: [listTools, getToolParameters, runTool]
+- file: clarifeye-signals-loop.md
+  name: Submit and triage knowledge signals
+  api: openapi/clarifeye-openapi-original.yaml
+  operations: [submitSignal, listSignals, updateSignal]

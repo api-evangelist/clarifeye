@@ -1,0 +1,33 @@
+generated: '2026-07-18'
+method: searched
+source: https://eu.app.clarifeye.ai/.well-known/oauth-authorization-server
+docs: https://docs.clarifeye.ai/guides/mcp-authentication
+note: >
+  Clarifeye's OAuth surface backs the hosted MCP server, not the REST API
+  (the REST OpenAPI declares only Bearer token / Token apiKey auth). Scopes
+  are enumerated by the OAuth authorization-server discovery document and by
+  the MCP authentication guide. Dynamic Client Registration (RFC 7591) is
+  supported at /o/register/; PKCE S256 required.
+schemes:
+- name: OAuth2
+  source: https://eu.app.clarifeye.ai/.well-known/oauth-authorization-server
+  flows:
+  - flow: authorizationCode
+    authorizationUrl: https://eu.app.clarifeye.ai/o/authorize/
+    tokenUrl: https://eu.app.clarifeye.ai/o/token/
+    refreshUrl: https://eu.app.clarifeye.ai/o/token/
+    registrationUrl: https://eu.app.clarifeye.ai/o/register/
+    revocationUrl: https://eu.app.clarifeye.ai/o/revoke/
+scopes:
+- scope: claudeai
+  description: MCP access scope for Claude / AI-client connectors to the Clarifeye knowledge stores.
+  flows: [authorizationCode]
+  sources: [https://eu.app.clarifeye.ai/.well-known/oauth-authorization-server]
+- scope: openid
+  description: OpenID Connect scope; identifies the authenticated user (whoami).
+  flows: [authorizationCode]
+  sources: [https://eu.app.clarifeye.ai/.well-known/oauth-authorization-server]
+- scope: offline_access
+  description: Requests a refresh token so the client can maintain access without re-consent.
+  flows: [authorizationCode]
+  sources: [https://eu.app.clarifeye.ai/.well-known/oauth-authorization-server]

@@ -1,0 +1,4132 @@
+openapi: 3.0.3
+info:
+  title: Clarifeye Platform API
+  description: >
+    REST API for the Clarifeye Platform - Document intelligence and AI-powered
+    analysis.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in
+    every request using either format:
+
+    - `Authorization: Token <token_key>`
+
+    - `Authorization: Bearer <token_key>`
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on
+    behalf of other users.
+
+    This is useful for integrating external systems that need to attribute
+    actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to
+    enable this permission)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required
+    permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original
+    authenticated user
+
+    - If the target user does not have access to the project, the request
+    proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission,
+    the header is ignored
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+  - url: https://eu.app.clarifeye.ai/api/v1
+    description: EU
+  - url: https://us.app.clarifeye.ai/api/v1
+    description: US
+security:
+  - BearerAuth: []
+  - TokenAuth: []
+tags:
+  - name: Users
+    description: Manage users within a project
+  - name: Invitations
+    description: Manage project invitations
+  - name: Documents
+    description: Manage documents within a project
+  - name: Agent Settings
+    description: Manage AI agent configurations
+  - name: Conversations
+    description: Create and interact with AI-powered conversations
+  - name: Feedback
+    description: Submit feedback on conversation messages
+  - name: Tools
+    description: Execute configured AI tools with custom parameters
+  - name: Tables
+    description: Perform CRUD operations on warehouse tables
+  - name: Notifications
+    description: Manage project-scoped notifications for users
+  - name: Extraction Flows
+    description: >-
+      Manage extraction flows (auto-sync DAGs) — list, run, inspect statistics,
+      update, and publish
+  - name: Pipeline Runs
+    description: >-
+      Inspect pipeline runs queued by extraction flows or other pipeline
+      triggers — list runs and fetch the details/status of a single run
+paths:
+  /projects/{project_id}/users/:
+    get:
+      tags:
+        - Users
+      summary: List project users
+      description: Retrieve all users with access to a project.
+      operationId: listProjectUsers
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: search
+          in: query
+          description: Filter by email (case-insensitive partial match)
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectPermission'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/users/remove-by-email/:
+    post:
+      tags:
+        - Users
+      summary: Remove user by email
+      description: >-
+        Remove a user from the project using their email address. Users cannot
+        remove themselves.
+      operationId: removeUserByEmail
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email address of the user to remove
+                  example: user@example.com
+      responses:
+        '204':
+          description: User successfully removed
+        '400':
+          description: Bad request - user not found or trying to remove yourself
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/users/{permission_id}/:
+    patch:
+      tags:
+        - Users
+      summary: Update user permissions
+      description: Update a user's permissions on the project.
+      operationId: updateUserPermissions
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: permission_id
+          in: path
+          required: true
+          description: UUID of the permission record
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - permissions
+              properties:
+                permissions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PermissionType'
+                  example:
+                    - CAN_VIEW_DATA
+                    - CAN_PERFORM_ADMIN_ACTIONS
+      responses:
+        '200':
+          description: Permissions updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectPermission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/invites/:
+    get:
+      tags:
+        - Invitations
+      summary: List invitations
+      description: >-
+        Retrieve all invitations for a project with optional filtering by
+        status.
+      operationId: listInvitations
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: status
+          in: query
+          description: Filter by invitation status
+          schema:
+            $ref: '#/components/schemas/InvitationStatus'
+        - name: search
+          in: query
+          description: Filter by email (case-insensitive partial match)
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectInvite'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/invites/invite/:
+    post:
+      tags:
+        - Invitations
+      summary: Invite user to project
+      description: >
+        Invite a user to join the project.
+
+        - For new users (not registered): Creates a pending invite and sends an
+        email.
+
+        - For existing users: Automatically accepts the invite and sends a
+        notification.
+      operationId: inviteUser
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - permissions
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email address of the user to invite
+                  example: user@example.com
+                permissions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PermissionType'
+                  description: Permissions to grant to the user
+                  example:
+                    - CAN_VIEW_DATA
+                    - CAN_RUN_TASKS
+      responses:
+        '201':
+          description: Invitation created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ProjectInvite'
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - new_user
+                          - existing_user
+                        description: |
+                          - `new_user`: User not registered, invite is pending
+                          - `existing_user`: User exists, invite auto-accepted
+        '400':
+          description: >-
+            Bad request - invalid permissions, user already invited, or user
+            already has access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/invites/{invite_id}/:
+    delete:
+      tags:
+        - Invitations
+      summary: Cancel invitation
+      description: Cancel a pending invitation. Only pending invitations can be cancelled.
+      operationId: cancelInvitation
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: invite_id
+          in: path
+          required: true
+          description: UUID of the invitation
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Invitation cancelled successfully
+        '400':
+          description: Cannot cancel non-pending invitation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/documents/bulk-upload/:
+    post:
+      tags:
+        - Documents
+      summary: Bulk upload documents
+      description: >-
+        Upload multiple documents at once. Optionally skip the automatic parsing
+        pipeline.
+      operationId: bulkUploadDocuments
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: One or more files to upload
+                skip_parsing:
+                  type: string
+                  enum:
+                    - 'true'
+                    - 'false'
+                  default: 'false'
+                  description: Set to "true" to skip automatic parsing pipeline
+      responses:
+        '201':
+          description: Documents uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+        '400':
+          description: Bad request - no files uploaded or invalid file format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/documents/{document_id}/:
+    delete:
+      tags:
+        - Documents
+      summary: Delete document
+      description: >
+        Delete a document from the project. Deletion is performed asynchronously
+        -
+
+        the document is marked as "deleting" and removed in the background.
+      operationId: deleteDocument
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/DocumentId'
+      responses:
+        '204':
+          description: Document deletion initiated
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/documents/get-without-file/:
+    get:
+      tags:
+        - Documents
+      summary: List documents without file data
+      description: Retrieve document metadata without file URLs for faster response times.
+      operationId: listDocumentsWithoutFile
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DocumentMinimal'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/documents/filter-by-tag/:
+    post:
+      tags:
+        - Documents
+      summary: Filter documents by tag values
+      description: >
+        Retrieve documents that match one or more tag values (case-insensitive).
+
+        Pass tag values as a JSON array to avoid delimiter issues with values
+        containing commas.
+      operationId: filterDocumentsByTag
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tag_values
+              properties:
+                tag_values:
+                  type: array
+                  items:
+                    type: string
+                  description: >-
+                    List of tag values to filter by (OR logic,
+                    case-insensitive).
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DocumentMinimal'
+        '400':
+          description: Missing or invalid tag_values array
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/documents/filter-by-metadata/:
+    post:
+      tags:
+        - Documents
+      summary: Filter documents by metadata values
+      description: >
+        Retrieve documents whose metadata contains one or more of the given
+        values (case-insensitive, OR logic).
+
+
+        Document metadata is stored as a list of `[key, value]` pairs. This
+        endpoint matches against the
+
+        **value** part of each pair. For example, if a document has metadata
+        `[["category", "Finance"]]`,
+
+        passing `metadata_values: ["finance"]` will match it.
+
+
+        > **Note:** This endpoint requires documents to have metadata set. See
+        the metadata management
+
+        > endpoints below to add metadata to documents.
+      operationId: filterDocumentsByMetadata
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - metadata_values
+              properties:
+                metadata_values:
+                  type: array
+                  items:
+                    type: string
+                  description: >-
+                    List of metadata values to filter by (OR logic,
+                    case-insensitive).
+            example:
+              metadata_values:
+                - Finance
+                - Legal
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DocumentMinimal'
+        '400':
+          description: Missing or invalid metadata_values array
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/available-document-tags/:
+    get:
+      tags:
+        - Documents
+      summary: List available document tags
+      description: >
+        Retrieve all available document tag names and their possible values for
+        the project.
+
+
+        Values are aggregated from both the tag extractor configuration
+        (predefined possible values)
+
+        and actual tag data already extracted from documents. Results are
+        deduplicated and sorted.
+
+
+        Document tags are **LLM-inferred** by tag extractors during pipeline
+        runs,
+
+        whereas document metadata is **user-entered** (supplied at upload time
+        or edited
+
+        via the metadata endpoints).
+      operationId: getAvailableDocumentTags
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+                description: |
+                  Map of tag names to their available values.
+              example:
+                document_type:
+                  - Contract
+                  - Invoice
+                  - Report
+                language:
+                  - English
+                  - French
+                  - German
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/available-document-metadata/:
+    get:
+      tags:
+        - Documents
+      summary: List available document metadata
+      description: >
+        Retrieve all metadata keys and their distinct values across all active
+        documents in the project.
+
+
+        This is useful for building filter UIs or understanding what metadata
+        has been applied to documents.
+
+
+        Document metadata is **user-entered** (supplied at upload time or edited
+        via the metadata endpoints),
+
+        whereas document tags are **LLM-inferred** by tag extractors during
+        pipeline runs.
+
+
+        > **Note:** Document metadata requires the project to use the
+        **auto-sync** data versioning option.
+      operationId: getAvailableDocumentMetadata
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+                description: |
+                  Map of metadata keys to their distinct values (sorted).
+              example:
+                tag:
+                  - Finance
+                  - Legal
+                source_path:
+                  - /path/to/document.pdf
+                  - /path/to/document.docx
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/document-tags-by-document/:
+    get:
+      tags:
+        - Documents
+      summary: Get document tags grouped by document
+      description: >
+        Retrieve all document tags for the project, grouped by document ID.
+
+        Optionally filter by specific document IDs.
+
+
+        Each tag includes its name, value, and origin information (which
+        table/row it came from).
+      operationId: getDocumentTagsByDocument
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: document_ids
+          in: query
+          required: false
+          description: >-
+            Comma-separated list of document UUIDs to filter by. If omitted,
+            returns tags for all documents.
+          schema:
+            type: string
+          example: >-
+            550e8400-e29b-41d4-a716-446655440000,6ba7b810-9dad-11d1-80b4-00c04fd430c8
+        - name: include_deleted_rows
+          in: query
+          required: false
+          description: Whether to include soft-deleted tag rows. Defaults to false.
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    tags:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          tag_name:
+                            type: string
+                          tag_value:
+                            type: string
+                          origin:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  description: Row ID
+                                table:
+                                  type: string
+                                  format: uuid
+                                  description: Table ID
+                                table_version_id:
+                                  type: string
+                                  format: uuid
+                                  description: Table version ID
+                description: |
+                  Map of document IDs to their tags with origin information.
+              example:
+                550e8400-e29b-41d4-a716-446655440000:
+                  tags:
+                    - tag_name: document_type
+                      tag_value: Contract
+                      origin:
+                        - id: row-1
+                          table: table-uuid
+                          table_version_id: version-uuid
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/documents/{document_id}/metadata-add/:
+    post:
+      tags:
+        - Documents
+      summary: Add metadata to a document
+      description: >
+        Add a key-value metadata pair to a document. The pair is appended to the
+        document's
+
+        existing metadata list.
+
+
+        Metadata is stored as a list of `[key, value]` string pairs. A document
+        can have
+
+        multiple values for the same key.
+
+
+        > **Requires** the project to use the **auto-sync** data versioning
+        option.
+      operationId: addDocumentMetadata
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/DocumentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetadataKeyValue'
+            example:
+              key: category
+              value: Finance
+      responses:
+        '200':
+          description: Metadata added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          description: Invalid request body
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/documents/{document_id}/metadata-remove-pair/:
+    post:
+      tags:
+        - Documents
+      summary: Remove a specific metadata pair
+      description: >
+        Remove a specific key-value pair from a document's metadata. Both key
+        and value
+
+        must match exactly for the pair to be removed.
+
+
+        > **Requires** the project to use the **auto-sync** data versioning
+        option.
+      operationId: removeDocumentMetadataPair
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/DocumentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetadataKeyValue'
+            example:
+              key: category
+              value: Finance
+      responses:
+        '200':
+          description: Operation completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  removed:
+                    type: boolean
+                    description: Whether the pair was found and removed
+                  document:
+                    $ref: '#/components/schemas/Document'
+        '400':
+          description: Invalid request body
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/documents/{document_id}/metadata-remove-key/:
+    post:
+      tags:
+        - Documents
+      summary: Remove all metadata pairs for a key
+      description: >
+        Remove all metadata pairs matching the given key from a document,
+        regardless
+
+        of their values.
+
+
+        > **Requires** the project to use the **auto-sync** data versioning
+        option.
+      operationId: removeDocumentMetadataKey
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/DocumentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - key
+              properties:
+                key:
+                  type: string
+                  description: The metadata key to remove
+            example:
+              key: category
+      responses:
+        '200':
+          description: Operation completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  removed_count:
+                    type: integer
+                    description: Number of pairs removed
+                  document:
+                    $ref: '#/components/schemas/Document'
+        '400':
+          description: Invalid request body
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/documents/{document_id}/metadata-values/:
+    get:
+      tags:
+        - Documents
+      summary: Get metadata values for a key
+      description: >
+        Retrieve all values associated with a given metadata key on a document.
+
+
+        > **Requires** the project to use the **auto-sync** data versioning
+        option.
+      operationId: getDocumentMetadataValues
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/DocumentId'
+        - name: key
+          in: query
+          required: true
+          description: The metadata key to retrieve values for
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: The requested metadata key
+                  values:
+                    type: array
+                    items:
+                      type: string
+                    description: All values for the given key
+              example:
+                key: category
+                values:
+                  - Finance
+                  - Legal
+        '400':
+          description: Missing query parameter 'key'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/agent-settings/:
+    get:
+      tags:
+        - Agent Settings
+      summary: List agent settings
+      description: |
+        Retrieve all agent settings (AI agent configurations) for a project.
+        Results are ordered by most recently updated first.
+      operationId: listAgentSettings
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AgentSettings'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/playground-conversations/:
+    get:
+      tags:
+        - Conversations
+      summary: List conversations
+      description: >
+        Retrieve all conversations for a project with optional filtering.
+
+
+        **Access Control:**
+
+        - Admins see all conversations (including shared ones)
+
+        - Regular users see only conversations they created (including their own
+        shared ones)
+
+        - Shared conversations from other users are not shown in the list but
+        are accessible via direct URL
+
+
+        **Impersonation:**
+
+        - When using impersonation, returns conversations created by the
+        impersonated user
+
+
+        **Filtering:**
+
+        - Tags filtering uses OR logic (matches any of the provided tags)
+
+        - Text filtering uses AND logic (combined with tag filters)
+      operationId: listConversations
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+        - name: tags
+          in: query
+          description: >-
+            Filter by tags (OR logic). Can be specified multiple times or
+            comma-separated.
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          example:
+            - analysis
+            - review
+        - name: no_tags
+          in: query
+          description: Set to "true" to filter for conversations with no tags
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: text
+          in: query
+          description: Search text within chat history (case-insensitive)
+          schema:
+            type: string
+        - name: include_archived
+          in: query
+          description: >-
+            Set to "true" to include archived conversations in results. Defaults
+            to false (active conversations only).
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Conversation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Conversations
+      summary: Create conversation
+      description: >
+        Create a new AI-powered conversation.
+
+
+        **Impersonation:**
+
+        - When using impersonation, the conversation is created as the
+        impersonated user
+      operationId: createConversation
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - agent_settings
+              properties:
+                name:
+                  type: string
+                  description: Conversation name (auto-generated if not provided)
+                  example: Analysis Session
+                type:
+                  type: string
+                  default: playground
+                  description: Conversation type
+                agent_settings:
+                  type: string
+                  format: uuid
+                  description: ID of the agent settings to use
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: Tags for organizing conversations
+                  example:
+                    - analysis
+                    - review
+                conversation_instructions:
+                  type: string
+                  description: Custom instructions for this conversation
+                  example: Focus on financial data extraction
+      responses:
+        '201':
+          description: Conversation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/playground-conversations/{conversation_id}/:
+    get:
+      tags:
+        - Conversations
+      summary: Get conversation
+      description: |
+        Retrieve a conversation with its complete chat history.
+
+        **Access Control:**
+        - Admins can access any conversation
+        - Regular users can access their own conversations
+        - All project members can access shared conversations via direct URL
+      operationId: getConversation
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ConversationId'
+        - name: include_archived
+          in: query
+          description: >-
+            Set to "true" to allow retrieving an archived conversation. Defaults
+            to false.
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Conversations
+      summary: Archive conversation
+      description: >
+        Soft-archive a conversation. The conversation is hidden from default
+        list/get endpoints
+
+        but is preserved in the database along with all linked feedback.
+
+
+        To permanently delete an archived conversation, use the
+        `permanent_delete` action.
+
+        To restore an archived conversation, use the `unarchive` action.
+
+
+        **Access Control:**
+
+        - Admins can archive any conversation
+
+        - Regular users can only archive conversations they created
+
+
+        **Impersonation:**
+
+        - When using impersonation, the ownership check is performed against the
+        impersonated user
+      operationId: archiveConversation
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ConversationId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '204':
+          description: Conversation archived successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden - user does not own this conversation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/playground-conversations/{conversation_id}/unarchive/:
+    post:
+      tags:
+        - Conversations
+      summary: Unarchive conversation
+      description: |
+        Restore a previously archived conversation back to active status.
+
+        **Access Control:**
+        - Admins can unarchive any conversation
+        - Regular users can only unarchive conversations they created
+      operationId: unarchiveConversation
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ConversationId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '204':
+          description: Conversation unarchived successfully
+        '400':
+          description: Conversation is not archived
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/playground-conversations/{conversation_id}/permanent_delete/:
+    post:
+      tags:
+        - Conversations
+      summary: Permanently delete conversation
+      description: >
+        Permanently delete an archived conversation and all its associated
+        feedbacks.
+
+        This action is irreversible.
+
+
+        The conversation must be archived first (via the DELETE endpoint) before
+        it can be permanently deleted.
+
+
+        **Access Control:**
+
+        - Superusers only, or project members with `CAN_PERFORM_ADMIN_ACTIONS`
+        permission
+      operationId: permanentDeleteConversation
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ConversationId'
+      responses:
+        '204':
+          description: Conversation permanently deleted
+        '400':
+          description: Conversation is not archived
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden - admin permission required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/playground-conversations/{conversation_id}/send_message_stream/:
+    post:
+      tags:
+        - Conversations
+      summary: Send message (streaming)
+      description: >
+        Send a message and receive a streaming response using Server-Sent Events
+        (SSE).
+
+
+        The response is a stream of newline-delimited JSON events. Use this
+        endpoint for both
+
+        initial messages and follow-up messages - conversation context is
+        automatically preserved.
+
+
+        **Access Control:**
+
+        - For shared conversations, only the creator or admins can send messages
+
+        - Other project members can view shared conversations but cannot send
+        messages
+
+
+        **Impersonation:**
+
+        - When using impersonation, the message is sent as the impersonated user
+
+
+        ## Streaming Event Types
+
+
+        | Type | Description |
+
+        |------|-------------|
+
+        | `streaming_in_progress` | Intermediate event during response
+        generation |
+
+        | `streaming_error` | Error occurred during streaming |
+
+        | `streaming_completed` | Final event with complete chat history |
+
+
+        ## Payload Types (within streaming_in_progress)
+
+
+        | Payload Type | Description |
+
+        |--------------|-------------|
+
+        | `start_token_streaming` | Stream is starting |
+
+        | `token_streaming` | Text token being streamed |
+
+        | `tool_call_request` | Tool is being invoked |
+
+        | `tool_call` | Tool execution results |
+
+        | `reasoning` | Reasoning step |
+      operationId: sendMessageStream
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ConversationId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  description: The user message to send
+                  example: What information do you have about product pricing?
+      responses:
+        '200':
+          description: Server-Sent Events stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              examples:
+                streaming:
+                  summary: Example streaming response
+                  value: >
+                    data: {"type_streaming": "streaming_in_progress", "payload":
+                    {"type": "start_token_streaming", "content": ""}}
+
+
+                    data: {"type_streaming": "streaming_in_progress", "payload":
+                    {"type": "token_streaming", "content": "The"}}
+
+
+                    data: {"type_streaming": "streaming_in_progress", "payload":
+                    {"type": "token_streaming", "content": "The document"}}
+
+
+                    data: {"type_streaming": "streaming_in_progress", "payload":
+                    {"type": "tool_call", "tool_type": "semantic_chunks",
+                    "results": [...]}}
+
+
+                    data: {"type_streaming": "streaming_completed", "payload":
+                    {"conversation_id": "uuid", "chat_history": [...]}}
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/playground-conversations/all-tags/:
+    get:
+      tags:
+        - Conversations
+      summary: Get all conversation tags
+      description: >
+        Retrieve all unique tags used across conversations in the project.
+
+
+        **Access Control:**
+
+        - Admins see tags from all conversations
+
+        - Regular users see only tags from conversations they created
+
+
+        **Impersonation:**
+
+        - When using impersonation, returns tags from conversations created by
+        the impersonated user
+      operationId: getAllConversationTags
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                    description: List of unique tags sorted alphabetically
+                    example:
+                      - analysis
+                      - important
+                      - review
+                  count:
+                    type: integer
+                    description: Total number of unique tags
+                    example: 3
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/playground-conversations/{conversation_id}/share/:
+    post:
+      tags:
+        - Conversations
+      summary: Share conversation
+      description: >
+        Share a conversation with all workspace members.
+
+
+        When shared:
+
+        - The conversation becomes accessible to all project members via direct
+        URL
+
+        - The conversation is hidden from the conversation list (to reduce
+        clutter)
+
+        - Only the creator and admins can send messages (read-only for others)
+
+
+        **Access Control:**
+
+        - Only the conversation creator or project admins can share a
+        conversation
+      operationId: shareConversation
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ConversationId'
+      responses:
+        '200':
+          description: Conversation shared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  is_shared:
+                    type: boolean
+                    example: true
+        '400':
+          description: Conversation is already shared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Permission denied - only creator or admin can share
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/playground-conversations/{conversation_id}/unshare/:
+    post:
+      tags:
+        - Conversations
+      summary: Unshare conversation
+      description: >
+        Remove sharing from a conversation.
+
+
+        When unshared:
+
+        - The conversation returns to the creator's conversation list
+
+        - Other project members lose access to the conversation
+
+
+        **Access Control:**
+
+        - Only the conversation creator or project admins can unshare a
+        conversation
+      operationId: unshareConversation
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ConversationId'
+      responses:
+        '200':
+          description: Conversation unshared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  is_shared:
+                    type: boolean
+                    example: false
+        '400':
+          description: Conversation is not shared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Permission denied - only creator or admin can unshare
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/feedbacks/:
+    get:
+      tags:
+        - Feedback
+      summary: List feedback
+      description: >
+        Retrieve all feedback for a project with optional filtering.
+
+
+        **Access Control:**
+
+        - Admins see all feedback in the project
+
+        - Regular users see only feedback they submitted
+
+
+        **Impersonation:**
+
+        - When using impersonation, returns feedback submitted by the
+        impersonated user
+
+
+        **Sorting:**
+
+        - Results are ordered by most recently updated first (`updated_at`
+        field)
+
+
+        **Note:** For grouped views by conversation, use
+        `/projects/{project_id}/feedbacks/grouped_by_conversation/`
+      operationId: listFeedback
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+        - name: status
+          in: query
+          description: Filter by feedback status
+          schema:
+            $ref: '#/components/schemas/FeedbackStatus'
+        - name: is_positive
+          in: query
+          description: Filter by sentiment
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          description: Search in feedback text or user email (case-insensitive)
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        description: Array of Feedback objects
+                        items:
+                          $ref: '#/components/schemas/Feedback'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Feedback
+      summary: Submit feedback on a message
+      description: >
+        Provide feedback on a specific message in a conversation.
+
+
+        **Impersonation:**
+
+        - When using impersonation, the feedback is submitted as the
+        impersonated user
+
+
+        ## Feedback Types
+
+
+        | Type | is_positive Value | Description |
+
+        |------|-------------------|-------------|
+
+        | Thumbs up | `true` | Positive feedback |
+
+        | Thumbs down | `false` | Negative feedback |
+
+        | Neutral | `null` | Neutral or no sentiment |
+
+
+        ## Query ID
+
+
+        The `query_id` identifies a specific user query and all related
+        responses.
+
+        It can be obtained from:
+
+        - The streaming response (each message contains `query_id`)
+
+        - The `streaming_completed` event's `chat_history`
+
+        - The conversation retrieval endpoint
+      operationId: submitFeedback
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - context
+              properties:
+                feedback:
+                  type: string
+                  description: Text comment (can be empty for quick feedback)
+                  example: This answer was helpful and accurate
+                context:
+                  type: object
+                  required:
+                    - conversation_id
+                    - query_id
+                    - source
+                  properties:
+                    conversation_id:
+                      type: string
+                      format: uuid
+                      description: ID of the conversation
+                    query_id:
+                      type: integer
+                      description: Query ID of the message to provide feedback on
+                      example: 0
+                    source:
+                      type: string
+                      enum:
+                        - PlaygroundConversation
+                      description: Source of the feedback
+                is_positive:
+                  type: boolean
+                  nullable: true
+                  description: |
+                    - `true`: Positive feedback (thumbs up)
+                    - `false`: Negative feedback (thumbs down)
+                    - `null`: Neutral feedback
+                  example: true
+      responses:
+        '201':
+          description: Feedback submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/feedbacks/{feedback_id}/:
+    patch:
+      tags:
+        - Feedback
+      summary: Update feedback status
+      description: >
+        Mark feedback as reviewed or update other fields.
+
+
+        **Access Control:**
+
+        - Admins can update any feedback
+
+        - Regular users can only update feedback they submitted
+
+
+        **Impersonation:**
+
+        - When using impersonation, the ownership check is performed against the
+        impersonated user
+
+        - This allows updating feedback submitted by the impersonated user
+      operationId: updateFeedback
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: feedback_id
+          in: path
+          required: true
+          description: UUID of the feedback
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  $ref: '#/components/schemas/FeedbackStatus'
+                feedback:
+                  type: string
+                  description: Updated feedback text
+                is_positive:
+                  type: boolean
+                  nullable: true
+                  description: Updated sentiment
+      responses:
+        '200':
+          description: Feedback updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden - user does not own this feedback
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Feedback
+      summary: Delete feedback
+      description: >
+        Remove feedback.
+
+
+        **Access Control:**
+
+        - Admins can delete any feedback
+
+        - Regular users can only delete feedback they submitted
+
+
+        **Impersonation:**
+
+        - When using impersonation, the ownership check is performed against the
+        impersonated user
+
+        - This allows deleting feedback submitted by the impersonated user
+      operationId: deleteFeedback
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: feedback_id
+          in: path
+          required: true
+          description: UUID of the feedback
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '204':
+          description: Feedback deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden - user does not own this feedback
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/feedbacks/grouped_by_conversation/:
+    get:
+      tags:
+        - Feedback
+      summary: Get feedbacks grouped by conversation
+      description: >
+        Retrieve feedbacks grouped by their associated playground conversation
+        with unified pagination and sorting.
+
+
+        **Access Control:**
+
+        - Admins see all feedback in the project
+
+        - Regular users see only feedback they submitted
+
+
+        **Grouping Logic:**
+
+        - Feedbacks are grouped by their `conversation` field (FK to
+        PlaygroundConversation)
+
+        - Conversation groups and ungrouped feedbacks are returned in a single
+        flat array
+
+        - Ungrouped feedbacks appear as single-item groups with
+        `conversation_id: null`
+
+        - Each group includes status counts and all associated feedbacks
+
+
+        **Pagination:**
+
+        - Paginates across the unified list of conversation groups and ungrouped
+        feedbacks
+
+        - Use `limit` and `offset` parameters to page through results
+
+        - The `count` field reflects the total number of displayable groups
+        (conversations + ungrouped)
+
+
+        **Status Filtering:**
+
+        - `status=to_review`: Groups with ANY unreviewed feedback
+
+        - `status=reviewed`: Groups where ALL feedbacks are reviewed
+
+        - No status filter: All groups
+
+
+        **Sorting:**
+
+        - All groups are sorted together by the most recent feedback update time
+
+        - With `status=to_review`: Sorted by the most recent "to_review"
+        feedback update
+
+        - With `status=reviewed`: Sorted by the most recent "reviewed" feedback
+        update
+
+        - Without status filter: Sorted by the most recent feedback update (any
+        status)
+
+        - Feedbacks within each group are ordered by most recently updated first
+
+
+        **Impersonation:**
+
+        - When using impersonation, returns feedback submitted by the
+        impersonated user
+      operationId: getGroupedFeedbacks
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+        - name: status
+          in: query
+          description: Filter by conversation status (based on feedback statuses)
+          schema:
+            $ref: '#/components/schemas/FeedbackStatus'
+        - name: search
+          in: query
+          description: Search in feedback text or user email (case-insensitive)
+          schema:
+            type: string
+        - name: include_archived
+          in: query
+          description: >-
+            Set to "true" to include feedbacks from archived conversations.
+            Defaults to false.
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        description: >
+                          Flat array of conversation groups and ungrouped
+                          feedbacks, sorted by last updated feedback.
+
+                          Ungrouped feedbacks appear as single-item groups with
+                          `conversation_id: null`.
+                        items:
+                          $ref: '#/components/schemas/ConversationFeedbackGroup'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/feedbacks/mark_conversation_reviewed/:
+    post:
+      tags:
+        - Feedback
+      summary: Mark all feedbacks in a conversation as reviewed
+      description: >
+        Update the status of all feedbacks associated with a specific
+        conversation to "reviewed".
+
+
+        **Access Control:**
+
+        - Admins can update all feedbacks in the project
+
+        - Regular users can only update feedback they submitted
+
+
+        **Impersonation:**
+
+        - When using impersonation, only updates feedback submitted by the
+        impersonated user
+      operationId: markConversationReviewed
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - conversation_id
+              properties:
+                conversation_id:
+                  type: string
+                  format: uuid
+                  description: >-
+                    ID of the conversation whose feedbacks should be marked as
+                    reviewed
+                  example: 123e4567-e89b-12d3-a456-426614174000
+            example:
+              conversation_id: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        '200':
+          description: Feedbacks updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated_count:
+                    type: integer
+                    description: Number of feedbacks updated
+                    example: 3
+                  conversation_id:
+                    type: string
+                    format: uuid
+                    description: ID of the conversation whose feedbacks were updated
+                    example: 123e4567-e89b-12d3-a456-426614174000
+                  new_status:
+                    type: string
+                    description: The new status that was applied to the feedbacks
+                    example: reviewed
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/feedbacks/counts/:
+    get:
+      tags:
+        - Feedback
+      summary: Get feedback counts by status
+      description: >
+        Retrieve comprehensive counts of feedbacks split by status, conversation
+        grouping, and ungrouped feedbacks.
+
+
+        **Access Control:**
+
+        - Admins see counts for all feedback in the project
+
+        - Regular users see counts only for feedback they submitted
+
+
+        **Impersonation:**
+
+        - When using impersonation, returns counts for feedback submitted by the
+        impersonated user
+      operationId: getFeedbackCounts
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  to_review:
+                    type: integer
+                    description: >-
+                      Total count of individual feedbacks with status
+                      "to_review"
+                    example: 28
+                  reviewed:
+                    type: integer
+                    description: Total count of individual feedbacks with status "reviewed"
+                    example: 45
+                  conversations_to_review:
+                    type: integer
+                    description: >-
+                      Count of conversations with at least one unreviewed
+                      feedback
+                    example: 12
+                  conversations_reviewed:
+                    type: integer
+                    description: Count of conversations where ALL feedbacks are reviewed
+                    example: 8
+                  ungrouped_to_review:
+                    type: integer
+                    description: >-
+                      Count of feedbacks without a conversation that are
+                      "to_review"
+                    example: 4
+                  ungrouped_reviewed:
+                    type: integer
+                    description: >-
+                      Count of feedbacks without a conversation that are
+                      "reviewed"
+                    example: 2
+              examples:
+                ungrouped:
+                  summary: Individual feedback counts
+                  value:
+                    to_review: 8
+                    reviewed: 15
+                grouped:
+                  summary: Conversation counts
+                  value:
+                    to_review: 3
+                    reviewed: 7
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/tools/{tool_id}/run/:
+    post:
+      tags:
+        - Tools
+      summary: Run a tool
+      description: >
+        Execute a configured tool with provided parameters.
+
+
+        The request body varies based on the tool type. Most tools accept a
+        `query` parameter
+
+        and optional parameters like `top_k` for controlling result count.
+      operationId: runTool
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ToolId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToolRunRequest'
+            examples:
+              retrieval:
+                summary: Retrieval tool example
+                value:
+                  query: What are the key findings about revenue growth?
+                  top_k: 10
+              document_retrieval:
+                summary: Document retrieval example
+                value:
+                  query: financial reports
+                  top_k: 5
+      responses:
+        '200':
+          description: Tool execution successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolRunResponse'
+        '400':
+          description: Invalid syntax or query errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Tool or index not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolError'
+        '500':
+          description: Database or internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolError'
+  /projects/{project_id}/tables/{table_id}/data-operations/:
+    post:
+      tags:
+        - Tables
+      summary: Execute data operations
+      description: >
+        Execute CRUD operations on table data.
+
+
+        **Operations:**
+
+        - `read`: Retrieve records with optional filtering and pagination
+
+        - `create`: Insert new records
+
+        - `update`: Update existing records (use `override` for full
+        replacement)
+
+        - `delete`: Remove records matching filters
+
+
+        **Filtering:**
+
+        Use the `filters` parameter to filter records by field values.
+
+        Example: `{"document_id": "550e8400-e29b-41d4-a716-446655440000"}`
+
+
+        **Column Selection:**
+
+        Use the `columns` parameter to specify which fields to return in the
+        response.
+      operationId: dataOperations
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/TableId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataOperationRequest'
+            examples:
+              read:
+                summary: Read with filters
+                value:
+                  operation: read
+                  filters:
+                    document_id: 550e8400-e29b-41d4-a716-446655440000
+                  columns:
+                    - id
+                    - content
+                    - document_id
+                  limit: 50
+                  offset: 0
+              create:
+                summary: Create records
+                value:
+                  operation: create
+                  data:
+                    - field1: value1
+                      field2: value2
+              update:
+                summary: Update records
+                value:
+                  operation: update
+                  filters:
+                    id: 550e8400-e29b-41d4-a716-446655440000
+                  data:
+                    - field1: updated_value
+                  override: false
+              delete:
+                summary: Delete by filter
+                value:
+                  operation: delete
+                  filters:
+                    document_id: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Operation executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataOperationResponse'
+        '400':
+          description: Invalid operation or missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataOperationErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataOperationErrorResponse'
+  /projects/{project_id}/notifications/:
+    get:
+      tags:
+        - Notifications
+      summary: List project notifications
+      description: >
+        List notifications for the effective user (authenticated user or
+        impersonated user).
+
+
+        **Filtering:**
+
+        - Only PROJECT-scoped notifications are returned (not account-level)
+
+        - Returns all unread notifications plus read notifications from the last
+        7 days
+
+        - Optionally filter by status using the `status` query parameter
+
+
+        **Impersonation:**
+
+        When using the `X-Impersonate-Email` header, returns notifications for
+        the target user
+
+        instead of the authenticated user.
+      operationId: listProjectNotifications
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+        - name: status
+          in: query
+          description: Filter by notification status
+          schema:
+            $ref: '#/components/schemas/NotificationStatus'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectScopedNotification'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/notifications/{notification_id}/:
+    get:
+      tags:
+        - Notifications
+      summary: Retrieve a notification
+      description: >
+        Retrieve details of a single notification for the effective user.
+
+
+        **Impersonation:**
+
+        When using the `X-Impersonate-Email` header, retrieves the notification
+        for the target user.
+      operationId: getProjectNotification
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/NotificationId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectScopedNotification'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Notifications
+      summary: Delete a notification
+      description: >
+        Delete a single notification for the effective user.
+
+
+        **Impersonation:**
+
+        When using the `X-Impersonate-Email` header, deletes the notification
+        for the target user.
+      operationId: deleteProjectNotification
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/NotificationId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '204':
+          description: Notification deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/notifications/{notification_id}/mark-as-read/:
+    post:
+      tags:
+        - Notifications
+      summary: Mark notification as read
+      description: >
+        Mark a single notification as read for the effective user.
+
+
+        **Impersonation:**
+
+        When using the `X-Impersonate-Email` header, marks the notification as
+        read for the target user.
+      operationId: markNotificationAsRead
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/NotificationId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: Notification marked as read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectScopedNotification'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/notifications/{notification_id}/mark-as-unread/:
+    post:
+      tags:
+        - Notifications
+      summary: Mark notification as unread
+      description: >
+        Mark a single notification as unread for the effective user.
+
+
+        **Impersonation:**
+
+        When using the `X-Impersonate-Email` header, marks the notification as
+        unread for the target user.
+      operationId: markNotificationAsUnread
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/NotificationId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: Notification marked as unread
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectScopedNotification'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/notifications/mark-all-as-read/:
+    post:
+      tags:
+        - Notifications
+      summary: Mark all notifications as read
+      description: >
+        Mark all unread project notifications as read for the effective user.
+
+
+        **Impersonation:**
+
+        When using the `X-Impersonate-Email` header, marks all notifications as
+        read for the target user.
+      operationId: markAllNotificationsAsRead
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: All notifications marked as read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationBulkActionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/notifications/delete-read/:
+    post:
+      tags:
+        - Notifications
+      summary: Delete all read notifications
+      description: >
+        Delete all read project notifications for the effective user.
+
+
+        **Impersonation:**
+
+        When using the `X-Impersonate-Email` header, deletes all read
+        notifications for the target user.
+      operationId: deleteReadNotifications
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: All read notifications deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationBulkActionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/extraction-flows/:
+    get:
+      tags:
+        - Extraction Flows
+      summary: List extraction flows
+      description: >
+        List all extraction flows for the project, ordered by most recently
+        updated.
+      operationId: listExtractionFlows
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExtractionFlow'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/extraction-flows/{flow_id}/:
+    patch:
+      tags:
+        - Extraction Flows
+      summary: Update an extraction flow
+      description: >
+        Partially update an extraction flow. The most common use is to switch
+        its
+
+        **publish mode** between `auto_publish` and `manual_publish`.
+
+
+        **Publish modes:**
+
+        - `auto_publish` — Each successful flow run automatically publishes the
+          extracted data. No separate publish step
+          is required.
+        - `manual_publish` — Flow runs only compute and persist extracted data
+        in
+          the warehouse. Publishing to downstream indexes must be triggered
+          explicitly via the `publish` action. Use this when you want to review
+          the results of a run before exposing them to search / agents.
+      operationId: updateExtractionFlow
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/FlowId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Human-readable name of the flow
+                publish_mode:
+                  type: string
+                  enum:
+                    - auto_publish
+                    - manual_publish
+                  description: >
+                    Controls whether extracted data is pushed to downstream
+                    indexes
+
+                    automatically after each run (`auto_publish`) or only on an
+
+                    explicit `publish` call (`manual_publish`).
+                dag:
+                  type: object
+                  description: DAG definition (`name` + `nodes`) for the extraction flow.
+            example:
+              publish_mode: manual_publish
+      responses:
+        '200':
+          description: Flow updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtractionFlow'
+        '400':
+          description: Invalid payload (e.g. malformed DAG or unknown publish_mode)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/extraction-flows/{flow_id}/run-sync/:
+    post:
+      tags:
+        - Extraction Flows
+      summary: Run an extraction flow
+      description: |
+        Queue a pipeline run that executes the flow's DAG across the given
+        documents (or all project documents if `document_ids` is omitted).
+
+        Returns the `pipeline_run_id` you can poll to track progress.
+      operationId: runExtractionFlow
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/FlowId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                document_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: >
+                    Optional list of document UUIDs to run the flow on. If
+                    omitted
+
+                    or empty, the flow runs against all documents in the
+                    project.
+            example:
+              document_ids:
+                - 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Sync started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sync started.
+                  pipeline_run_id:
+                    type: string
+                    format: uuid
+        '400':
+          description: Flow DAG is empty, inconsistent, or document_ids are invalid
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/extraction-flows/{flow_id}/node-stats/:
+    post:
+      tags:
+        - Extraction Flows
+      summary: Get extraction flow statistics
+      description: |
+        Dry-run cache simulation of the flow — returns, per DAG node, how many
+        inputs would be reused from cache vs. recomputed, without actually
+        executing any extraction. Useful to preview the cost/impact of a run.
+      operationId: getExtractionFlowStatistics
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/FlowId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                document_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: |
+                    Optional list of document UUIDs to scope the simulation to.
+                    When omitted, statistics are computed over all documents in
+                    the project.
+            example:
+              document_ids:
+                - 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Per-node statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                description: |
+                  Map of DAG node names to their cache/recompute statistics.
+                additionalProperties:
+                  type: object
+        '400':
+          description: Flow DAG is empty, inconsistent, or document_ids are invalid
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/extraction-flows/{flow_id}/publish/:
+    post:
+      tags:
+        - Extraction Flows
+      summary: Publish an extraction flow
+      description: |
+        Queue a pipeline run that publishes previously-extracted data to the
+        downstream indexes without re-running extraction.
+
+        > **Only valid for flows whose `publish_mode` is `manual_publish`.**
+        > For `auto_publish` flows, publishing happens automatically at the end
+        > of each `run-sync`, so calling this endpoint is unnecessary.
+      operationId: publishExtractionFlow
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/FlowId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                document_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: |
+                    Optional list of document UUIDs to scope publishing to. When
+                    omitted, publishing covers all documents in the project.
+            example:
+              document_ids:
+                - 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Publish started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Publish started.
+                  pipeline_run_id:
+                    type: string
+                    format: uuid
+        '400':
+          description: Flow DAG is empty or inconsistent
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/pipeline-runs/:
+    get:
+      tags:
+        - Pipeline Runs
+      summary: List pipeline runs
+      description: |
+        List all pipeline runs in the project, ordered by creation date (most
+        recent first). Use this to discover the `id` of a run returned by an
+        extraction flow `run-sync` / `publish` call, or to monitor recent
+        activity.
+
+        The list response uses a lightweight serializer that omits the very
+        large `chunk_ids` / `document_ids` arrays and truncates `raw_logs` to
+        the most recent entries. Fetch a single run via the detail endpoint
+        to get the full payload.
+      operationId: listPipelineRuns
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: status
+          in: query
+          description: >-
+            Filter pipeline runs by status (e.g. `pending`, `running`,
+            `completed`, `failed`).
+          schema:
+            $ref: '#/components/schemas/PipelineRunStatus'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PipelineRunListItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/pipeline-runs/{pipeline_run_id}/:
+    get:
+      tags:
+        - Pipeline Runs
+      summary: Get pipeline run details and status
+      description: |
+        Retrieve the full details of a single pipeline run, including its
+        current `status`, the list of executed steps with their per-step
+        status, and the aggregated `raw_logs` produced during execution.
+
+        Poll this endpoint to track the progress of a run started via an
+        extraction flow `run-sync` or `publish` call. A run is in a terminal
+        state when `status` is one of `completed`, `completed_with_warnings`,
+        `failed`, or `aborted`.
+      operationId: getPipelineRun
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/PipelineRunId'
+      responses:
+        '200':
+          description: Pipeline run details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineRun'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/pipeline-runs/{pipeline_run_id}/abort/:
+    post:
+      tags:
+        - Pipeline Runs
+      summary: Abort a pipeline run
+      description: >
+        Cancel a pipeline run that is `pending` or `running`. The run and any
+
+        of its non-terminal steps transition to `aborted`.
+
+
+        Aborting an already-terminal run (`completed`,
+        `completed_with_warnings`,
+
+        `failed`, or `aborted`) is a no-op.
+      operationId: abortPipelineRun
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/PipelineRunId'
+      responses:
+        '200':
+          description: Abort accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: aborted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use Authorization: Bearer <token>'
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'
+  parameters:
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+    DocumentId:
+      name: document_id
+      in: path
+      required: true
+      description: UUID of the document
+      schema:
+        type: string
+        format: uuid
+    ConversationId:
+      name: conversation_id
+      in: path
+      required: true
+      description: UUID of the conversation
+      schema:
+        type: string
+        format: uuid
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    ImpersonateEmail:
+      name: X-Impersonate-Email
+      in: header
+      required: false
+      description: >
+        Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS`
+        permission.
+
+        If the target user is not found or does not have access to the project,
+        the request
+
+        proceeds as the authenticated user. Contact Clarifeye to enable this
+        permission.
+      schema:
+        type: string
+        format: email
+    ToolId:
+      name: tool_id
+      in: path
+      required: true
+      description: UUID of the tool
+      schema:
+        type: string
+        format: uuid
+    TableId:
+      name: table_id
+      in: path
+      required: true
+      description: UUID of the table
+      schema:
+        type: string
+        format: uuid
+    NotificationId:
+      name: notification_id
+      in: path
+      required: true
+      description: UUID of the notification
+      schema:
+        type: string
+        format: uuid
+    FlowId:
+      name: flow_id
+      in: path
+      required: true
+      description: UUID of the extraction flow
+      schema:
+        type: string
+        format: uuid
+    PipelineRunId:
+      name: pipeline_run_id
+      in: path
+      required: true
+      description: UUID of the pipeline run
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to next page of results
+        previous:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    ValidationError:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email:
+          - This field is required.
+    PermissionType:
+      type: string
+      enum:
+        - CAN_PERFORM_ADMIN_ACTIONS
+        - CAN_VIEW_DATA
+        - CAN_RUN_TASKS
+        - CAN_VIEW_TECHNICAL_INTERFACE
+        - CAN_IMPERSONATE_OTHER_USERS
+      description: >
+        - `CAN_PERFORM_ADMIN_ACTIONS`: Full administrative access
+
+        - `CAN_VIEW_DATA`: Read-only access to project data
+
+        - `CAN_RUN_TASKS`: Execute background tasks and pipelines
+
+        - `CAN_VIEW_TECHNICAL_INTERFACE`: Access to technical features
+
+        - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls
+        (contact Clarifeye to enable)
+    ToolRunRequest:
+      type: object
+      description: >
+        Request body for running a tool. Parameters vary by tool type.
+
+        Most tools accept a `query` parameter and optional `top_k` for result
+        count.
+      properties:
+        query:
+          type: string
+          description: The search query or input for the tool
+          example: What are the key findings about revenue growth?
+        top_k:
+          type: integer
+          description: Maximum number of results to return
+          default: 10
+          example: 10
+      additionalProperties: true
+    ToolRunResponse:
+      type: array
+      description: Array of tool execution results
+      items:
+        type: object
+        description: Individual result object (structure varies by tool type)
+        additionalProperties: true
+    ToolError:
+      type: object
+      description: Error response from tool execution
+      properties:
+        error_type:
+          type: string
+          description: Category of the error
+          example: syntax_error
+        error_code:
+          type: string
+          description: Specific error code
+          example: INVALID_QUERY
+        status:
+          type: string
+          description: Error status
+          example: error
+        message:
+          type: string
+          description: Human-readable error message
+          example: Invalid query syntax
+    DataOperationType:
+      type: string
+      enum:
+        - read
+        - create
+        - update
+        - delete
+      description: |
+        Type of data operation:
+        - `read`: Retrieve records with optional filtering
+        - `create`: Insert new records
+        - `update`: Update existing records
+        - `delete`: Remove records
+    DataOperationRequest:
+      type: object
+      required:
+        - operation
+      properties:
+        operation:
+          $ref: '#/components/schemas/DataOperationType'
+        data:
+          type: array
+          description: Array of records for create/update operations
+          items:
+            type: object
+            additionalProperties: true
+        filters:
+          type: object
+          description: |
+            Dictionary of field-value pairs to filter records.
+            Example: `{"document_id": "550e8400-e29b-41d4-a716-446655440000"}`
+          additionalProperties: true
+        columns:
+          type: array
+          description: List of column names to include in the response
+          items:
+            type: string
+          example:
+            - id
+            - content
+            - document_id
+        override:
+          type: boolean
+          description: For update operations, whether to fully replace records
+          default: false
+        table_version_id:
+          type: string
+          format: uuid
+          description: Optional UUID to target a specific table version
+        limit:
+          type: integer
+          description: Maximum number of records to return (for read operations)
+          default: 100
+        offset:
+          type: integer
+          description: Number of records to skip for pagination (for read operations)
+          default: 0
+    DataOperationResponse:
+      type: object
+      description: Response from a data operation
+      properties:
+        data:
+          type: array
+          description: Array of result records (for read operations)
+          items:
+            type: object
+            additionalProperties: true
+        count:
+          type: integer
+          description: Total number of affected/returned records
+        success:
+          type: boolean
+          description: Whether the operation completed successfully
+    DataOperationErrorResponse:
+      type: object
+      description: Error response from a data operation
+      properties:
+        errors:
+          type: array
+          description: Array of error messages
+          items:
+            type: string
+        error:
+          type: string
+          description: Single error message
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        date_joined:
+          type: string
+          format: date-time
+    ProjectPermission:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user:
+          $ref: '#/components/schemas/User'
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionType'
+    InvitationStatus:
+      type: string
+      enum:
+        - pending
+        - accepted
+        - cancelled
+      description: |
+        - `pending`: Invitation sent, awaiting response
+        - `accepted`: User accepted the invitation
+        - `cancelled`: Invitation was cancelled
+    ProjectInvite:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionType'
+        status:
+          $ref: '#/components/schemas/InvitationStatus'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        invited_by:
+          $ref: '#/components/schemas/User'
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Document filename
+        file:
+          type: string
+          format: uri
+          description: URL to the document file
+        content_type:
+          type: string
+          description: MIME type of the document
+          example: application/pdf
+        computed_pdf_file:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to generated PDF version (if applicable)
+        source:
+          type: string
+          enum:
+            - upload
+            - connector
+          description: Origin of the document
+        source_metadata:
+          type: object
+          description: Metadata about the document source
+        page_count:
+          type: integer
+          nullable: true
+          description: Number of pages in the document
+        file_size:
+          type: integer
+          nullable: true
+          description: File size in bytes
+        metadata:
+          type: array
+          description: >
+            List of key-value metadata pairs. Each element is a two-element
+            array `[key, value]`.
+
+            Requires the project to use the **auto-sync** data versioning
+            option.
+          items:
+            type: array
+            items:
+              type: string
+            minItems: 2
+            maxItems: 2
+          example:
+            - - category
+              - Finance
+            - - region
+              - EMEA
+        status:
+          type: string
+          enum:
+            - active
+            - deleting
+            - deleted
+          description: Document deletion status
+    DocumentMinimal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Document filename
+        content_type:
+          type: string
+          description: MIME type of the document
+        page_count:
+          type: integer
+          nullable: true
+          description: Number of pages in the document
+        file_size:
+          type: integer
+          nullable: true
+          description: File size in bytes
+        metadata:
+          type: array
+          description: >
+            List of key-value metadata pairs. Each element is a two-element
+            array `[key, value]`.
+          items:
+            type: array
+            items:
+              type: string
+            minItems: 2
+            maxItems: 2
+        status:
+          type: string
+          enum:
+            - active
+            - deleting
+            - deleted
+          description: Document deletion status
+    MetadataKeyValue:
+      type: object
+      required:
+        - key
+        - value
+      properties:
+        key:
+          type: string
+          description: Metadata key
+        value:
+          type: string
+          description: Metadata value
+    AgentSettings:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Name of the agent configuration
+        description:
+          type: string
+          description: Description of the agent
+        created_by:
+          type: string
+          format: uuid
+          description: ID of the user who created the agent settings
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        readonly:
+          type: boolean
+          description: Whether the agent settings are read-only
+        additional_instructions:
+          type: string
+          description: Additional instructions for the agent
+        agent_conversation_starter:
+          type: string
+          description: Default conversation starter message
+        model:
+          type: string
+          description: LLM model to use
+          example: claude-3-5-sonnet
+        project_brief:
+          type: string
+          description: Project context/brief for the agent
+        knowledge_graph_mode:
+          type: string
+          description: Knowledge graph usage mode
+        knowledge_graph_parameters:
+          type: object
+          description: Knowledge graph configuration parameters
+        tags_hierarchies_mode:
+          type: string
+          description: Tag hierarchies usage mode
+        tags_hierarchies_parameters:
+          type: object
+          description: Tag hierarchies configuration parameters
+        selected_workflows_mode:
+          type: string
+          description: Reasoning workflows selection mode
+        selected_workflows:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of selected reasoning workflow IDs
+        agent_mode:
+          type: string
+          description: Agent operation mode
+        tools:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of tool IDs available to the agent
+        last_conversation_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date of the most recent conversation using this agent (read-only)
+        local_documents:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of local document IDs attached to the agent (read-only)
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+        created_by:
+          type: string
+          format: uuid
+          description: ID of the user who created the conversation
+        chat_history:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+        agent_settings:
+          type: string
+          format: uuid
+        agent_settings_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        message_count:
+          type: integer
+        tool_call_count:
+          type: integer
+        tokens:
+          type: object
+          properties:
+            input:
+              type: integer
+            output:
+              type: integer
+            total:
+              type: integer
+        tags:
+          type: array
+          items:
+            type: string
+        conversation_instructions:
+          type: string
+          nullable: true
+        is_shared:
+          type: boolean
+          description: Whether the conversation is shared with all workspace members
+          default: false
+        can_send_messages:
+          type: boolean
+          description: >
+            Whether the current user can send messages to this conversation.
+
+            For shared conversations, only the creator and admins can send
+            messages.
+        is_archived:
+          type: boolean
+          description: Whether the conversation has been soft-archived
+          default: false
+        archived_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when the conversation was archived, null if not archived
+    ChatMessage:
+      type: object
+      description: >
+        A message in the conversation. The `query_id` groups all messages from a
+        single
+
+        user interaction (user message, assistant response, tool calls).
+      properties:
+        role:
+          type: string
+          enum:
+            - user
+            - assistant
+        content:
+          type: string
+        type:
+          type: string
+          enum:
+            - message
+            - tool_call
+            - reasoning_flow
+        query_id:
+          type: integer
+          description: >
+            Unique identifier for this query. All messages from one interaction
+            share the same query_id.
+
+            Use this value when submitting feedback on a specific message.
+        user_id:
+          type: string
+          format: uuid
+        used_tokens_input:
+          type: integer
+        used_tokens_output:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        tool_type:
+          type: string
+          description: Type of tool (only for tool_call messages)
+        input_parameters:
+          type: object
+          description: Tool input parameters (only for tool_call messages)
+        results:
+          type: array
+          items: {}
+          description: Tool results (only for tool_call messages)
+    FeedbackStatus:
+      type: string
+      enum:
+        - to_review
+        - reviewed
+      description: |
+        - `to_review`: Feedback pending review (default)
+        - `reviewed`: Feedback has been reviewed
+    Feedback:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        given_by:
+          type: object
+          description: User who submitted the feedback
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+        status:
+          $ref: '#/components/schemas/FeedbackStatus'
+        feedback:
+          type: string
+          description: Feedback text comment
+        context:
+          type: object
+          description: >-
+            Legacy context object (conversation_id is now available as a direct
+            field)
+          properties:
+            conversation_id:
+              type: string
+              format: uuid
+              deprecated: true
+              description: Use the top-level `conversation` field instead
+            query_id:
+              type: integer
+            source:
+              type: string
+        is_positive:
+          type: boolean
+          nullable: true
+          description: |
+            - `true`: Positive feedback
+            - `false`: Negative feedback
+            - `null`: Neutral
+        user_message:
+          type: string
+          description: The user message that was responded to (computed field)
+        conversation_title:
+          type: string
+          description: Title of the conversation (computed field)
+        suggested_action_type:
+          type: string
+          nullable: true
+          description: Auto-generated suggested action type
+        suggested_action_data:
+          type: object
+          description: Auto-generated suggested action data
+    ConversationFeedbackGroup:
+      type: object
+      description: A group of feedbacks from the same playground conversation
+      properties:
+        conversation_id:
+          type: string
+          format: uuid
+          description: ID of the playground conversation
+        conversation_title:
+          type: string
+          description: Title of the conversation
+          example: Product pricing discussion
+        conversation_created_at:
+          type: string
+          format: date-time
+          description: When the conversation was created
+        agent_name:
+          type: string
+          nullable: true
+          description: Name of the agent settings used in this conversation
+          example: Customer Support Assistant
+        conversation_is_archived:
+          type: boolean
+          description: Whether the associated conversation is archived
+          default: false
+        to_review_count:
+          type: integer
+          description: Number of feedbacks with status "to_review" in this conversation
+          example: 3
+        reviewed_count:
+          type: integer
+          description: Number of feedbacks with status "reviewed" in this conversation
+          example: 1
+        feedbacks:
+          type: array
+          description: >-
+            All feedbacks from this conversation, ordered by most recently
+            updated first (by `updated_at` field)
+          items:
+            $ref: '#/components/schemas/Feedback'
+      example:
+        conversation_id: 123e4567-e89b-12d3-a456-426614174000
+        conversation_title: Product pricing discussion
+        conversation_created_at: '2026-03-01T10:30:00Z'
+        agent_name: Customer Support Assistant
+        conversation_is_archived: false
+        to_review_count: 3
+        reviewed_count: 1
+        feedbacks:
+          - id: abc-123
+            status: to_review
+            feedback: The answer was inaccurate
+            is_positive: false
+          - id: abc-124
+            status: to_review
+            feedback: This needs more detail
+            is_positive: false
+          - id: abc-125
+            status: to_review
+            feedback: Missing citation for this claim
+            is_positive: false
+          - id: abc-126
+            status: reviewed
+            feedback: Great explanation!
+            is_positive: true
+        status_summary: mixed
+        feedback_count: 4
+        latest_updated_at: '2026-02-26T10:30:00Z'
+        has_unreviewed: true
+    NotificationStatus:
+      type: string
+      enum:
+        - unread
+        - read
+      description: |
+        - `unread`: Notification has not been read
+        - `read`: Notification has been read
+    NotificationAccessLevel:
+      type: string
+      enum:
+        - admin
+        - viewer
+      description: |
+        - `admin`: Notification visible only to project admins
+        - `viewer`: Notification visible to all project members
+    NotificationScope:
+      type: string
+      enum:
+        - account
+        - project
+      description: |
+        - `account`: Account-level notification (global to user)
+        - `project`: Project-level notification (linked to a specific project)
+    NotificationBase:
+      type: object
+      description: Base notification properties shared by all notification types
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the notification
+        created_at:
+          type: string
+          format: date-time
+          description: When the notification was created
+        updated_at:
+          type: string
+          format: date-time
+          description: When the notification was last updated
+        user:
+          type: string
+          format: uuid
+          description: ID of the user this notification belongs to
+        status:
+          $ref: '#/components/schemas/NotificationStatus'
+        access_level:
+          $ref: '#/components/schemas/NotificationAccessLevel'
+        title:
+          type: string
+          description: Notification title
+          example: Document processing completed
+        message:
+          type: string
+          description: Notification message body
+          example: Your document 'Q4 Report.pdf' has been processed successfully.
+        notification_type:
+          type: string
+          description: Type/category of the notification
+          example: document_processed
+        actions:
+          type: object
+          description: |
+            Optional actions that can be taken from the notification.
+            Structure may include:
+            - `primary`: Primary action with `label` and `type`
+            - `secondary`: Array of secondary actions
+          example:
+            primary:
+              label: View Document
+              type: navigate
+              url: /documents/123
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the notification was marked as read (null if unread)
+        source_object_type:
+          type: string
+          description: Type of the source object that triggered this notification
+          example: document
+        source_object_id:
+          type: string
+          description: ID of the source object that triggered this notification
+          example: 550e8400-e29b-41d4-a716-446655440000
+        relative_time:
+          type: string
+          description: Human-readable relative time (e.g., "2 minutes ago", "Yesterday")
+          example: 2 hours ago
+        absolute_time:
+          type: string
+          format: date-time
+          description: ISO format absolute timestamp
+    ProjectScopedNotification:
+      description: >
+        A project-scoped notification. Returned by project notification
+        endpoints.
+
+        The `scope` is always "project" and `project` is always a non-null UUID.
+      allOf:
+        - $ref: '#/components/schemas/NotificationBase'
+        - type: object
+          required:
+            - scope
+            - project
+          properties:
+            scope:
+              type: string
+              enum:
+                - project
+              description: Always "project" for project-scoped notifications
+            project:
+              type: string
+              format: uuid
+              description: >-
+                UUID of the project this notification belongs to (always
+                non-null)
+    Notification:
+      description: >
+        Generic notification that can be either account-scoped or
+        project-scoped.
+
+        For project notification endpoints, use ProjectScopedNotification
+        instead.
+      allOf:
+        - $ref: '#/components/schemas/NotificationBase'
+        - type: object
+          properties:
+            scope:
+              $ref: '#/components/schemas/NotificationScope'
+            project:
+              type: string
+              format: uuid
+              nullable: true
+              description: ID of the project (null for account-scoped notifications)
+    NotificationBulkActionResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Human-readable message describing the action taken
+          example: Marked 5 notifications as read
+        count:
+          type: integer
+          description: Number of notifications affected by the action
+          example: 5
+    ExtractionFlowPublishMode:
+      type: string
+      enum:
+        - auto_publish
+        - manual_publish
+      description: >
+        - `auto_publish` — runs automatically push extracted data to downstream
+        indexes.
+
+        - `manual_publish` — publishing is triggered explicitly via the
+        `publish` action.
+    ExtractionFlow:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        publish_mode:
+          $ref: '#/components/schemas/ExtractionFlowPublishMode'
+        dag:
+          type: object
+          description: DAG definition (`name` + `nodes`) describing the extractor pipeline.
+        tpuf_namespaces:
+          type: object
+          description: >-
+            Per-namespace-type TurboPuffer namespace mapping populated on
+            publish.
+        last_pushed_to_tpuf:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PipelineRunStatus:
+      type: string
+      description: |
+        Lifecycle status of a pipeline run or step:
+        - `pending` — queued, not yet started
+        - `running` — currently executing
+        - `completed` — finished successfully
+        - `completed_with_warnings` — finished, but some steps emitted warnings
+        - `failed` — terminated with an error
+        - `aborted` — cancelled via the `abort` action
+      enum:
+        - pending
+        - running
+        - completed
+        - completed_with_warnings
+        - failed
+        - aborted
+    PipelineRunStep:
+      type: object
+      description: One step within a pipeline run's DAG.
+      properties:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        step:
+          type: string
+          description: The pipeline step type (parsing, chunking, tag-extraction, etc.).
+        name:
+          type: string
+          nullable: true
+          description: Human-readable name of the step within the DAG.
+        status:
+          $ref: '#/components/schemas/PipelineRunStatus'
+        inputs:
+          type: object
+          description: Map of input table name → resolved table version UUID.
+          additionalProperties:
+            type: string
+            format: uuid
+            nullable: true
+        outputs:
+          type: object
+          description: Map of output table name → resolved table version UUID.
+          additionalProperties:
+            type: string
+            format: uuid
+            nullable: true
+        warnings:
+          nullable: true
+          description: Warnings emitted by the step, when any.
+        depends_on:
+          type: array
+          items:
+            type: string
+          description: Names of the steps this step depends on.
+        params:
+          type: object
+          description: Step-specific parameters used at execution time.
+        tag_extractor_id:
+          type: string
+          format: uuid
+          nullable: true
+        object_extractor_id:
+          type: string
+          format: uuid
+          nullable: true
+        chunks_extractor_id:
+          type: string
+          format: uuid
+          nullable: true
+    PipelineRunListItem:
+      type: object
+      description: |
+        Lightweight pipeline run representation returned by the list endpoint.
+        Excludes the large `chunk_ids` / `document_ids` arrays and truncates
+        `raw_logs` to the most recent entries. Use the detail endpoint to get
+        the full payload.
+      properties:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/PipelineRunStatus'
+        project:
+          type: string
+          format: uuid
+        pipeline_name:
+          type: string
+        mode:
+          type: string
+          description: >-
+            Run mode (e.g. `recreate-all`, `recreate-single`, `upsert-single`,
+            `upsert-all`).
+        celery_task_id:
+          type: string
+        user:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID of the user who triggered the run.
+        tables:
+          type: object
+          nullable: true
+          description: Map of table name → table version UUID for the run.
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/PipelineRunStep'
+        document_count:
+          type: integer
+          description: Number of documents this run targets.
+        chunk_count:
+          type: integer
+          description: Number of chunks this run targets.
+        raw_logs:
+          type: string
+          description: Truncated tail of run logs (most recent entries only).
+    PipelineRun:
+      type: object
+      description: Full pipeline run payload returned by the detail endpoint.
+      properties:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/PipelineRunStatus'
+        project:
+          type: string
+          format: uuid
+        pipeline_name:
+          type: string
+        mode:
+          type: string
+          description: >-
+            Run mode (e.g. `recreate-all`, `recreate-single`, `upsert-single`,
+            `upsert-all`).
+        celery_task_id:
+          type: string
+        user:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID of the user who triggered the run.
+        tables:
+          type: object
+          nullable: true
+          description: Map of table name → table version UUID for the run.
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/PipelineRunStep'
+        document_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+          description: UUIDs of documents this run targets.
+        chunk_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+          description: UUIDs of chunks this run targets.
+        raw_logs:
+          type: string
+          description: Concatenated logs produced during execution.
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/Error'
+              - $ref: '#/components/schemas/ValidationError'
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.

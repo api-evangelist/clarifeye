@@ -1,0 +1,41 @@
+generated: '2026-07-18'
+method: searched
+source: https://www.clarifeye.ai/technology, openapi/clarifeye-openapi-original.yaml, https://eu.app.clarifeye.ai/.well-known/oauth-authorization-server
+standards:
+- id: oauth2
+  conforms: true
+  evidence: MCP authorization server exposes RFC 8414 metadata; authorizationCode flow with PKCE S256.
+- id: oidc
+  conforms: true
+  evidence: openid scope advertised in oauth-authorization-server metadata.
+- id: rfc7591-dcr
+  conforms: true
+  evidence: registration_endpoint /o/register/ advertised (Dynamic Client Registration).
+- id: rfc7636-pkce
+  conforms: true
+  evidence: code_challenge_methods_supported = [S256].
+- id: rfc9728-oauth-protected-resource
+  conforms: true
+  evidence: /.well-known/oauth-protected-resource present for the MCP resource.
+- id: mcp
+  conforms: true
+  evidence: Hosted Model Context Protocol server documented and published.
+- id: rfc9457-problem-details
+  conforms: false
+  evidence: 'Errors use a flat {"error": ...} envelope, not application/problem+json.'
+- id: pagination
+  conforms: true
+  evidence: DRF page-number pagination (count/next/previous/results).
+- id: soc2-type-ii
+  conforms: true
+  evidence: SOC 2 Type II certification stated on the technology page.
+- id: gdpr-data-localization
+  conforms: true
+  evidence: EU and US data-localization options; PII detection/redaction at ingestion; zero training on customer data.
+compliance:
+  programs: [SOC 2 Type II]
+  docs: https://www.clarifeye.ai/technology
+notes: >
+  SOC 2 Type II is a published compliance claim on the vendor technology page,
+  so a Compliance pointer is emitted. No formal trust center / cert portal was
+  found (no trust.clarifeye.ai).

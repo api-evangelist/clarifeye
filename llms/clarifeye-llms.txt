@@ -1,0 +1,195 @@
+# Clarifeye
+
+## Docs
+
+- [Get conversation](https://docs.clarifeye.ai/api-reference/conversations/get-conversation.md): Retrieve a conversation with its complete chat history.
+- [Bulk upload documents](https://docs.clarifeye.ai/api-reference/documents/bulk-upload-documents.md): Upload multiple documents at once. Optionally skip the automatic parsing pipeline.
+- [Delete document](https://docs.clarifeye.ai/api-reference/documents/delete-document.md): Delete a document from the project. Deletion is always asynchronous.
+- [Filter documents by metadata values](https://docs.clarifeye.ai/api-reference/documents/filter-documents-by-metadata-values.md): Retrieve documents whose metadata contains one or more of the given values (case-insensitive, OR logic).
+- [Filter documents by tag values](https://docs.clarifeye.ai/api-reference/documents/filter-documents-by-tag-values.md): Retrieve documents that match one or more tag values (case-insensitive). Pass tag values as a JSON array to avoid delimiter issues with values containing commas.
+- [Get document indexing status](https://docs.clarifeye.ai/api-reference/documents/get-document-indexing-status.md): Returns the indexing status for each `(document, extractor node)` pair in the project. Callers poll this endpoint until documents reach `active` (queryable by AI) or `deleted`.
+- [List documents without file data](https://docs.clarifeye.ai/api-reference/documents/list-documents-without-file-data.md): Retrieve document metadata without file URLs for faster response times.
+- [Create and assign interviews](https://docs.clarifeye.ai/api-reference/interviews/create-and-assign-interviews.md): Create and assign one interview per assignee. **Admin only.**
+- [List interviews](https://docs.clarifeye.ai/api-reference/interviews/list-interviews.md): Retrieve interviews for a project.
+- [Retrieve interview content](https://docs.clarifeye.ai/api-reference/interviews/retrieve-interview-content.md): Retrieve a single interview with its full content, including the complete `chat_history` transcript and `chat_memory`.
+- [Cancel invitation](https://docs.clarifeye.ai/api-reference/invitations/cancel-invitation.md): Cancel a pending invitation. Only pending invitations can be cancelled.
+- [Invite user to project](https://docs.clarifeye.ai/api-reference/invitations/invite-user-to-project.md): Invite a user to join the project. - For new users (not registered): Creates a pending invite and sends an email. - For existing users: Automatically accepts the invite and sends a notification.
+- [List invitations](https://docs.clarifeye.ai/api-reference/invitations/list-invitations.md): Retrieve all invitations for a project with optional filtering by status.
+- [List signals](https://docs.clarifeye.ai/api-reference/signals/list-signals.md): Retrieve all signals for a project with optional filtering.
+- [Submit a signal](https://docs.clarifeye.ai/api-reference/signals/submit-a-signal.md): Submit a signal about the project's content: the signal text itself, plus optional `context.additional_details` with extra context for the reviewer. The signal shows up in the review UI for domain experts.
+- [Update signal status](https://docs.clarifeye.ai/api-reference/signals/update-signal-status.md): Mark a signal as reviewed or update other fields.
+- [Get tool parameters schema](https://docs.clarifeye.ai/api-reference/tools/get-tool-parameters-schema.md): Return the JSON schema describing the parameters accepted by [`runTool`](#operation/runTool) for this tool.
+- [List tools](https://docs.clarifeye.ai/api-reference/tools/list-tools.md): List all tools available to the project, including tools owned by the project (`category: local`) and tools imported from other projects (`category: imported`).
+- [Run a tool](https://docs.clarifeye.ai/api-reference/tools/run-a-tool.md): Execute a configured tool with provided parameters.
+- [List project users](https://docs.clarifeye.ai/api-reference/users/list-project-users.md): Retrieve all users with access to a project.
+- [Remove user by email](https://docs.clarifeye.ai/api-reference/users/remove-user-by-email.md): Remove a user from the project using their email address. Users cannot remove themselves.
+- [Update user permissions](https://docs.clarifeye.ai/api-reference/users/update-user-permissions.md): Update a user's permissions on the project.
+- [List agent settings](https://docs.clarifeye.ai/backoffice/agent-settings/list-agent-settings.md): Retrieve all agent settings (AI agent configurations) for a project. Results are ordered by most recently updated first.
+- [Edit a design template](https://docs.clarifeye.ai/backoffice/artifact-edits/edit-a-design-template.md): Read (action=list/get) or create/update/delete a design template — on-brand document-generation metadata (a document type plus freeform brand/format notes). `upsert` returns the entry including a `ui_url` deep-link where the user uploads reference files; `delete` also removes the template's uploaded…
+- [Edit a playbook](https://docs.clarifeye.ai/backoffice/artifact-edits/edit-a-playbook.md): Read (action=list/get) or batch-edit a playbook (pass playbook_name, change_summary, and an ordered changes list). Public but requires project-admin permission.
+- [Edit the business brief](https://docs.clarifeye.ai/backoffice/artifact-edits/edit-the-business-brief.md): Read or edit the business brief, with the same semantics as the coach assistant (action=get returns current text; set replaces it; patch does a line/text edit). Public but requires project-admin permission.
+- [Edit the document-library description](https://docs.clarifeye.ai/backoffice/artifact-edits/edit-the-document-library-description.md): Read or edit the corpus (document-library) description (same action semantics as edit-brief). Public but requires project-admin permission.
+- [Edit the general knowledge](https://docs.clarifeye.ai/backoffice/artifact-edits/edit-the-general-knowledge.md): Read or edit the general knowledge (same action semantics as edit-brief). Public but requires project-admin permission.
+- [Edit the mental map (ontology)](https://docs.clarifeye.ai/backoffice/artifact-edits/edit-the-mental-map-ontology.md): Read (action=get) or batch-edit the mental map / ontology (pass change_summary and an ordered changes list). Mutations trigger ontology-change detection and derived-element sync. Public but requires project-admin permission.
+- [Create chunk tag filter extractor](https://docs.clarifeye.ai/backoffice/chunk-tag-filter-extractors/create-chunk-tag-filter-extractor.md): Create a `ChunkTagFilterExtractor` — restricts a downstream pipeline branch to chunks carrying specific tags.
+- [Delete chunk tag filter extractor](https://docs.clarifeye.ai/backoffice/chunk-tag-filter-extractors/delete-chunk-tag-filter-extractor.md)
+- [List chunk tag filter extractors](https://docs.clarifeye.ai/backoffice/chunk-tag-filter-extractors/list-chunk-tag-filter-extractors.md)
+- [Retrieve chunk tag filter extractor](https://docs.clarifeye.ai/backoffice/chunk-tag-filter-extractors/retrieve-chunk-tag-filter-extractor.md)
+- [Update chunk tag filter extractor (auto-creates new version)](https://docs.clarifeye.ai/backoffice/chunk-tag-filter-extractors/update-chunk-tag-filter-extractor-auto-creates-new-version.md): Partial update. Version-bearing field: `filter`.
+- [Create chunks extractor](https://docs.clarifeye.ai/backoffice/chunks-extractors/create-chunks-extractor.md): Create a `ChunksExtractor`. A first `ChunksExtractorVersion` is created automatically and marked as default.
+- [Delete chunks extractor](https://docs.clarifeye.ai/backoffice/chunks-extractors/delete-chunks-extractor.md): Delete the `ChunksExtractor`. The related `extracted_chunks_table` is cleaned up on cascade.
+- [List chunks extractors](https://docs.clarifeye.ai/backoffice/chunks-extractors/list-chunks-extractors.md)
+- [Retrieve chunks extractor](https://docs.clarifeye.ai/backoffice/chunks-extractors/retrieve-chunks-extractor.md)
+- [Update chunks extractor (auto-creates new version)](https://docs.clarifeye.ai/backoffice/chunks-extractors/update-chunks-extractor-auto-creates-new-version.md): Partial update. Version-bearing fields: `maximum_chunk_size`, `minimum_chunk_size`, `page_as_separator`, `title_section_separator_mode`, `excluded_block_types`, `chunking_mode`.
+- [Get a single chunk by id (version-agnostic)](https://docs.clarifeye.ai/backoffice/chunks/get-a-single-chunk-by-id-version-agnostic.md): Fetch one chunk row by its id, independent of which extractor version produced it. Chunk ids are random UUIDs (unique within the chunk table), so the lookup is unambiguous and does not require the extractor version.
+- [Back office concepts](https://docs.clarifeye.ai/backoffice/concepts.md): The extraction flow, extractors, agent settings, and tools — for technical users who customize Clarifeye.
+- [Archive conversation](https://docs.clarifeye.ai/backoffice/conversations/archive-conversation.md): Soft-archive a conversation. The conversation is hidden from default list/get endpoints but is preserved in the database along with all linked feedback.
+- [Create conversation](https://docs.clarifeye.ai/backoffice/conversations/create-conversation.md): Create a new AI-powered conversation.
+- [Get all conversation tags](https://docs.clarifeye.ai/backoffice/conversations/get-all-conversation-tags.md): Retrieve all unique tags used across conversations in the project.
+- [Get conversation](https://docs.clarifeye.ai/backoffice/conversations/get-conversation.md): Retrieve a conversation with its complete chat history.
+- [List conversations](https://docs.clarifeye.ai/backoffice/conversations/list-conversations.md): Retrieve all conversations for a project with optional filtering.
+- [Permanently delete conversation](https://docs.clarifeye.ai/backoffice/conversations/permanently-delete-conversation.md): Permanently delete an archived conversation and all its associated feedbacks. This action is irreversible.
+- [Retrieve conversation feedback](https://docs.clarifeye.ai/backoffice/conversations/retrieve-conversation-feedback.md): List all feedback (including text content) attached to a conversation.
+- [Send message (streaming)](https://docs.clarifeye.ai/backoffice/conversations/send-message-streaming.md): Send a message and receive a streaming response using Server-Sent Events (SSE).
+- [Share conversation](https://docs.clarifeye.ai/backoffice/conversations/share-conversation.md): Share a conversation with all workspace members.
+- [Unarchive conversation](https://docs.clarifeye.ai/backoffice/conversations/unarchive-conversation.md): Restore a previously archived conversation back to active status.
+- [Unshare conversation](https://docs.clarifeye.ai/backoffice/conversations/unshare-conversation.md): Remove sharing from a conversation.
+- [Delete a design template file](https://docs.clarifeye.ai/backoffice/design-system-templates/delete-a-design-template-file.md): Delete a design template reference file from the project, removing it from storage. Requires project-admin permission.
+- [List design template files](https://docs.clarifeye.ai/backoffice/design-system-templates/list-design-template-files.md): List the project's design template reference files (paginated). Optionally filter to a single template via `template_id`. Requires project view permission.
+- [Upload a design template file](https://docs.clarifeye.ai/backoffice/design-system-templates/upload-a-design-template-file.md): Upload a reference/example file and attach it to a design template. Requires project-admin permission.
+- [Create document filter extractor](https://docs.clarifeye.ai/backoffice/document-filter-extractors/create-document-filter-extractor.md): Create a `DocumentFilterExtractor` — restricts a downstream pipeline branch to documents matching the configured filter.
+- [Delete document filter extractor](https://docs.clarifeye.ai/backoffice/document-filter-extractors/delete-document-filter-extractor.md)
+- [List document filter extractors](https://docs.clarifeye.ai/backoffice/document-filter-extractors/list-document-filter-extractors.md)
+- [Retrieve document filter extractor](https://docs.clarifeye.ai/backoffice/document-filter-extractors/retrieve-document-filter-extractor.md)
+- [Update document filter extractor (auto-creates new version)](https://docs.clarifeye.ai/backoffice/document-filter-extractors/update-document-filter-extractor-auto-creates-new-version.md): Partial update. Version-bearing field: `filter`.
+- [Create document tag extractor](https://docs.clarifeye.ai/backoffice/document-tag-extractors/create-document-tag-extractor.md): Create a `DocumentTagExtractor` — applies a flat set of metadata tags to each document.
+- [Delete document tag extractor](https://docs.clarifeye.ai/backoffice/document-tag-extractors/delete-document-tag-extractor.md): Delete the `DocumentTagExtractor`. The related `extracted_document_tags_table` is cleaned up on cascade.
+- [List document tag extractors](https://docs.clarifeye.ai/backoffice/document-tag-extractors/list-document-tag-extractors.md)
+- [Retrieve document tag extractor](https://docs.clarifeye.ai/backoffice/document-tag-extractors/retrieve-document-tag-extractor.md)
+- [Update document tag extractor (auto-creates new version)](https://docs.clarifeye.ai/backoffice/document-tag-extractors/update-document-tag-extractor-auto-creates-new-version.md): Partial update. Version-bearing fields: `tags`, `llm_model`.
+- [Add metadata to a document](https://docs.clarifeye.ai/backoffice/documents/add-metadata-to-a-document.md): Add metadata to a document. Accepts **either** a single `{key, value}` pair **or** a list of `{key, value}` pairs in one request. Each pair is appended to the document's existing metadata list.
+- [Bulk upload documents](https://docs.clarifeye.ai/backoffice/documents/bulk-upload-documents.md): Upload multiple documents at once. Optionally skip the automatic parsing pipeline.
+- [Create a document collection](https://docs.clarifeye.ai/backoffice/documents/create-a-document-collection.md): Create a collection. The `slug` is derived server-side from `name` (deduplicated per project) and cannot be set by the client. Requires admin permissions.
+- [Delete a document collection](https://docs.clarifeye.ai/backoffice/documents/delete-a-document-collection.md): Delete the collection row. Linked documents keep their metadata and fall back to the virtual "Default" bucket. Requires admin permissions.
+- [Delete document](https://docs.clarifeye.ai/backoffice/documents/delete-document.md): Delete a document from the project. Deletion is performed asynchronously - the document is marked as "deleting" and removed in the background.
+- [Filter documents by metadata values](https://docs.clarifeye.ai/backoffice/documents/filter-documents-by-metadata-values.md): Retrieve documents whose metadata contains one or more of the given values (case-insensitive, OR logic).
+- [Filter documents by tag values](https://docs.clarifeye.ai/backoffice/documents/filter-documents-by-tag-values.md): Retrieve documents that match one or more tag values (case-insensitive). Pass tag values as a JSON array to avoid delimiter issues with values containing commas.
+- [Get document tags grouped by document](https://docs.clarifeye.ai/backoffice/documents/get-document-tags-grouped-by-document.md): Retrieve all document tags for the project, grouped by document ID. Optionally filter by specific document IDs.
+- [Get metadata values for a key](https://docs.clarifeye.ai/backoffice/documents/get-metadata-values-for-a-key.md): Retrieve all values associated with a given metadata key on a document.
+- [List available document metadata](https://docs.clarifeye.ai/backoffice/documents/list-available-document-metadata.md): Retrieve all metadata keys and their distinct values across all active documents in the project.
+- [List available document tags](https://docs.clarifeye.ai/backoffice/documents/list-available-document-tags.md): Retrieve all available document tag names and their possible values for the project.
+- [List document collections](https://docs.clarifeye.ai/backoffice/documents/list-document-collections.md): List the project's document collections. Available to all project members.
+- [List documents](https://docs.clarifeye.ai/backoffice/documents/list-documents.md): List a project's documents (paginated). Supports text search, status filtering, and filtering by collection.
+- [List documents without file data](https://docs.clarifeye.ai/backoffice/documents/list-documents-without-file-data.md): Retrieve document metadata without file URLs for faster response times.
+- [Move a document to a collection](https://docs.clarifeye.ai/backoffice/documents/move-a-document-to-a-collection.md): Move a document into a collection, or out to "Default". Sets the `collection` foreign key and swaps the mirrored `["tag", slug]` pair so retrieval/extraction filters follow the move. Requires project admin permission.
+- [Move multiple documents to a collection](https://docs.clarifeye.ai/backoffice/documents/move-multiple-documents-to-a-collection.md): Move up to 200 active documents into a collection, or out to "Default", in one request. Sets the `collection` foreign key and swaps the mirrored `["tag", slug]` pair on each document so retrieval/extraction filters follow the move. Requires project admin permission.
+- [Remove a specific metadata pair](https://docs.clarifeye.ai/backoffice/documents/remove-a-specific-metadata-pair.md): Remove a specific key-value pair from a document's metadata. Both key and value must match exactly for the pair to be removed.
+- [Remove all metadata pairs for a key](https://docs.clarifeye.ai/backoffice/documents/remove-all-metadata-pairs-for-a-key.md): Remove all metadata pairs matching the given key from a document, regardless of their values.
+- [Rename a document collection](https://docs.clarifeye.ai/backoffice/documents/rename-a-document-collection.md): Update the collection's `name`. The `slug` is immutable. Requires admin permissions.
+- [Retrieve a document collection](https://docs.clarifeye.ai/backoffice/documents/retrieve-a-document-collection.md)
+- [Get extraction flow statistics](https://docs.clarifeye.ai/backoffice/extraction-flows/get-extraction-flow-statistics.md): Dry-run cache simulation of the flow — returns, per DAG node, how many inputs would be reused from cache vs. recomputed, without actually executing any extraction. Useful to preview the cost/impact of a run.
+- [List extraction flows](https://docs.clarifeye.ai/backoffice/extraction-flows/list-extraction-flows.md): List all extraction flows for the project, ordered by most recently updated.
+- [Publish an extraction flow](https://docs.clarifeye.ai/backoffice/extraction-flows/publish-an-extraction-flow.md): Queue a pipeline run that publishes previously-extracted data to the downstream indexes without re-running extraction.
+- [Run an extraction flow](https://docs.clarifeye.ai/backoffice/extraction-flows/run-an-extraction-flow.md): Queue a pipeline run that executes the flow's DAG across the given documents (or all project documents if `document_ids` is omitted).
+- [Update an extraction flow](https://docs.clarifeye.ai/backoffice/extraction-flows/update-an-extraction-flow.md): Partially update an extraction flow. Common uses are switching the **publish mode** and editing the **DAG** (adding, modifying or removing nodes).
+- [Delete feedback](https://docs.clarifeye.ai/backoffice/feedback/delete-feedback.md): Remove feedback.
+- [Get feedback counts by status](https://docs.clarifeye.ai/backoffice/feedback/get-feedback-counts-by-status.md): Retrieve comprehensive counts of feedbacks split by status, conversation grouping, and ungrouped feedbacks.
+- [Get feedbacks grouped by conversation](https://docs.clarifeye.ai/backoffice/feedback/get-feedbacks-grouped-by-conversation.md): Retrieve feedbacks grouped by their associated playground conversation with unified pagination and sorting.
+- [List feedback](https://docs.clarifeye.ai/backoffice/feedback/list-feedback.md): Retrieve all feedback for a project with optional filtering.
+- [Mark all feedbacks in a conversation as reviewed](https://docs.clarifeye.ai/backoffice/feedback/mark-all-feedbacks-in-a-conversation-as-reviewed.md): Update the status of all feedbacks associated with a specific conversation to "reviewed".
+- [Submit feedback](https://docs.clarifeye.ai/backoffice/feedback/submit-feedback.md): Submit feedback. The simplest form is direct feedback about content: just the feedback text and optional `context.additional_details`, with no conversation attached. Feedback can also be linked to a playground conversation message, or submitted by an agent through MCP.
+- [Update feedback status](https://docs.clarifeye.ai/backoffice/feedback/update-feedback-status.md): Mark feedback as reviewed or update other fields.
+- [Create imported object extractor](https://docs.clarifeye.ai/backoffice/imported-object-extractors/create-imported-object-extractor.md): Create an `ImportedObjectExtractor` — holds objects imported from an external system (rather than extracted by an LLM).
+- [Delete imported object extractor](https://docs.clarifeye.ai/backoffice/imported-object-extractors/delete-imported-object-extractor.md): Delete the `ImportedObjectExtractor`. The related `imported_objects_table` is cleaned up on cascade.
+- [List imported object extractors](https://docs.clarifeye.ai/backoffice/imported-object-extractors/list-imported-object-extractors.md)
+- [Retrieve imported object extractor](https://docs.clarifeye.ai/backoffice/imported-object-extractors/retrieve-imported-object-extractor.md)
+- [Update imported object extractor (auto-creates new version)](https://docs.clarifeye.ai/backoffice/imported-object-extractors/update-imported-object-extractor-auto-creates-new-version.md): Partial update. Version-bearing field: `extractable_pydantic_class`.
+- [Create and assign interviews](https://docs.clarifeye.ai/backoffice/interviews/create-and-assign-interviews.md): Create and assign one interview per assignee. **Admin only.**
+- [List interviews](https://docs.clarifeye.ai/backoffice/interviews/list-interviews.md): Retrieve interviews for a project.
+- [Retrieve interview content](https://docs.clarifeye.ai/backoffice/interviews/retrieve-interview-content.md): Retrieve a single interview with its full content, including the complete `chat_history` transcript and `chat_memory`.
+- [Cancel invitation](https://docs.clarifeye.ai/backoffice/invitations/cancel-invitation.md): Cancel a pending invitation. Only pending invitations can be cancelled.
+- [Invite user to project](https://docs.clarifeye.ai/backoffice/invitations/invite-user-to-project.md): Invite a user to join the project. - For new users (not registered): Creates a pending invite and sends an email. - For existing users: Automatically accepts the invite and sends a notification.
+- [List invitations](https://docs.clarifeye.ai/backoffice/invitations/list-invitations.md): Retrieve all invitations for a project with optional filtering by status.
+- [Delete a notification](https://docs.clarifeye.ai/backoffice/notifications/delete-a-notification.md): Delete a single notification for the effective user.
+- [Delete all read notifications](https://docs.clarifeye.ai/backoffice/notifications/delete-all-read-notifications.md): Delete all read project notifications for the effective user.
+- [List project notifications](https://docs.clarifeye.ai/backoffice/notifications/list-project-notifications.md): List notifications for the effective user (authenticated user or impersonated user).
+- [Mark all notifications as read](https://docs.clarifeye.ai/backoffice/notifications/mark-all-notifications-as-read.md): Mark all unread project notifications as read for the effective user.
+- [Mark notification as read](https://docs.clarifeye.ai/backoffice/notifications/mark-notification-as-read.md): Mark a single notification as read for the effective user.
+- [Mark notification as unread](https://docs.clarifeye.ai/backoffice/notifications/mark-notification-as-unread.md): Mark a single notification as unread for the effective user.
+- [Retrieve a notification](https://docs.clarifeye.ai/backoffice/notifications/retrieve-a-notification.md): Retrieve details of a single notification for the effective user.
+- [Create object alerts extractor](https://docs.clarifeye.ai/backoffice/object-alerts-extractors/create-object-alerts-extractor.md): Create an `ObjectAlertsExtractor` — runs LLM-based alerts over already-extracted object rows.
+- [Delete object alerts extractor](https://docs.clarifeye.ai/backoffice/object-alerts-extractors/delete-object-alerts-extractor.md): Delete the `ObjectAlertsExtractor`. The related `alerts_table` is cleaned up on cascade.
+- [List object alerts extractors](https://docs.clarifeye.ai/backoffice/object-alerts-extractors/list-object-alerts-extractors.md)
+- [Retrieve object alerts extractor](https://docs.clarifeye.ai/backoffice/object-alerts-extractors/retrieve-object-alerts-extractor.md)
+- [Update object alerts extractor (auto-creates new version)](https://docs.clarifeye.ai/backoffice/object-alerts-extractors/update-object-alerts-extractor-auto-creates-new-version.md): Partial update. Version-bearing fields: `instructions`, `llm_model`.
+- [Create object extractor](https://docs.clarifeye.ai/backoffice/object-extractors/create-object-extractor.md): Create an `ObjectExtractor`. A first `ObjectExtractorVersion` is created automatically and marked as default. Pass `import_mode: true` to skip auto-version creation (bulk imports only).
+- [Delete object extractor](https://docs.clarifeye.ai/backoffice/object-extractors/delete-object-extractor.md): Delete the `ObjectExtractor`. Related warehouse tables (`extracted_objects_table`, `alerts_table`) are cleaned up on cascade.
+- [List object extractors](https://docs.clarifeye.ai/backoffice/object-extractors/list-object-extractors.md): List all `ObjectExtractor` rows in the project, newest first.
+- [Retrieve object extractor](https://docs.clarifeye.ai/backoffice/object-extractors/retrieve-object-extractor.md)
+- [Update object extractor (auto-creates new version)](https://docs.clarifeye.ai/backoffice/object-extractors/update-object-extractor-auto-creates-new-version.md): Partial update of an `ObjectExtractor`. If any **version-bearing** field differs from the latest version, a new `ObjectExtractorVersion` row is created automatically. Version-bearing fields: `extractable_pydantic_class`, `extraction_prompt`, `llm_model`, `add_anchoring_object`, `filtered_on_block_ty…
+- [Delete an API key (superuser only)](https://docs.clarifeye.ai/backoffice/organization-api-keys/delete-an-api-key-superuser-only.md): Permanently deletes the key; it immediately stops authenticating.
+- [Download the full secret (superuser or org admin)](https://docs.clarifeye.ai/backoffice/organization-api-keys/download-the-full-secret-superuser-or-org-admin.md)
+- [List API keys (superuser → all; org admin → own org's keys)](https://docs.clarifeye.ai/backoffice/organization-api-keys/list-api-keys-superuser-→-all;-org-admin-→-own-orgs-keys.md)
+- [Mint an API key (superuser only)](https://docs.clarifeye.ai/backoffice/organization-api-keys/mint-an-api-key-superuser-only.md): The full `api_key` is returned ONCE in this response.
+- [Retrieve API key metadata (superuser or org admin)](https://docs.clarifeye.ai/backoffice/organization-api-keys/retrieve-api-key-metadata-superuser-or-org-admin.md)
+- [Create parsing extractor](https://docs.clarifeye.ai/backoffice/parsing-extractors/create-parsing-extractor.md): Create a `ParsingExtractor`. A first version is created automatically and marked as default.
+- [Delete parsing extractor](https://docs.clarifeye.ai/backoffice/parsing-extractors/delete-parsing-extractor.md): Delete the `ParsingExtractor`. Related warehouse tables (`extracted_parsed_documents_table`, `extracted_blocks_table`) are cleaned up on cascade.
+- [List parsing extractors](https://docs.clarifeye.ai/backoffice/parsing-extractors/list-parsing-extractors.md)
+- [Retrieve parsing extractor](https://docs.clarifeye.ai/backoffice/parsing-extractors/retrieve-parsing-extractor.md)
+- [Update parsing extractor (auto-creates new version)](https://docs.clarifeye.ai/backoffice/parsing-extractors/update-parsing-extractor-auto-creates-new-version.md): Partial update. Version-bearing fields: `reducto_parsing_options`, `llm_model`, `use_fast_parsing_for_pdfs`.
+- [Abort a pipeline run](https://docs.clarifeye.ai/backoffice/pipeline-runs/abort-a-pipeline-run.md): Cancel a pipeline run that is `pending` or `running`. The run and any of its non-terminal steps transition to `aborted`.
+- [Get pipeline run details and status](https://docs.clarifeye.ai/backoffice/pipeline-runs/get-pipeline-run-details-and-status.md): Retrieve the full details of a single pipeline run, including its current `status`, the list of executed steps with their per-step status, and the aggregated `raw_logs` produced during execution.
+- [List pipeline runs](https://docs.clarifeye.ai/backoffice/pipeline-runs/list-pipeline-runs.md): List all pipeline runs in the project, ordered by creation date (most recent first). Use this to discover the `id` of a run returned by an extraction flow `run-sync` / `publish` call, or to monitor recent activity.
+- [Home dashboard summary](https://docs.clarifeye.ai/backoffice/projects/home-dashboard-summary.md): Everything the Standard-interface Home dashboard needs in one call: document count and last-added timestamp, plus the caller's open (pending or in-progress) interviews. For project admins the response additionally includes the team's pending interviews and the count of feedbacks awaiting review; the…
+- [List knowledge changelog entries](https://docs.clarifeye.ai/backoffice/projects/list-knowledge-changelog-entries.md): List the project's knowledge changelog entries, most recent first. Each entry records a change to the project's knowledge (artifact edits, API ontology/playbook changes, document uploads/syncs). Read-only. Admin-only: the feed aggregates edits by all project members, so it requires CAN_PERFORM_ADMIN…
+- [Read extractor output rows](https://docs.clarifeye.ai/backoffice/tables/read-extractor-output-rows.md): Read-only retrieval of rows produced by a specific `ExtractorVersion`, joining the warehouse table with `HydrationComputation` records.
+- [Create tag alerts extractor](https://docs.clarifeye.ai/backoffice/tag-alerts-extractors/create-tag-alerts-extractor.md): Create a `TagAlertsExtractor` — runs LLM-based alerts over already-extracted tag rows.
+- [Delete tag alerts extractor](https://docs.clarifeye.ai/backoffice/tag-alerts-extractors/delete-tag-alerts-extractor.md): Delete the `TagAlertsExtractor`. The related `alerts_tags_table` is cleaned up on cascade.
+- [List tag alerts extractors](https://docs.clarifeye.ai/backoffice/tag-alerts-extractors/list-tag-alerts-extractors.md)
+- [Retrieve tag alerts extractor](https://docs.clarifeye.ai/backoffice/tag-alerts-extractors/retrieve-tag-alerts-extractor.md)
+- [Update tag alerts extractor (auto-creates new version)](https://docs.clarifeye.ai/backoffice/tag-alerts-extractors/update-tag-alerts-extractor-auto-creates-new-version.md): Partial update. Version-bearing fields: `instructions`, `llm_model`.
+- [Create tag extractor](https://docs.clarifeye.ai/backoffice/tag-extractors/create-tag-extractor.md): Create a `TagExtractor`. A first `TagExtractorVersion` is created automatically and marked as default.
+- [Delete tag extractor](https://docs.clarifeye.ai/backoffice/tag-extractors/delete-tag-extractor.md): Delete the `TagExtractor`. Related warehouse tables (`extracted_tags_table`, `alerts_tags_table`) are cleaned up on cascade.
+- [List tag extractors](https://docs.clarifeye.ai/backoffice/tag-extractors/list-tag-extractors.md)
+- [Retrieve tag extractor](https://docs.clarifeye.ai/backoffice/tag-extractors/retrieve-tag-extractor.md)
+- [Update tag extractor (auto-creates new version)](https://docs.clarifeye.ai/backoffice/tag-extractors/update-tag-extractor-auto-creates-new-version.md): Partial update. Version-bearing fields (changing any creates a new `TagExtractorVersion`): `tagging_tree`, `extraction_prompt`, `llm_model`, `enforce_single_tag`, `alerts_additional_instructions`.
+- [Get tool parameters schema](https://docs.clarifeye.ai/backoffice/tools/get-tool-parameters-schema.md): Return the JSON schema describing the parameters accepted by [`runTool`](#operation/runTool) for this tool.
+- [List tools](https://docs.clarifeye.ai/backoffice/tools/list-tools.md): List all tools available to the project, including tools owned by the project (`category: local`) and tools imported from other projects (`category: imported`).
+- [Run a tool](https://docs.clarifeye.ai/backoffice/tools/run-a-tool.md): Execute a configured tool with provided parameters.
+- [Pre-create (or re-activate) an org user](https://docs.clarifeye.ai/backoffice/user-provisioning/pre-create-or-re-activate-an-org-user.md): Pre-creates a user bound to this organization, with a verified primary email so a later SSO login links to it automatically. Idempotent: re-provisioning an existing member is a no-op (role/state unchanged). The email's domain must be in the org's `allowed_provisioning_domains`. The API key must belo…
+- [Read the org's allowed provisioning domains (superuser only)](https://docs.clarifeye.ai/backoffice/user-provisioning/read-the-orgs-allowed-provisioning-domains-superuser-only.md)
+- [Remove an org user's membership](https://docs.clarifeye.ai/backoffice/user-provisioning/remove-an-org-users-membership.md): Removes the user's membership in this organization. If the user has no remaining memberships they are deactivated (blocking SSO login); otherwise their active organization is re-pointed. Returns `deprovisioned: false` if no such user. The API key must belong to the organization in the path.
+- [Set the org's allowed provisioning domains (superuser only)](https://docs.clarifeye.ai/backoffice/user-provisioning/set-the-orgs-allowed-provisioning-domains-superuser-only.md)
+- [List project users](https://docs.clarifeye.ai/backoffice/users/list-project-users.md): Retrieve all users with access to a project.
+- [Remove user by email](https://docs.clarifeye.ai/backoffice/users/remove-user-by-email.md): Remove a user from the project using their email address. Users cannot remove themselves.
+- [Update user permissions](https://docs.clarifeye.ai/backoffice/users/update-user-permissions.md): Update a user's permissions on the project.
+- [Build & Improve](https://docs.clarifeye.ai/guides/build-improve.md): Capture knowledge from your experts and keep it accurate over time.
+- [Compliance & Certifications](https://docs.clarifeye.ai/guides/compliance.md): Our security standards and compliance certifications
+- [Core concepts](https://docs.clarifeye.ai/guides/core-concepts.md): The handful of ideas that run through everything else in Clarifeye.
+- [Create your knowledge store](https://docs.clarifeye.ai/guides/create-knowledge-store.md): Create your first knowledge store through a guided conversation with Clara.
+- [Knowledge](https://docs.clarifeye.ai/guides/knowledge.md): The consolidated artifacts and the sources behind them.
+- [Connect to a Light LLM Gateway](https://docs.clarifeye.ai/guides/llm-gateway.md): Route Clarifeye's LLM and agentic calls through your own LiteLLM gateway, one model at a time.
+- [Connect to AI clients](https://docs.clarifeye.ai/guides/mcp.md): Bring your knowledge stores into Claude, ChatGPT, Copilot, or any custom client.
+- [MCP authentication](https://docs.clarifeye.ai/guides/mcp-authentication.md): Authenticate to the Clarifeye MCP server using a user token or OAuth.
+- [ChatGPT](https://docs.clarifeye.ai/guides/mcp-chatgpt.md): Connect Clarifeye to ChatGPT using MCP apps and skills
+- [Claude](https://docs.clarifeye.ai/guides/mcp-claude.md): Connect Clarifeye to Claude.ai using MCP connectors and skills
+- [Microsoft Copilot](https://docs.clarifeye.ai/guides/mcp-copilot.md): Connect Clarifeye to Microsoft Copilot using MCP tools
+- [Other clients](https://docs.clarifeye.ai/guides/mcp-generic.md): Connect Clarifeye to any AI assistant that supports MCP.
+- [MCP tools](https://docs.clarifeye.ai/guides/mcp-tools.md): The tools the Clarifeye MCP server exposes to AI clients.
+- [Organization settings](https://docs.clarifeye.ai/guides/organization-settings.md): The organization-level layer that shapes every knowledge store beneath it.
+- [Other Security Settings](https://docs.clarifeye.ai/guides/other-security.md): Other security settings in Clarifeye
+- [Quickstart](https://docs.clarifeye.ai/guides/quickstart.md): Go from an empty knowledge store to one your team can use through an AI client.
+- [Send signals from Slack & Teams](https://docs.clarifeye.ai/guides/signals-slack.md): Send signals to Clarifeye from Slack or Microsoft Teams by calling the API from your own app.
+- [Single Sign-On (SSO)](https://docs.clarifeye.ai/guides/sso.md): Set up SSO with OpenID Connect (OIDC) or SAML for Clarifeye
+- [Use](https://docs.clarifeye.ai/guides/use.md): Put your knowledge store to work to produce a real output.
+- [User management](https://docs.clarifeye.ai/guides/user-management.md): Profiles, permissions, and how to invite users to a knowledge store.
+- [What is Clarifeye?](https://docs.clarifeye.ai/guides/what-is-clarifeye.md): Clarifeye captures your organization's expertise and turns it into knowledge that AI can use faithfully.
+
+## OpenAPI Specs
+
+- [openapi-public](https://docs.clarifeye.ai/api-reference/openapi-public.yaml)
+- [openapi-full](https://docs.clarifeye.ai/api-reference/openapi-full.yaml)
+
+## Optional
+
+- [Website](https://clarifeye.ai)
