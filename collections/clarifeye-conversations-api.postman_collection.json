@@ -1,0 +1,3750 @@
+{
+  "item": [
+    {
+      "id": "610d11a4-82d5-40d4-abd0-23f4921781e7",
+      "name": "Conversations",
+      "description": {
+        "content": "Create and interact with AI-powered conversations",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "fcfc0076-49c4-41ca-9e2f-632c3d44ee09",
+          "name": "List conversations",
+          "request": {
+            "name": "List conversations",
+            "description": {
+              "content": "Retrieve all conversations for a project with optional filtering.\n\n**Access Control:**\n- Admins see all conversations (including shared ones)\n- Regular users see only conversations they created (including their own shared ones)\n- Shared conversations from other users are not shown in the list but are accessible via direct URL\n\n**Impersonation:**\n- When using impersonation, returns conversations created by the impersonated user\n\n**Filtering:**\n- Tags filtering uses OR logic (matches any of the provided tags)\n- Text filtering uses AND logic (combined with tag filters)\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "playground-conversations",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "tags",
+                  "value": "<string>",
+                  "description": "Filter by tags (OR logic). Can be specified multiple times or comma-separated."
+                },
+                {
+                  "disabled": false,
+                  "key": "tags",
+                  "value": "<string>",
+                  "description": "Filter by tags (OR logic). Can be specified multiple times or comma-separated."
+                },
+                {
+                  "disabled": false,
+                  "key": "no_tags",
+                  "value": "<string>",
+                  "description": "Set to \"true\" to filter for conversations with no tags"
+                },
+                {
+                  "disabled": false,
+                  "key": "text",
+                  "value": "<string>",
+                  "description": "Search text within chat history (case-insensitive)"
+                },
+                {
+                  "disabled": false,
+                  "key": "include_archived",
+                  "value": "<string>",
+                  "description": "Set to \"true\" to include archived conversations in results. Defaults to false (active conversations only)."
+                },
+                {
+                  "disabled": false,
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Maximum number of results per page"
+                },
+                {
+                  "disabled": false,
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Number of results to skip for pagination"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                "key": "X-Impersonate-Email",
+                "value": "<email>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "7c22dd50-92f9-406b-94e0-773d238499a3",
+              "name": "Successful response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "tags",
+                      "value": "analysis"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "review"
+                    },
+                    {
+                      "key": "no_tags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "text",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "include_archived",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"count\": 9795,\n  \"next\": \"http://HHeIAQoFixNSKLCBfckQn.qaxBkNG9bR4HGXpAumuawz\",\n  \"previous\": \"https://fCfdZK.cmhsOVzfRvb.DdEN3I8cCG8VZyxCZmAA+y2r.fVWxZzq3y8mWVg70kzzXp-GIjJKIk76Kf1K4\",\n  \"results\": [\n    {\n      \"id\": \"06231660-7867-abc5-ec5e-b3d694d12046\",\n      \"name\": \"string\",\n      \"type\": \"string\",\n      \"created_by\": \"755a8fc9-09b8-da8d-56fb-f6246351b6dd\",\n      \"chat_history\": [\n        {\n          \"role\": \"assistant\",\n          \"content\": \"string\",\n          \"type\": \"message\",\n          \"query_id\": 372,\n          \"user_id\": \"5a38b547-d1b9-2509-bf86-7015ba7b8aa2\",\n          \"used_tokens_input\": 5520,\n          \"used_tokens_output\": 7007,\n          \"timestamp\": \"1978-07-20T14:22:59.188Z\",\n          \"tool_type\": \"string\",\n          \"input_parameters\": {}\n        },\n        {\n          \"role\": \"user\",\n          \"content\": \"string\",\n          \"type\": \"message\",\n          \"query_id\": 3220,\n          \"user_id\": \"e727cd98-3a04-7c11-52ab-12931bc1f317\",\n          \"used_tokens_input\": 2253,\n          \"used_tokens_output\": 9541,\n          \"timestamp\": \"1958-04-16T13:17:15.352Z\",\n          \"tool_type\": \"string\",\n          \"input_parameters\": {}\n        }\n      ],\n      \"agent_settings\": \"e614d113-2498-cf68-4799-f3e4265014d5\",\n      \"agent_settings_name\": \"string\",\n      \"created_at\": \"2022-12-22T18:12:21.747Z\",\n      \"updated_at\": \"1952-08-01T21:40:51.579Z\",\n      \"message_count\": 4705,\n      \"tool_call_count\": 480,\n      \"tokens\": {\n        \"input\": 736,\n        \"output\": 1797,\n        \"total\": 6152\n      },\n      \"tags\": [\n        \"string\",\n        \"string\"\n      ],\n      \"conversation_instructions\": \"string\",\n      \"is_shared\": false,\n      \"can_send_messages\": true,\n      \"is_archived\": false,\n      \"archived_at\": \"1965-04-07T07:09:28.960Z\"\n    },\n    {\n      \"id\": \"62191204-c0c9-755a-b83f-1eae88f757aa\",\n      \"name\": \"string\",\n      \"type\": \"string\",\n      \"created_by\": \"df320bb4-d675-41df-0276-ee240ef30870\",\n      \"chat_history\": [\n        {\n          \"role\": \"user\",\n          \"content\": \"string\",\n          \"type\": \"message\",\n          \"query_id\": 2232,\n          \"user_id\": \"9b33ee74-db06-dbd1-2bc2-74a54003d94a\",\n          \"used_tokens_input\": 9154,\n          \"used_tokens_output\": 5657,\n          \"timestamp\": \"1960-09-21T09:46:23.732Z\",\n          \"tool_type\": \"string\",\n          \"input_parameters\": {}\n        },\n        {\n          \"role\": \"assistant\",\n          \"content\": \"string\",\n          \"type\": \"tool_call\",\n          \"query_id\": 7943,\n          \"user_id\": \"aa730274-46f1-5919-09d2-90123ecef582\",\n          \"used_tokens_input\": 4848,\n          \"used_tokens_output\": 5648,\n          \"timestamp\": \"1947-09-06T23:50:26.935Z\",\n          \"tool_type\": \"string\",\n          \"input_parameters\": {}\n        }\n      ],\n      \"agent_settings\": \"0cb48810-d94a-68f9-6de9-42794882bc85\",\n      \"agent_settings_name\": \"string\",\n      \"created_at\": \"2004-10-29T07:03:42.289Z\",\n      \"updated_at\": \"1992-12-20T07:01:46.073Z\",\n      \"message_count\": 5843,\n      \"tool_call_count\": 6914,\n      \"tokens\": {\n        \"input\": 3108,\n        \"output\": 1872,\n        \"total\": 8942\n      },\n      \"tags\": [\n        \"string\",\n        \"string\"\n      ],\n      \"conversation_instructions\": \"string\",\n      \"is_shared\": false,\n      \"can_send_messages\": false,\n      \"is_archived\": false,\n      \"archived_at\": \"2016-03-25T00:25:26.492Z\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e874ef79-a43c-4100-8a4b-caf40ff1946c",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "tags",
+                      "value": "analysis"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "review"
+                    },
+                    {
+                      "key": "no_tags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "text",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "include_archived",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4bbbf5f9-7507-41c8-ae4c-7c771a976cc1",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "tags",
+                      "value": "analysis"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "review"
+                    },
+                    {
+                      "key": "no_tags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "text",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "include_archived",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "90118d51-8eab-4646-bd92-3fc3c135fce3",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "tags",
+                      "value": "analysis"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "review"
+                    },
+                    {
+                      "key": "no_tags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "text",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "include_archived",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "bdefe92f-eb62-469f-893e-1dca119b0452",
+          "name": "Create conversation",
+          "request": {
+            "name": "Create conversation",
+            "description": {
+              "content": "Create a new AI-powered conversation.\n\n**Impersonation:**\n- When using impersonation, the conversation is created as the impersonated user\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "playground-conversations",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                "key": "X-Impersonate-Email",
+                "value": "<email>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent_settings\": \"<uuid>\",\n  \"name\": \"<string>\",\n  \"type\": \"playground\",\n  \"tags\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"conversation_instructions\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "feb0ba54-dd02-413e-8c5d-8c5075617c1c",
+              "name": "Conversation created successfully",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"agent_settings\": \"<uuid>\",\n  \"name\": \"Analysis Session\",\n  \"type\": \"playground\",\n  \"tags\": [\n    \"analysis\",\n    \"review\"\n  ],\n  \"conversation_instructions\": \"Focus on financial data extraction\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"80cae7c4-2d7a-eea5-f1fd-cd73082e5a83\",\n  \"name\": \"string\",\n  \"type\": \"string\",\n  \"created_by\": \"cb8ebc8c-3666-f20d-6cae-aa9b3d26435b\",\n  \"chat_history\": [\n    {\n      \"role\": \"assistant\",\n      \"content\": \"string\",\n      \"type\": \"message\",\n      \"query_id\": 2612,\n      \"user_id\": \"221ea1f9-76ff-f709-431d-1f0337dafe66\",\n      \"used_tokens_input\": 1441,\n      \"used_tokens_output\": 3857,\n      \"timestamp\": \"1995-10-04T19:24:42.633Z\",\n      \"tool_type\": \"string\",\n      \"input_parameters\": {}\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"string\",\n      \"type\": \"tool_call\",\n      \"query_id\": 4781,\n      \"user_id\": \"0746e75c-5d26-5dcb-eb7d-51ba87aa4fec\",\n      \"used_tokens_input\": 7326,\n      \"used_tokens_output\": 5744,\n      \"timestamp\": \"2014-12-16T23:57:41.175Z\",\n      \"tool_type\": \"string\",\n      \"input_parameters\": {}\n    }\n  ],\n  \"agent_settings\": \"a2048271-befc-ecf4-fc34-44b3980a7b9b\",\n  \"agent_settings_name\": \"string\",\n  \"created_at\": \"1969-10-17T08:06:10.781Z\",\n  \"updated_at\": \"2010-07-26T10:34:23.555Z\",\n  \"message_count\": 4454,\n  \"tool_call_count\": 3016,\n  \"tokens\": {\n    \"input\": 445,\n    \"output\": 3140,\n    \"total\": 3205\n  },\n  \"tags\": [\n    \"string\",\n    \"string\"\n  ],\n  \"conversation_instructions\": \"string\",\n  \"is_shared\": false,\n  \"can_send_messages\": false,\n  \"is_archived\": false,\n  \"archived_at\": \"1995-04-04T21:55:07.022Z\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "eb67ca3f-7250-4307-b958-e92ad8d09ed0",
+              "name": "Bad request - invalid parameters or request body",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"agent_settings\": \"<uuid>\",\n  \"name\": \"Analysis Session\",\n  \"type\": \"playground\",\n  \"tags\": [\n    \"analysis\",\n    \"review\"\n  ],\n  \"conversation_instructions\": \"Focus on financial data extraction\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "9011f4a8-1c78-46c7-a19b-6a668b2f5396",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"agent_settings\": \"<uuid>\",\n  \"name\": \"Analysis Session\",\n  \"type\": \"playground\",\n  \"tags\": [\n    \"analysis\",\n    \"review\"\n  ],\n  \"conversation_instructions\": \"Focus on financial data extraction\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "f28801ba-3ae0-49d1-b2ff-9f097bec29c4",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"agent_settings\": \"<uuid>\",\n  \"name\": \"Analysis Session\",\n  \"type\": \"playground\",\n  \"tags\": [\n    \"analysis\",\n    \"review\"\n  ],\n  \"conversation_instructions\": \"Focus on financial data extraction\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "f34c3a6f-77d7-4125-b62f-4cfb2add8d89",
+          "name": "Get conversation",
+          "request": {
+            "name": "Get conversation",
+            "description": {
+              "content": "Retrieve a conversation with its complete chat history.\n\n**Access Control:**\n- Admins can access any conversation\n- Regular users can access their own conversations\n- All project members can access shared conversations via direct URL\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "playground-conversations",
+                ":conversation_id",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "include_archived",
+                  "value": "<string>",
+                  "description": "Set to \"true\" to allow retrieving an archived conversation. Defaults to false."
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "conversation_id",
+                  "description": "(Required) UUID of the conversation"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "3bb5176f-7aef-480a-88ee-abd18b57ff97",
+              "name": "Successful response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include_archived",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"80cae7c4-2d7a-eea5-f1fd-cd73082e5a83\",\n  \"name\": \"string\",\n  \"type\": \"string\",\n  \"created_by\": \"cb8ebc8c-3666-f20d-6cae-aa9b3d26435b\",\n  \"chat_history\": [\n    {\n      \"role\": \"assistant\",\n      \"content\": \"string\",\n      \"type\": \"message\",\n      \"query_id\": 2612,\n      \"user_id\": \"221ea1f9-76ff-f709-431d-1f0337dafe66\",\n      \"used_tokens_input\": 1441,\n      \"used_tokens_output\": 3857,\n      \"timestamp\": \"1995-10-04T19:24:42.633Z\",\n      \"tool_type\": \"string\",\n      \"input_parameters\": {}\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"string\",\n      \"type\": \"tool_call\",\n      \"query_id\": 4781,\n      \"user_id\": \"0746e75c-5d26-5dcb-eb7d-51ba87aa4fec\",\n      \"used_tokens_input\": 7326,\n      \"used_tokens_output\": 5744,\n      \"timestamp\": \"2014-12-16T23:57:41.175Z\",\n      \"tool_type\": \"string\",\n      \"input_parameters\": {}\n    }\n  ],\n  \"agent_settings\": \"a2048271-befc-ecf4-fc34-44b3980a7b9b\",\n  \"agent_settings_name\": \"string\",\n  \"created_at\": \"1969-10-17T08:06:10.781Z\",\n  \"updated_at\": \"2010-07-26T10:34:23.555Z\",\n  \"message_count\": 4454,\n  \"tool_call_count\": 3016,\n  \"tokens\": {\n    \"input\": 445,\n    \"output\": 3140,\n    \"total\": 3205\n  },\n  \"tags\": [\n    \"string\",\n    \"string\"\n  ],\n  \"conversation_instructions\": \"string\",\n  \"is_shared\": false,\n  \"can_send_messages\": false,\n  \"is_archived\": false,\n  \"archived_at\": \"1995-04-04T21:55:07.022Z\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "541b6293-9ce0-4252-9084-bfd254d31b8b",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include_archived",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "2f4e1eea-6294-4dfc-ab49-7f0019f4816f",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include_archived",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "556550bc-4d3d-4a2c-9d3a-4a26c727ba47",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include_archived",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "f0377afc-ca1e-4771-b432-100d92585ae5",
+          "name": "Archive conversation",
+          "request": {
+            "name": "Archive conversation",
+            "description": {
+              "content": "Soft-archive a conversation. The conversation is hidden from default list/get endpoints\nbut is preserved in the database along with all linked feedback.\n\nTo permanently delete an archived conversation, use the `permanent_delete` action.\nTo restore an archived conversation, use the `unarchive` action.\n\n**Access Control:**\n- Admins can archive any conversation\n- Regular users can only archive conversations they created\n\n**Impersonation:**\n- When using impersonation, the ownership check is performed against the impersonated user\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "playground-conversations",
+                ":conversation_id",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "conversation_id",
+                  "description": "(Required) UUID of the conversation"
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                "key": "X-Impersonate-Email",
+                "value": "<email>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "DELETE",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "adae26de-70f7-4057-828e-8473b1d6e87c",
+              "name": "Conversation archived successfully",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "No Content",
+              "code": 204,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "bc1dae6e-1934-4f2d-ad37-2d1974fac705",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "aaa9c85c-872d-427b-a448-183cf5e9d2bc",
+              "name": "Forbidden - user does not own this conversation",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "1de48f72-6188-444d-908c-1fc14caf6617",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "8e7d2c05-05e0-48ad-84a9-95b865567f27",
+          "name": "Unarchive conversation",
+          "request": {
+            "name": "Unarchive conversation",
+            "description": {
+              "content": "Restore a previously archived conversation back to active status.\n\n**Access Control:**\n- Admins can unarchive any conversation\n- Regular users can only unarchive conversations they created\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "playground-conversations",
+                ":conversation_id",
+                "unarchive",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "conversation_id",
+                  "description": "(Required) UUID of the conversation"
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                "key": "X-Impersonate-Email",
+                "value": "<email>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "c12dcd78-b96c-4a7b-8e01-2ddc000d0e5a",
+              "name": "Conversation unarchived successfully",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "unarchive",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "No Content",
+              "code": 204,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "e79be40b-207a-4cbe-a823-31e9648a517f",
+              "name": "Conversation is not archived",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "unarchive",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "41525276-be10-4809-add7-1e24e60becc0",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "unarchive",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "230cc0ca-bee0-4a50-8d82-3877df7db717",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "unarchive",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "5222c147-256a-403d-8c77-5ede479416b9",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "unarchive",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "33777d4b-800e-414f-958a-78bcfed9e97d",
+          "name": "Permanently delete conversation",
+          "request": {
+            "name": "Permanently delete conversation",
+            "description": {
+              "content": "Permanently delete an archived conversation and all its associated feedbacks.\nThis action is irreversible.\n\nThe conversation must be archived first (via the DELETE endpoint) before it can be permanently deleted.\n\n**Access Control:**\n- Superusers only, or project members with `CAN_PERFORM_ADMIN_ACTIONS` permission\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "playground-conversations",
+                ":conversation_id",
+                "permanent_delete",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "conversation_id",
+                  "description": "(Required) UUID of the conversation"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "97e333f2-5a4e-41d3-9dcf-25c553a75943",
+              "name": "Conversation permanently deleted",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "permanent_delete",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "No Content",
+              "code": 204,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "f9314091-e746-479d-a2dc-1edc6e1a15f7",
+              "name": "Conversation is not archived",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "permanent_delete",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "cd3095b3-48d2-4b8d-bd56-020631264d2d",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "permanent_delete",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "50553fa2-b570-45b8-86e1-2e1d3037961f",
+              "name": "Forbidden - admin permission required",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "permanent_delete",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "01a7f51a-6c44-4d41-bbf2-5e68957d20f8",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "permanent_delete",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "18503355-b745-4aad-bd34-5b7465311d09",
+          "name": "Send message (streaming)",
+          "request": {
+            "name": "Send message (streaming)",
+            "description": {
+              "content": "Send a message and receive a streaming response using Server-Sent Events (SSE).\n\nThe response is a stream of newline-delimited JSON events. Use this endpoint for both\ninitial messages and follow-up messages - conversation context is automatically preserved.\n\n**Access Control:**\n- For shared conversations, only the creator or admins can send messages\n- Other project members can view shared conversations but cannot send messages\n\n**Impersonation:**\n- When using impersonation, the message is sent as the impersonated user\n\n## Streaming Event Types\n\n| Type | Description |\n|------|-------------|\n| `streaming_in_progress` | Intermediate event during response generation |\n| `streaming_error` | Error occurred during streaming |\n| `streaming_completed` | Final event with complete chat history |\n\n## Payload Types (within streaming_in_progress)\n\n| Payload Type | Description |\n|--------------|-------------|\n| `start_token_streaming` | Stream is starting |\n| `token_streaming` | Text token being streamed |\n| `tool_call_request` | Tool is being invoked |\n| `tool_call` | Tool execution results |\n| `reasoning` | Reasoning step |\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "playground-conversations",
+                ":conversation_id",
+                "send_message_stream",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "conversation_id",
+                  "description": "(Required) UUID of the conversation"
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                "key": "X-Impersonate-Email",
+                "value": "<email>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "99f82cb6-d07c-4394-80c7-7f9484a0a366",
+              "name": "Server-Sent Events stream",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "send_message_stream",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "text/event-stream"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"message\": \"What information do you have about product pricing?\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/event-stream"
+                }
+              ],
+              "body": "data: {\"type_streaming\": \"streaming_in_progress\", \"payload\": {\"type\": \"start_token_streaming\", \"content\": \"\"}}\n\ndata: {\"type_streaming\": \"streaming_in_progress\", \"payload\": {\"type\": \"token_streaming\", \"content\": \"The\"}}\n\ndata: {\"type_streaming\": \"streaming_in_progress\", \"payload\": {\"type\": \"token_streaming\", \"content\": \"The document\"}}\n\ndata: {\"type_streaming\": \"streaming_in_progress\", \"payload\": {\"type\": \"tool_call\", \"tool_type\": \"semantic_chunks\", \"results\": [...]}}\n\ndata: {\"type_streaming\": \"streaming_completed\", \"payload\": {\"conversation_id\": \"uuid\", \"chat_history\": [...]}}\n",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "22d1ce4b-c1b1-48df-b2a3-6e569e82151e",
+              "name": "Bad request - invalid parameters or request body",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "send_message_stream",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"message\": \"What information do you have about product pricing?\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "9ac716ae-a6a0-4089-ac9a-249f377819e3",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "send_message_stream",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"message\": \"What information do you have about product pricing?\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "060a23c1-0d37-4737-a842-f6cbf9ed6b8a",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "send_message_stream",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"message\": \"What information do you have about product pricing?\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "05bb2c90-ce5a-4b06-adf2-f54e716d0e3c",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "send_message_stream",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"message\": \"What information do you have about product pricing?\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "fb5dac19-0abf-43ff-a683-b64bd48c70ac",
+          "name": "Get all conversation tags",
+          "request": {
+            "name": "Get all conversation tags",
+            "description": {
+              "content": "Retrieve all unique tags used across conversations in the project.\n\n**Access Control:**\n- Admins see tags from all conversations\n- Regular users see only tags from conversations they created\n\n**Impersonation:**\n- When using impersonation, returns tags from conversations created by the impersonated user\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "playground-conversations",
+                "all-tags",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                "key": "X-Impersonate-Email",
+                "value": "<email>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "8200260a-caa5-4e52-a147-92f904d09d35",
+              "name": "Successful response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    "all-tags",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"tags\": [\n    \"analysis\",\n    \"important\",\n    \"review\"\n  ],\n  \"count\": 3\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "9624f2bd-7a2c-4804-aaed-2e04b98e3f1d",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    "all-tags",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "135b305a-b8f5-4001-8e0b-9206d9054ddf",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    "all-tags",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "70a7026a-f07a-4e85-83bf-5ba939459cb2",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    "all-tags",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "4df44035-85a6-4161-a295-5a207564d1b1",
+          "name": "Share conversation",
+          "request": {
+            "name": "Share conversation",
+            "description": {
+              "content": "Share a conversation with all workspace members.\n\nWhen shared:\n- The conversation becomes accessible to all project members via direct URL\n- The conversation is hidden from the conversation list (to reduce clutter)\n- Only the creator and admins can send messages (read-only for others)\n\n**Access Control:**\n- Only the conversation creator or project admins can share a conversation\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "playground-conversations",
+                ":conversation_id",
+                "share",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "conversation_id",
+                  "description": "(Required) UUID of the conversation"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "4132aaad-afc1-44cd-9bff-dff8275f202c",
+              "name": "Conversation shared successfully",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "share",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"ok\",\n  \"is_shared\": true\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "90888c0f-03e6-4f7a-87a5-7c61d9dc3471",
+              "name": "Conversation is already shared",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "share",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4996044d-50c4-4626-a1fe-3ce8ea6a4f37",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "share",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b4ddc68e-1aef-4d6e-acab-605e296c1c8b",
+              "name": "Permission denied - only creator or admin can share",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "share",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "83c4646e-104f-4fb2-988d-5c6576444c16",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "share",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "fbcd4be0-d793-4bfb-bf5f-9573b2f7b582",
+          "name": "Unshare conversation",
+          "request": {
+            "name": "Unshare conversation",
+            "description": {
+              "content": "Remove sharing from a conversation.\n\nWhen unshared:\n- The conversation returns to the creator's conversation list\n- Other project members lose access to the conversation\n\n**Access Control:**\n- Only the conversation creator or project admins can unshare a conversation\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "playground-conversations",
+                ":conversation_id",
+                "unshare",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "conversation_id",
+                  "description": "(Required) UUID of the conversation"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "6eba0a91-2e2a-4af2-8d03-6259b7f1daba",
+              "name": "Conversation unshared successfully",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "unshare",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"ok\",\n  \"is_shared\": false\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "01640144-7aaa-44dc-8866-466207ebf9a9",
+              "name": "Conversation is not shared",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "unshare",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "68893f1f-96bb-4b49-87b5-1d2666682687",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "unshare",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "fc76be48-6ac1-4372-84f3-5c16b346dec5",
+              "name": "Permission denied - only creator or admin can unshare",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "unshare",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "fd95ef57-5dd8-429d-b6bc-b25d464d30af",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "playground-conversations",
+                    ":conversation_id",
+                    "unshare",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "conversation_id",
+                      "description": "(Required) UUID of the conversation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://eu.app.clarifeye.ai/api/v1",
+      "key": "baseUrl"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}"
+      }
+    ]
+  },
+  "info": {
+    "_postman_id": "e259c15e-473b-44e8-bcf5-0a666272fc24",
+    "name": "Clarifeye Platform Agent Settings Conversations API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.\n\n## Authentication\nAll endpoints require authentication. Include the Authorization header in every request using either format:\n- `Authorization: Token <token_key>`\n- `Authorization: Bearer <token_key>`\n\n## Impersonation\n\nCertain endpoints support user impersonation for creating or listing data on behalf of other users.\nThis is useful for integrating external systems that need to attribute actions to specific users.\n\n**Header:** `X-Impersonate-Email`\n\n**Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)\n\n**Behavior:**\n- If the header is provided and the impersonator has the required permission, the action is performed as the target user\n- If the target user is not found, the request proceeds as the original authenticated user\n- If the target user does not have access to the project, the request proceeds as the original authenticated user\n- If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored\n\n\nContact Support:\n Name: Clarifeye Support",
+      "type": "text/plain"
+    }
+  }
+}

@@ -1,0 +1,283 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Clarifeye Platform Agent Settings Feedback API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Feedback",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List feedback",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/feedbacks/",
+            "headers": [
+              {
+                "name": "X-Impersonate-Email",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "status",
+                "value": "",
+                "type": "query",
+                "description": "Filter by feedback status"
+              },
+              {
+                "name": "is_positive",
+                "value": "",
+                "type": "query",
+                "description": "Filter by sentiment"
+              },
+              {
+                "name": "search",
+                "value": "",
+                "type": "query",
+                "description": "Search in feedback text or user email (case-insensitive)"
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results per page"
+              },
+              {
+                "name": "offset",
+                "value": "",
+                "type": "query",
+                "description": "Number of results to skip for pagination"
+              }
+            ]
+          },
+          "docs": "Retrieve all feedback for a project with optional filtering.\n\n**Access Control:**\n- Admins see all feedback in the project\n- Regular users see only feedback they submitted\n\n**Impersonation:**\n- When using impersonation, returns feedback submitted by the impersonated user\n\n**Sorting:**\n- Results are ordered by most recently updated first (`updated_at` field)\n\n**Note:** For grouped views by conversation, use `/projects/{project_id}/feedbacks/grouped_by_conversation/`\n"
+        },
+        {
+          "info": {
+            "name": "Submit feedback on a message",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/feedbacks/",
+            "headers": [
+              {
+                "name": "X-Impersonate-Email",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Provide feedback on a specific message in a conversation.\n\n**Impersonation:**\n- When using impersonation, the feedback is submitted as the impersonated user\n\n## Feedback Types\n\n| Type | is_positive Value | Description |\n|------|-------------------|-------------|\n| Thumbs up | `true` | Positive feedback |\n| Thumbs down | `false` | Negative feedback |\n| Neutral | `null` | Neutral or no sentiment |\n\n## Query ID\n\nThe `query_id` identifies a specific user query and all related responses.\nIt can be ob"
+        },
+        {
+          "info": {
+            "name": "Update feedback status",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/feedbacks/:feedback_id/",
+            "headers": [
+              {
+                "name": "X-Impersonate-Email",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "feedback_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the feedback"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Mark feedback as reviewed or update other fields.\n\n**Access Control:**\n- Admins can update any feedback\n- Regular users can only update feedback they submitted\n\n**Impersonation:**\n- When using impersonation, the ownership check is performed against the impersonated user\n- This allows updating feedback submitted by the impersonated user\n"
+        },
+        {
+          "info": {
+            "name": "Delete feedback",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/feedbacks/:feedback_id/",
+            "headers": [
+              {
+                "name": "X-Impersonate-Email",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "feedback_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the feedback"
+              }
+            ]
+          },
+          "docs": "Remove feedback.\n\n**Access Control:**\n- Admins can delete any feedback\n- Regular users can only delete feedback they submitted\n\n**Impersonation:**\n- When using impersonation, the ownership check is performed against the impersonated user\n- This allows deleting feedback submitted by the impersonated user\n"
+        },
+        {
+          "info": {
+            "name": "Get feedbacks grouped by conversation",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/feedbacks/grouped_by_conversation/",
+            "headers": [
+              {
+                "name": "X-Impersonate-Email",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "status",
+                "value": "",
+                "type": "query",
+                "description": "Filter by conversation status (based on feedback statuses)"
+              },
+              {
+                "name": "search",
+                "value": "",
+                "type": "query",
+                "description": "Search in feedback text or user email (case-insensitive)"
+              },
+              {
+                "name": "include_archived",
+                "value": "",
+                "type": "query",
+                "description": "Set to \"true\" to include feedbacks from archived conversations. Defaults to false."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results per page"
+              },
+              {
+                "name": "offset",
+                "value": "",
+                "type": "query",
+                "description": "Number of results to skip for pagination"
+              }
+            ]
+          },
+          "docs": "Retrieve feedbacks grouped by their associated playground conversation with unified pagination and sorting.\n\n**Access Control:**\n- Admins see all feedback in the project\n- Regular users see only feedback they submitted\n\n**Grouping Logic:**\n- Feedbacks are grouped by their `conversation` field (FK to PlaygroundConversation)\n- Conversation groups and ungrouped feedbacks are returned in a single flat array\n- Ungrouped feedbacks appear as single-item groups with `conversation_id: null`\n- Each group "
+        },
+        {
+          "info": {
+            "name": "Mark all feedbacks in a conversation as reviewed",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/feedbacks/mark_conversation_reviewed/",
+            "headers": [
+              {
+                "name": "X-Impersonate-Email",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Update the status of all feedbacks associated with a specific conversation to \"reviewed\".\n\n**Access Control:**\n- Admins can update all feedbacks in the project\n- Regular users can only update feedback they submitted\n\n**Impersonation:**\n- When using impersonation, only updates feedback submitted by the impersonated user\n"
+        },
+        {
+          "info": {
+            "name": "Get feedback counts by status",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/feedbacks/counts/",
+            "headers": [
+              {
+                "name": "X-Impersonate-Email",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              }
+            ]
+          },
+          "docs": "Retrieve comprehensive counts of feedbacks split by status, conversation grouping, and ungrouped feedbacks.\n\n**Access Control:**\n- Admins see counts for all feedback in the project\n- Regular users see counts only for feedback they submitted\n\n**Impersonation:**\n- When using impersonation, returns counts for feedback submitted by the impersonated user\n"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

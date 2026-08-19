@@ -1,0 +1,159 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Clarifeye Platform Agent Settings Extraction Flows API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Extraction Flows",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List extraction flows",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/extraction-flows/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              }
+            ]
+          },
+          "docs": "List all extraction flows for the project, ordered by most recently updated.\n"
+        },
+        {
+          "info": {
+            "name": "Update an extraction flow",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/extraction-flows/:flow_id/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "flow_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the extraction flow"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Partially update an extraction flow. The most common use is to switch its\n**publish mode** between `auto_publish` and `manual_publish`.\n\n**Publish modes:**\n- `auto_publish` — Each successful flow run automatically publishes the\n  extracted data. No separate publish step\n  is required.\n- `manual_publish` — Flow runs only compute and persist extracted data in\n  the warehouse. Publishing to downstream indexes must be triggered\n  explicitly via the `publish` action. Use this when you want to review\n"
+        },
+        {
+          "info": {
+            "name": "Run an extraction flow",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/extraction-flows/:flow_id/run-sync/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "flow_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the extraction flow"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Queue a pipeline run that executes the flow's DAG across the given\ndocuments (or all project documents if `document_ids` is omitted).\n\nReturns the `pipeline_run_id` you can poll to track progress.\n"
+        },
+        {
+          "info": {
+            "name": "Get extraction flow statistics",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/extraction-flows/:flow_id/node-stats/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "flow_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the extraction flow"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Dry-run cache simulation of the flow — returns, per DAG node, how many\ninputs would be reused from cache vs. recomputed, without actually\nexecuting any extraction. Useful to preview the cost/impact of a run.\n"
+        },
+        {
+          "info": {
+            "name": "Publish an extraction flow",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/extraction-flows/:flow_id/publish/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "flow_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the extraction flow"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Queue a pipeline run that publishes previously-extracted data to the\ndownstream indexes without re-running extraction.\n\n> **Only valid for flows whose `publish_mode` is `manual_publish`.**\n> For `auto_publish` flows, publishing happens automatically at the end\n> of each `run-sync`, so calling this endpoint is unnecessary.\n"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

@@ -1,0 +1,115 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Clarifeye Platform Agent Settings Tools API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Tools",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Run a tool",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/tools/:tool_id/run/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "tool_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the tool"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Execute a configured tool with provided parameters.\n\nThe request body varies based on the tool type. Most tools accept a `query` parameter\nand optional parameters like `top_k` for controlling result count.\n"
+        },
+        {
+          "info": {
+            "name": "List tools",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/tools/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "tool_type",
+                "value": "",
+                "type": "query",
+                "description": "Filter by tool type"
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results per page"
+              },
+              {
+                "name": "offset",
+                "value": "",
+                "type": "query",
+                "description": "Number of results to skip for pagination"
+              }
+            ]
+          },
+          "docs": "List all tools available to the project, including tools owned by the\nproject (`category: local`) and tools imported from other projects\n(`category: imported`).\n\nUse the returned `id` together with\n[`getToolParameters`](#operation/getToolParameters) to discover the\nrequest body schema for a given tool, then call\n[`runTool`](#operation/runTool) to execute it.\n"
+        },
+        {
+          "info": {
+            "name": "Get tool parameters schema",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/tools/:tool_id/parameters/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "tool_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the tool"
+              }
+            ]
+          },
+          "docs": "Return the JSON schema describing the parameters accepted by\n[`runTool`](#operation/runTool) for this tool.\n\nThe schema is a list of parameter specs (`id`, `type`, `description`,\n`required`, and an optional `default`). The exact list depends on the\ntool's `tool_type` and configuration — for example a retrieval tool\nconfigured with `auto_include` tags exposes an extra `included_tags`\nparameter.\n\nUse the `id` of each entry as the key in the JSON body sent to\n[`runTool`](#operation/runTool).\n"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

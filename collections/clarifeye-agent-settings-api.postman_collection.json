@@ -1,0 +1,352 @@
+{
+  "item": [
+    {
+      "id": "e43bbd1d-570e-4f8f-baf5-8071a8080c81",
+      "name": "Agent Settings",
+      "description": {
+        "content": "Manage AI agent configurations",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "661edb61-868b-43b3-af59-ac650c11c0ee",
+          "name": "List agent settings",
+          "request": {
+            "name": "List agent settings",
+            "description": {
+              "content": "Retrieve all agent settings (AI agent configurations) for a project.\nResults are ordered by most recently updated first.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "agent-settings",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Maximum number of results per page"
+                },
+                {
+                  "disabled": false,
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Number of results to skip for pagination"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "fd27f043-01d1-4e00-a45e-903ca16dc5eb",
+              "name": "Successful response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "agent-settings",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"count\": 4578,\n  \"next\": \"https://kpWFpRE.ijhplfpAAMR4O9-O0laaevdfh6NouatzX2,6js3T\",\n  \"previous\": \"http://blZaQrFwNlnkBgSqGAMdrMeBaGozavGz.lvhhN252+y7uU,KaHzFxWIa1-kyDAbji3qD\",\n  \"results\": [\n    {\n      \"id\": \"c145fe6c-986a-5162-5afd-e0fc3c6bf5b6\",\n      \"name\": \"string\",\n      \"description\": \"string\",\n      \"created_by\": \"f55da445-030f-bdbe-044d-fca79770614b\",\n      \"created_at\": \"1970-05-29T04:09:58.774Z\",\n      \"updated_at\": \"1988-04-16T04:22:15.863Z\",\n      \"readonly\": true,\n      \"additional_instructions\": \"string\",\n      \"agent_conversation_starter\": \"string\",\n      \"model\": \"claude-3-5-sonnet\",\n      \"project_brief\": \"string\",\n      \"knowledge_graph_mode\": \"string\",\n      \"knowledge_graph_parameters\": {},\n      \"tags_hierarchies_mode\": \"string\",\n      \"tags_hierarchies_parameters\": {},\n      \"selected_workflows_mode\": \"string\",\n      \"selected_workflows\": [\n        \"c014ae62-0f5e-5526-6ae8-d2436a9a6706\",\n        \"ef8a7848-ce7b-309d-4423-3bee63ef428d\"\n      ],\n      \"agent_mode\": \"string\",\n      \"tools\": [\n        \"ba514949-d3cf-9346-a6b0-f112e3ffe406\",\n        \"9cbdba17-f69e-9c9e-08c8-abbac41e1868\"\n      ],\n      \"last_conversation_date\": \"1969-06-11T12:38:25.581Z\",\n      \"local_documents\": [\n        \"fdef7296-7257-30bd-890b-9fccad4fea4c\",\n        \"92f7b18e-ba09-457e-bdd8-3f2aee125582\"\n      ]\n    },\n    {\n      \"id\": \"fe2459a2-6103-ecd4-32d9-f06da7cc4c60\",\n      \"name\": \"string\",\n      \"description\": \"string\",\n      \"created_by\": \"a4332eb7-2eca-b362-e5a3-6af85f9cd9cd\",\n      \"created_at\": \"2008-06-12T15:59:08.495Z\",\n      \"updated_at\": \"1964-04-03T21:39:48.414Z\",\n      \"readonly\": true,\n      \"additional_instructions\": \"string\",\n      \"agent_conversation_starter\": \"string\",\n      \"model\": \"claude-3-5-sonnet\",\n      \"project_brief\": \"string\",\n      \"knowledge_graph_mode\": \"string\",\n      \"knowledge_graph_parameters\": {},\n      \"tags_hierarchies_mode\": \"string\",\n      \"tags_hierarchies_parameters\": {},\n      \"selected_workflows_mode\": \"string\",\n      \"selected_workflows\": [\n        \"e93146ca-2e83-0644-31d9-4166d84b3ac4\",\n        \"902e5fde-5c38-e358-dc51-3100a0da2396\"\n      ],\n      \"agent_mode\": \"string\",\n      \"tools\": [\n        \"706ea3a1-6754-3b2e-c1bc-d2b3d1a06e0a\",\n        \"ee6f2f0a-63e8-2236-e1ac-9c1b5fbea34a\"\n      ],\n      \"last_conversation_date\": \"1976-01-26T21:53:50.283Z\",\n      \"local_documents\": [\n        \"7b16501b-607c-01d2-dd15-6034e8b9529b\",\n        \"debe6b95-0df9-063d-c6de-4a8bc6033e37\"\n      ]\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "d2a1aa4f-0542-404f-90e6-a8aeadc83fab",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "agent-settings",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "a1e13cb7-2357-4532-9c87-20db0cf297c4",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "agent-settings",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "a9996010-ea45-4159-a01d-f21883593c8b",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "agent-settings",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://eu.app.clarifeye.ai/api/v1",
+      "key": "baseUrl"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}"
+      }
+    ]
+  },
+  "info": {
+    "_postman_id": "cbe0e5a4-81e3-4aff-a16d-2795679e84f9",
+    "name": "Clarifeye Platform Agent Settings API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.\n\n## Authentication\nAll endpoints require authentication. Include the Authorization header in every request using either format:\n- `Authorization: Token <token_key>`\n- `Authorization: Bearer <token_key>`\n\n## Impersonation\n\nCertain endpoints support user impersonation for creating or listing data on behalf of other users.\nThis is useful for integrating external systems that need to attribute actions to specific users.\n\n**Header:** `X-Impersonate-Email`\n\n**Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)\n\n**Behavior:**\n- If the header is provided and the impersonator has the required permission, the action is performed as the target user\n- If the target user is not found, the request proceeds as the original authenticated user\n- If the target user does not have access to the project, the request proceeds as the original authenticated user\n- If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored\n\n\nContact Support:\n Name: Clarifeye Support",
+      "type": "text/plain"
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Clarifeye Platform Agent Settings API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Agent Settings",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List agent settings",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/agent-settings/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results per page"
+              },
+              {
+                "name": "offset",
+                "value": "",
+                "type": "query",
+                "description": "Number of results to skip for pagination"
+              }
+            ]
+          },
+          "docs": "Retrieve all agent settings (AI agent configurations) for a project.\nResults are ordered by most recently updated first.\n"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

@@ -1,0 +1,1095 @@
+{
+  "item": [
+    {
+      "id": "19ecbdd7-8b56-465d-93d8-1f91bb18ee99",
+      "name": "Interviews",
+      "description": {
+        "content": "Assign and review structured interview conversations",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "35741112-f758-47aa-aa24-22a6751a0d3c",
+          "name": "List interviews",
+          "request": {
+            "name": "List interviews",
+            "description": {
+              "content": "Retrieve interviews for a project.\n\n- Admins see all interviews in the project.\n- Other members see only interviews assigned to them or that they created.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "interviews",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "assigned_to",
+                  "value": "<string>",
+                  "description": "Set to \"me\" to return only interviews assigned to (or created by) the requesting user."
+                },
+                {
+                  "disabled": false,
+                  "key": "status",
+                  "value": "<string>",
+                  "description": "Filter by status. Comma-separated for multiple values (e.g. \"pending,in_progress\")."
+                },
+                {
+                  "disabled": false,
+                  "key": "text",
+                  "value": "<string>",
+                  "description": "Case-insensitive search over the interview name and transcript."
+                },
+                {
+                  "disabled": false,
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Maximum number of results per page"
+                },
+                {
+                  "disabled": false,
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Number of results to skip for pagination"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "70abe2fd-dbf8-4556-8d98-edc8ea441a4a",
+              "name": "Successful response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "interviews",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "assigned_to",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "text",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"count\": 3456,\n  \"next\": \"https://tMFvRWfYozAeedxNcnFPO.gqrr.V3XAjbozFIKPyU0dNoOxQo3mE2Jvd8whM69GQAleo1qQMip4-qgaND9P1pfui\",\n  \"previous\": \"http://zNdgKndZrfDQjlsjjkpyBcPb.estsL7QPQMp\",\n  \"results\": [\n    {\n      \"id\": \"84c5c1f7-e699-4d45-a7fd-9009694e19cd\",\n      \"name\": \"string\",\n      \"created_by\": \"a98deb0c-9af0-db13-d72f-1d1fdf0909a2\",\n      \"created_by_email\": \"aGdOh@BbDAczRRTyIefPdGwvrQlBcyAIvgD.mmop\",\n      \"type\": \"string\",\n      \"assigned_to\": \"63b11a67-06e6-5237-b719-651e5cfa9372\",\n      \"assigned_by\": \"d783b8c0-0bb4-1cd5-117d-64caaa5759e8\",\n      \"assigned_to_email\": \"lGrMkw@vNCyWjpCMblKXLqgufyYmzSOjS.yxg\",\n      \"assigned_by_email\": \"9ZT8@EwTnSvjgsBwlaB.ig\",\n      \"is_pending_invite\": true,\n      \"status\": \"completed\",\n      \"write_scope\": \"global\",\n      \"first_message_preview\": \"string\",\n      \"message_count\": 4118,\n      \"created_at\": \"1963-04-21T17:26:08.154Z\",\n      \"updated_at\": \"1968-08-08T21:36:52.367Z\"\n    },\n    {\n      \"id\": \"5f05aa39-3f4e-1a59-e108-2da1225ea519\",\n      \"name\": \"string\",\n      \"created_by\": \"a53ef371-716d-6e44-a26c-08385b8c5caa\",\n      \"created_by_email\": \"L6bUl@guOK.fk\",\n      \"type\": \"string\",\n      \"assigned_to\": \"b516f40c-adec-c6a6-433c-e32d839e698a\",\n      \"assigned_by\": \"79a10e4d-8067-60c2-db22-bd35bcbec8e2\",\n      \"assigned_to_email\": \"QJpCsce1ff5VPax@uozSrxQOrxgcaqWkIBnXYWrNhOvDFcE.tyu\",\n      \"assigned_by_email\": \"MTTbljOqh@SZsDtzqBJ.ixq\",\n      \"is_pending_invite\": true,\n      \"status\": \"in_progress\",\n      \"write_scope\": \"global\",\n      \"first_message_preview\": \"string\",\n      \"message_count\": 8353,\n      \"created_at\": \"2014-01-01T01:52:13.422Z\",\n      \"updated_at\": \"1955-07-15T09:59:40.840Z\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "500729c7-eddb-4015-be56-b662fed8e7c0",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "interviews",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "assigned_to",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "text",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "78ee420d-042a-48e7-aa1e-43810ad2586c",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "interviews",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "assigned_to",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "text",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "2de8df16-9e17-4718-a251-fa2a249940e9",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "interviews",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "assigned_to",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "text",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "cad99122-e7c7-4549-bc8d-31afde8e1360",
+          "name": "Create and assign interviews",
+          "request": {
+            "name": "Create and assign interviews",
+            "description": {
+              "content": "Create and assign one interview per assignee. **Admin only.**\n\nProvide existing project members via `assignee_ids` and/or new people to\ninvite via `invite_emails` (at least one is required). Invitees are added\nas non-admin Contributors. A separate interview is created for each\nassignee and the response is the list of created interviews.\n\n`write_scope` defaults to `local`. A `global` write scope requires every\nassignee to already be a project admin and cannot be combined with\n`invite_emails`.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "interviews",
+                "assign",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignee_ids\": [\n    \"<uuid>\",\n    \"<uuid>\"\n  ],\n  \"invite_emails\": [\n    \"<email>\",\n    \"<email>\"\n  ],\n  \"topic\": \"<string>\",\n  \"write_scope\": \"local\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "34059566-78da-49a7-9e17-deb58b882ddd",
+              "name": "Interviews created and assigned",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "interviews",
+                    "assign",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"assignee_ids\": [\n    \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"\n  ],\n  \"invite_emails\": [\n    \"newperson@example.com\"\n  ],\n  \"topic\": \"Q4 planning and roadmap review\",\n  \"write_scope\": \"local\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": \"7a21f0a6-f88c-bc97-e0fc-2f3b78549d95\",\n    \"name\": \"string\",\n    \"created_by\": \"5bdf2f3c-e358-1652-5b33-984d50106d4d\",\n    \"type\": \"string\",\n    \"type_additional_parameters\": {},\n    \"chat_memory\": {},\n    \"local_documents\": [\n      \"e13d5c0c-7816-1746-5486-f9094d87c797\",\n      \"8a9d879a-f712-6873-177c-c967fb477f72\"\n    ],\n    \"assigned_to\": \"bc47cce0-831c-4a8a-e426-b70e7bcb6376\",\n    \"assigned_by\": \"749d777c-fb1f-ea19-829c-966407e11c4f\",\n    \"assigned_to_email\": \"tVcczWklNA5xWy@IqGjELICVJwibhXlUujgNCySLzYsG.mqh\",\n    \"assigned_by_email\": \"NLr4krvCSW@XPFZvWjwawpWATzoAiYAexISZE.bulu\",\n    \"is_pending_invite\": false,\n    \"status\": \"in_progress\",\n    \"write_scope\": \"local\",\n    \"created_at\": \"2017-07-17T06:30:18.831Z\",\n    \"updated_at\": \"1964-03-23T05:51:24.456Z\"\n  },\n  {\n    \"id\": \"59ff42c9-2d57-7d3a-fca7-02bd47ae4648\",\n    \"name\": \"string\",\n    \"created_by\": \"7021565a-74e3-7e95-4803-9e18734fa70b\",\n    \"type\": \"string\",\n    \"type_additional_parameters\": {},\n    \"chat_memory\": {},\n    \"local_documents\": [\n      \"268da129-ef6a-c908-935e-fe68a5bcf906\",\n      \"cc0ab002-27fb-dcad-f3a5-0c1b7ffa2b3f\"\n    ],\n    \"assigned_to\": \"b040182e-a155-c896-0392-b8ca3715392f\",\n    \"assigned_by\": \"406fd6d3-ebe6-fadf-c0aa-5a22fbee60e9\",\n    \"assigned_to_email\": \"ElMPX-doJ2zhw@hdVATDrujS.imn\",\n    \"assigned_by_email\": \"okF@fKjZtanzVnKtVukMOmqcGgakQCMwIHt.kwz\",\n    \"is_pending_invite\": true,\n    \"status\": \"in_progress\",\n    \"write_scope\": \"local\",\n    \"created_at\": \"1980-11-03T18:34:03.443Z\",\n    \"updated_at\": \"1967-05-30T22:32:25.090Z\"\n  }\n]",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "a29018c3-7edd-407f-8ad2-64b7498c13be",
+              "name": "Bad request - invalid parameters or request body",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "interviews",
+                    "assign",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"assignee_ids\": [\n    \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"\n  ],\n  \"invite_emails\": [\n    \"newperson@example.com\"\n  ],\n  \"topic\": \"Q4 planning and roadmap review\",\n  \"write_scope\": \"local\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "128b1cf9-9554-4d97-a75d-931a948fd05a",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "interviews",
+                    "assign",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"assignee_ids\": [\n    \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"\n  ],\n  \"invite_emails\": [\n    \"newperson@example.com\"\n  ],\n  \"topic\": \"Q4 planning and roadmap review\",\n  \"write_scope\": \"local\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b5dc111d-65e6-4c66-a13c-91d93f958af1",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "interviews",
+                    "assign",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"assignee_ids\": [\n    \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"\n  ],\n  \"invite_emails\": [\n    \"newperson@example.com\"\n  ],\n  \"topic\": \"Q4 planning and roadmap review\",\n  \"write_scope\": \"local\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "7028fcfb-7e0e-4291-b02f-8d182d9a0f5d",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "interviews",
+                    "assign",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"assignee_ids\": [\n    \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"\n  ],\n  \"invite_emails\": [\n    \"newperson@example.com\"\n  ],\n  \"topic\": \"Q4 planning and roadmap review\",\n  \"write_scope\": \"local\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "662ed41d-1b6c-4b24-b416-0f090a865ddc",
+          "name": "Retrieve interview content",
+          "request": {
+            "name": "Retrieve interview content",
+            "description": {
+              "content": "Retrieve a single interview with its full content, including the\ncomplete `chat_history` transcript and `chat_memory`.\n\nNon-admins can only retrieve interviews assigned to them or that they\ncreated; admins can retrieve any interview in the project.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "interviews",
+                ":interview_id",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "interview_id",
+                  "description": "(Required) UUID of the interview"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "bbd15bd3-3caf-4c8f-8ee6-2c28106f3042",
+              "name": "Successful response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "interviews",
+                    ":interview_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "interview_id",
+                      "description": "(Required) UUID of the interview"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"8066cfb6-a316-4a00-c4eb-88fd6441b33d\",\n  \"name\": \"string\",\n  \"created_by\": \"0e6629b7-1bed-1206-21ad-365239cef495\",\n  \"type\": \"string\",\n  \"type_additional_parameters\": {},\n  \"chat_memory\": {},\n  \"local_documents\": [\n    \"d006b689-3700-0026-5de6-e4a218e68e87\",\n    \"b9c4d952-04e3-4918-5838-052a64fcf458\"\n  ],\n  \"assigned_to\": \"82a60da4-a4e3-c824-cf4e-693a3fa31026\",\n  \"assigned_by\": \"5e61028d-062f-0ead-6754-cac3c60d08f8\",\n  \"assigned_to_email\": \"SC0Yq9FxZSc3t@gNIzoBMJkC.wfp\",\n  \"assigned_by_email\": \"IOfH@XElMAlnEqryNozDtJcM.ozwg\",\n  \"is_pending_invite\": false,\n  \"status\": \"in_progress\",\n  \"write_scope\": \"global\",\n  \"created_at\": \"1965-04-10T19:19:26.420Z\",\n  \"updated_at\": \"2011-03-14T04:17:45.564Z\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b2e91e06-30cd-45a9-a514-430e5275d6a0",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "interviews",
+                    ":interview_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "interview_id",
+                      "description": "(Required) UUID of the interview"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "a8734ffe-35f2-484f-8869-3ecc2443dc03",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "interviews",
+                    ":interview_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "interview_id",
+                      "description": "(Required) UUID of the interview"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "bccf0f8f-d02a-4cc2-8b60-fc6509b6f132",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "interviews",
+                    ":interview_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "interview_id",
+                      "description": "(Required) UUID of the interview"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://eu.app.clarifeye.ai/api/v1",
+      "key": "baseUrl"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}"
+      }
+    ]
+  },
+  "info": {
+    "_postman_id": "4626d152-8d9c-4298-a960-ea9fcb496d6a",
+    "name": "Clarifeye Platform Agent Settings Interviews API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.\n\n## Authentication\nAll endpoints require authentication. Include the Authorization header in every request using either format:\n- `Authorization: Token <token_key>`\n- `Authorization: Bearer <token_key>`\n\n## Impersonation\n\nCertain endpoints support user impersonation for creating or listing data on behalf of other users.\nThis is useful for integrating external systems that need to attribute actions to specific users.\n\n**Header:** `X-Impersonate-Email`\n\n**Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)\n\n**Behavior:**\n- If the header is provided and the impersonator has the required permission, the action is performed as the target user\n- If the target user is not found, the request proceeds as the original authenticated user\n- If the target user does not have access to the project, the request proceeds as the original authenticated user\n- If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored\n\n\nContact Support:\n Name: Clarifeye Support",
+      "type": "text/plain"
+    }
+  }
+}

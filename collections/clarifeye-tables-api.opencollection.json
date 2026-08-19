@@ -1,0 +1,53 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Clarifeye Platform Agent Settings Tables API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Tables",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Execute data operations",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/tables/:table_id/data-operations/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "table_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the table"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Execute CRUD operations on table data.\n\n**Operations:**\n- `read`: Retrieve records with optional filtering and pagination\n- `create`: Insert new records\n- `update`: Update existing records (use `override` for full replacement)\n- `delete`: Remove records matching filters\n\n**Filtering:**\nUse the `filters` parameter to filter records by field values.\nExample: `{\"document_id\": \"550e8400-e29b-41d4-a716-446655440000\"}`\n\n**Column Selection:**\nUse the `columns` parameter to specify which fields to retur"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

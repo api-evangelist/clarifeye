@@ -1,0 +1,983 @@
+{
+  "item": [
+    {
+      "id": "5222f41d-317f-4eaf-a50f-d94184ce9449",
+      "name": "Pipeline Runs",
+      "description": {
+        "content": "Inspect pipeline runs queued by extraction flows or other pipeline triggers — list runs and fetch the details/status of a single run",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "1f1757d5-ac1b-4e80-a86a-11d24e770064",
+          "name": "List pipeline runs",
+          "request": {
+            "name": "List pipeline runs",
+            "description": {
+              "content": "List all pipeline runs in the project, ordered by creation date (most\nrecent first). Use this to discover the `id` of a run returned by an\nextraction flow `run-sync` / `publish` call, or to monitor recent\nactivity.\n\nThe list response uses a lightweight serializer that omits the very\nlarge `chunk_ids` / `document_ids` arrays and truncates `raw_logs` to\nthe most recent entries. Fetch a single run via the detail endpoint\nto get the full payload.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "pipeline-runs",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "status",
+                  "value": "<string>",
+                  "description": "Filter pipeline runs by status (e.g. `pending`, `running`, `completed`, `failed`)."
+                },
+                {
+                  "disabled": false,
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Maximum number of results per page"
+                },
+                {
+                  "disabled": false,
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Number of results to skip for pagination"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "f1edcab7-cdab-418e-9ea9-37f825484ac6",
+              "name": "Successful response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "pipeline-runs",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"count\": 8903,\n  \"next\": \"https://EjchwVmuZYIxyJhZJQufdXOWV.qkneTded52n.y71jRyFcy5uLaxmAk2tOj+dFgtJ1NQSamsLrczvYM5GUnnvMy\",\n  \"previous\": \"https://sldaeKc.ritcXPRc3SH96OnsCTW+bydCdO2utXuKtAimVS+RZ\",\n  \"results\": [\n    {\n      \"id\": \"03343ddd-c61f-9cbd-01c2-c394ac28b158\",\n      \"created_at\": \"1962-10-17T18:17:21.386Z\",\n      \"updated_at\": \"1957-07-14T10:59:42.316Z\",\n      \"status\": \"<string>\",\n      \"project\": \"9b2aab8d-331a-ffda-d313-8d01d7df5407\",\n      \"pipeline_name\": \"string\",\n      \"mode\": \"string\",\n      \"celery_task_id\": \"string\",\n      \"user\": \"c42cc350-38f3-9b20-8578-c3d53655aba8\",\n      \"tables\": {},\n      \"steps\": [\n        {\n          \"id\": \"006518b1-d34c-0cae-6132-69ad1911fbbb\",\n          \"created_at\": \"2008-03-16T16:14:49.550Z\",\n          \"updated_at\": \"1992-06-29T08:09:30.615Z\",\n          \"step\": \"string\",\n          \"name\": \"string\",\n          \"status\": \"<string>\",\n          \"inputs\": {\n            \"key_0\": \"180d51ea-245d-e0f2-19cc-f20ddfafecb1\"\n          },\n          \"outputs\": {\n            \"key_0\": \"d69871b8-2cdd-1a8a-9d92-4f534dfa9d9f\",\n            \"key_1\": \"5c25c84a-2689-5a15-a0df-6e5133f6b3f3\"\n          },\n          \"warnings\": {},\n          \"depends_on\": [\n            \"string\",\n            \"string\"\n          ],\n          \"params\": {},\n          \"tag_extractor_id\": \"79271cc4-c788-9d82-5f71-1b210bd72eb8\",\n          \"object_extractor_id\": \"0b2135e9-2877-ee3b-9350-327fa847c875\",\n          \"chunks_extractor_id\": \"da75c459-0c5d-8db2-77b6-d2197b4c6641\"\n        },\n        {\n          \"id\": \"2a265bc3-6686-78b4-39f2-02af84e40379\",\n          \"created_at\": \"2007-03-28T04:37:00.891Z\",\n          \"updated_at\": \"2012-09-01T13:03:51.100Z\",\n          \"step\": \"string\",\n          \"name\": \"string\",\n          \"status\": \"<string>\",\n          \"inputs\": {\n            \"key_0\": \"f014b431-88a2-0a4c-e08d-5084b10ad032\"\n          },\n          \"outputs\": {\n            \"key_0\": \"a46215a2-e4de-bf3a-3a28-9de6a71181d6\"\n          },\n          \"warnings\": {},\n          \"depends_on\": [\n            \"string\",\n            \"string\"\n          ],\n          \"params\": {},\n          \"tag_extractor_id\": \"2e5c9f5f-936c-935e-63b8-17c510f44830\",\n          \"object_extractor_id\": \"3c8304ae-dfc0-5590-339c-ab45a494e055\",\n          \"chunks_extractor_id\": \"519d15cb-72f5-f1c6-dac7-d1996aa6a52e\"\n        }\n      ],\n      \"document_count\": 578,\n      \"chunk_count\": 1619,\n      \"raw_logs\": \"string\"\n    },\n    {\n      \"id\": \"04c5c621-0f94-157d-d705-c4185560b79c\",\n      \"created_at\": \"1985-10-04T14:32:39.013Z\",\n      \"updated_at\": \"2002-09-07T23:03:30.635Z\",\n      \"status\": \"<string>\",\n      \"project\": \"e7a8ff7b-b7fe-844b-d9a9-4aea22de06a6\",\n      \"pipeline_name\": \"string\",\n      \"mode\": \"string\",\n      \"celery_task_id\": \"string\",\n      \"user\": \"bc138268-371b-886e-de6d-32794829d446\",\n      \"tables\": {},\n      \"steps\": [\n        {\n          \"id\": \"0c3d67c9-116e-f539-a158-a94f71064fa1\",\n          \"created_at\": \"2005-02-27T08:45:36.953Z\",\n          \"updated_at\": \"2008-08-11T10:59:41.710Z\",\n          \"step\": \"string\",\n          \"name\": \"string\",\n          \"status\": \"<string>\",\n          \"inputs\": {\n            \"key_0\": \"2059ab59-b0a7-5cd7-ecd5-1199a4a9618a\",\n            \"key_1\": \"fd3551f6-b8ce-6a28-0e10-279571e61c38\"\n          },\n          \"outputs\": {\n            \"key_0\": \"2bc5b3ac-37f4-c9f4-0e4c-1835e7567796\",\n            \"key_1\": \"90674966-61c0-4bbc-7cd0-b874a0b89c09\"\n          },\n          \"warnings\": {},\n          \"depends_on\": [\n            \"string\",\n            \"string\"\n          ],\n          \"params\": {},\n          \"tag_extractor_id\": \"24d3caf1-a6e5-850f-85b5-ca743bca7c0b\",\n          \"object_extractor_id\": \"7a8ca33a-525d-3e24-b5eb-492beccc1d4a\",\n          \"chunks_extractor_id\": \"7be14ec8-40a7-c7bb-80dc-de82f224a13c\"\n        },\n        {\n          \"id\": \"ff359192-251b-bf27-964d-989f3c338ace\",\n          \"created_at\": \"1976-10-04T15:45:03.532Z\",\n          \"updated_at\": \"2017-02-22T10:46:32.488Z\",\n          \"step\": \"string\",\n          \"name\": \"string\",\n          \"status\": \"<string>\",\n          \"inputs\": {\n            \"key_0\": \"81317834-c81e-1e5f-f0db-4e492f858291\",\n            \"key_1\": \"43be5daa-a0c1-30e5-c17b-5bfd52586d55\"\n          },\n          \"outputs\": {\n            \"key_0\": \"95dc34d6-a62e-c1fb-26e6-1c88467cc282\",\n            \"key_1\": \"decb3816-7f65-2ce3-c668-8519370feee7\"\n          },\n          \"warnings\": {},\n          \"depends_on\": [\n            \"string\",\n            \"string\"\n          ],\n          \"params\": {},\n          \"tag_extractor_id\": \"38421592-b164-34c2-7488-356aa25cc19b\",\n          \"object_extractor_id\": \"4d510c50-9088-5de5-6638-000f3a18390e\",\n          \"chunks_extractor_id\": \"bf04f618-010f-d031-7eb3-efe532922878\"\n        }\n      ],\n      \"document_count\": 6266,\n      \"chunk_count\": 7824,\n      \"raw_logs\": \"string\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "65f54066-a03b-41dc-b95f-4c534d74ace5",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "pipeline-runs",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "2507316e-1e4a-403b-87d5-c04d1149c6f1",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "pipeline-runs",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "8b7658ad-0c78-4086-a00b-f67ff11a3269",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "pipeline-runs",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "bc239b73-79ef-4a47-bece-e6ba1a049663",
+          "name": "Get pipeline run details and status",
+          "request": {
+            "name": "Get pipeline run details and status",
+            "description": {
+              "content": "Retrieve the full details of a single pipeline run, including its\ncurrent `status`, the list of executed steps with their per-step\nstatus, and the aggregated `raw_logs` produced during execution.\n\nPoll this endpoint to track the progress of a run started via an\nextraction flow `run-sync` or `publish` call. A run is in a terminal\nstate when `status` is one of `completed`, `completed_with_warnings`,\n`failed`, or `aborted`.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "pipeline-runs",
+                ":pipeline_run_id",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "pipeline_run_id",
+                  "description": "(Required) UUID of the pipeline run"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "b4ad303c-e374-4dea-b7b6-6ba7620f5dde",
+              "name": "Pipeline run details",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "pipeline-runs",
+                    ":pipeline_run_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "pipeline_run_id",
+                      "description": "(Required) UUID of the pipeline run"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"2cd65637-9ec2-61e3-2c68-5725eb4ff175\",\n  \"created_at\": \"1966-06-17T22:21:11.478Z\",\n  \"updated_at\": \"2017-11-18T00:22:49.104Z\",\n  \"status\": \"<string>\",\n  \"project\": \"fd0ad29d-59c0-9a9a-44e4-bb54ffce6b80\",\n  \"pipeline_name\": \"string\",\n  \"mode\": \"string\",\n  \"celery_task_id\": \"string\",\n  \"user\": \"f86a0171-b810-a5ad-87ca-47b3dd21069f\",\n  \"tables\": {},\n  \"steps\": [\n    {\n      \"id\": \"c8fc71d5-a60e-5179-49a1-f9c4da99d7bf\",\n      \"created_at\": \"1996-01-20T12:21:39.846Z\",\n      \"updated_at\": \"2005-06-26T00:51:51.050Z\",\n      \"step\": \"string\",\n      \"name\": \"string\",\n      \"status\": \"<string>\",\n      \"inputs\": {\n        \"key_0\": \"819e0820-33d8-0584-3742-819b3085bd94\"\n      },\n      \"outputs\": {\n        \"key_0\": \"e24e05af-3455-669e-2d44-d0cf4f0f6fd3\"\n      },\n      \"warnings\": {},\n      \"depends_on\": [\n        \"string\",\n        \"string\"\n      ],\n      \"params\": {},\n      \"tag_extractor_id\": \"07c165e3-29ef-2758-4221-31e56eee7850\",\n      \"object_extractor_id\": \"321b121a-3388-3cf8-daa5-43963b969c8e\",\n      \"chunks_extractor_id\": \"469a5c8f-23fa-fd70-ba88-af7c43e91055\"\n    },\n    {\n      \"id\": \"c561713c-d81a-1dc6-28f9-918dfdb1aa81\",\n      \"created_at\": \"2008-07-22T12:41:17.012Z\",\n      \"updated_at\": \"1970-12-19T03:57:01.725Z\",\n      \"step\": \"string\",\n      \"name\": \"string\",\n      \"status\": \"<string>\",\n      \"inputs\": {\n        \"key_0\": \"4801ea46-d174-3a95-9809-5c10e2bdb6a5\",\n        \"key_1\": \"934bc385-cdee-3525-16ee-43f1d1f76c16\"\n      },\n      \"outputs\": {\n        \"key_0\": \"8139fdb6-5666-c59b-4176-efbd90d10c66\",\n        \"key_1\": \"5e780434-dc0e-33f8-2709-41a61e8b0667\"\n      },\n      \"warnings\": {},\n      \"depends_on\": [\n        \"string\",\n        \"string\"\n      ],\n      \"params\": {},\n      \"tag_extractor_id\": \"973b94f6-e6f1-22c6-e14f-162a9f6d686e\",\n      \"object_extractor_id\": \"70dc4811-f6a0-306b-255d-a3daaf2dfdde\",\n      \"chunks_extractor_id\": \"e02cee2d-f399-d185-23bd-14673d0f5f47\"\n    }\n  ],\n  \"document_ids\": [\n    \"98aa19b5-458d-6a5b-e045-f7e157d45aef\",\n    \"dbd3d279-0abb-2202-54bf-9bdecaa44b5f\"\n  ],\n  \"chunk_ids\": [\n    \"a6231601-6d16-d4c7-cd5a-cd771a28cd2f\",\n    \"d81647a3-971d-c3fe-70a5-e0a519d849da\"\n  ],\n  \"raw_logs\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b282210d-27e0-4c06-adb9-2d4234170ea4",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "pipeline-runs",
+                    ":pipeline_run_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "pipeline_run_id",
+                      "description": "(Required) UUID of the pipeline run"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "3bf4a0b6-b244-401b-8c9a-289f67386c30",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "pipeline-runs",
+                    ":pipeline_run_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "pipeline_run_id",
+                      "description": "(Required) UUID of the pipeline run"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "8d360659-d691-481c-96c7-686299b67098",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "pipeline-runs",
+                    ":pipeline_run_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "pipeline_run_id",
+                      "description": "(Required) UUID of the pipeline run"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "09a94aba-d233-4dcc-8d31-4998632c9557",
+          "name": "Abort a pipeline run",
+          "request": {
+            "name": "Abort a pipeline run",
+            "description": {
+              "content": "Cancel a pipeline run that is `pending` or `running`. The run and any\nof its non-terminal steps transition to `aborted`.\n\nAborting an already-terminal run (`completed`, `completed_with_warnings`,\n`failed`, or `aborted`) is a no-op.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "pipeline-runs",
+                ":pipeline_run_id",
+                "abort",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "pipeline_run_id",
+                  "description": "(Required) UUID of the pipeline run"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "4c2a4f68-8122-4176-839c-251ca8da91d3",
+              "name": "Abort accepted",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "pipeline-runs",
+                    ":pipeline_run_id",
+                    "abort",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "pipeline_run_id",
+                      "description": "(Required) UUID of the pipeline run"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"aborted\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "cdc5856e-7380-472b-bf49-8e1119c28f3a",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "pipeline-runs",
+                    ":pipeline_run_id",
+                    "abort",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "pipeline_run_id",
+                      "description": "(Required) UUID of the pipeline run"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "34118efb-20aa-4f59-b7b5-8016d92e2f71",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "pipeline-runs",
+                    ":pipeline_run_id",
+                    "abort",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "pipeline_run_id",
+                      "description": "(Required) UUID of the pipeline run"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "059469b9-ac08-4f2c-94c9-056313162c2f",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "pipeline-runs",
+                    ":pipeline_run_id",
+                    "abort",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "pipeline_run_id",
+                      "description": "(Required) UUID of the pipeline run"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://eu.app.clarifeye.ai/api/v1",
+      "key": "baseUrl"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}"
+      }
+    ]
+  },
+  "info": {
+    "_postman_id": "8eea9652-6abc-4a03-8310-00ce30b1b462",
+    "name": "Clarifeye Platform Agent Settings Pipeline Runs API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.\n\n## Authentication\nAll endpoints require authentication. Include the Authorization header in every request using either format:\n- `Authorization: Token <token_key>`\n- `Authorization: Bearer <token_key>`\n\n## Impersonation\n\nCertain endpoints support user impersonation for creating or listing data on behalf of other users.\nThis is useful for integrating external systems that need to attribute actions to specific users.\n\n**Header:** `X-Impersonate-Email`\n\n**Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)\n\n**Behavior:**\n- If the header is provided and the impersonator has the required permission, the action is performed as the target user\n- If the target user is not found, the request proceeds as the original authenticated user\n- If the target user does not have access to the project, the request proceeds as the original authenticated user\n- If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored\n\n\nContact Support:\n Name: Clarifeye Support",
+      "type": "text/plain"
+    }
+  }
+}

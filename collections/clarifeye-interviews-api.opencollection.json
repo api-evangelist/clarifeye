@@ -1,0 +1,121 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Clarifeye Platform Agent Settings Interviews API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Interviews",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List interviews",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/interviews/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "assigned_to",
+                "value": "",
+                "type": "query",
+                "description": "Set to \"me\" to return only interviews assigned to (or created by) the requesting user."
+              },
+              {
+                "name": "status",
+                "value": "",
+                "type": "query",
+                "description": "Filter by status. Comma-separated for multiple values (e.g. \"pending,in_progress\")."
+              },
+              {
+                "name": "text",
+                "value": "",
+                "type": "query",
+                "description": "Case-insensitive search over the interview name and transcript."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results per page"
+              },
+              {
+                "name": "offset",
+                "value": "",
+                "type": "query",
+                "description": "Number of results to skip for pagination"
+              }
+            ]
+          },
+          "docs": "Retrieve interviews for a project.\n\n- Admins see all interviews in the project.\n- Other members see only interviews assigned to them or that they created.\n"
+        },
+        {
+          "info": {
+            "name": "Create and assign interviews",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/interviews/assign/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Create and assign one interview per assignee. **Admin only.**\n\nProvide existing project members via `assignee_ids` and/or new people to\ninvite via `invite_emails` (at least one is required). Invitees are added\nas non-admin Contributors. A separate interview is created for each\nassignee and the response is the list of created interviews.\n\n`write_scope` defaults to `local`. A `global` write scope requires every\nassignee to already be a project admin and cannot be combined with\n`invite_emails`.\n"
+        },
+        {
+          "info": {
+            "name": "Retrieve interview content",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/interviews/:interview_id/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "interview_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the interview"
+              }
+            ]
+          },
+          "docs": "Retrieve a single interview with its full content, including the\ncomplete `chat_history` transcript and `chat_memory`.\n\nNon-admins can only retrieve interviews assigned to them or that they\ncreated; admins can retrieve any interview in the project.\n"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

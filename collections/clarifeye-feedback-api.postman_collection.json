@@ -1,0 +1,2686 @@
+{
+  "item": [
+    {
+      "id": "44277d0c-d58e-46ef-9443-57bccad873d1",
+      "name": "Feedback",
+      "description": {
+        "content": "Submit feedback on conversation messages",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "2110be19-9cd1-4d0a-b509-e22f7e798f13",
+          "name": "List feedback",
+          "request": {
+            "name": "List feedback",
+            "description": {
+              "content": "Retrieve all feedback for a project with optional filtering.\n\n**Access Control:**\n- Admins see all feedback in the project\n- Regular users see only feedback they submitted\n\n**Impersonation:**\n- When using impersonation, returns feedback submitted by the impersonated user\n\n**Sorting:**\n- Results are ordered by most recently updated first (`updated_at` field)\n\n**Note:** For grouped views by conversation, use `/projects/{project_id}/feedbacks/grouped_by_conversation/`\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "feedbacks",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "status",
+                  "value": "<string>",
+                  "description": "Filter by feedback status"
+                },
+                {
+                  "disabled": false,
+                  "key": "is_positive",
+                  "value": "<boolean>",
+                  "description": "Filter by sentiment"
+                },
+                {
+                  "disabled": false,
+                  "key": "search",
+                  "value": "<string>",
+                  "description": "Search in feedback text or user email (case-insensitive)"
+                },
+                {
+                  "disabled": false,
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Maximum number of results per page"
+                },
+                {
+                  "disabled": false,
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Number of results to skip for pagination"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                "key": "X-Impersonate-Email",
+                "value": "<email>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "558a2396-c605-431a-922b-f5f3cbb20439",
+              "name": "Successful response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "is_positive",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "search",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"count\": 722,\n  \"next\": \"https://OdjXUKuVQtUMFYURgzertpEXu.rbniUa6nKQR5KW.5ytLtEXbhU2Ia8HVJmL,VcEmVVQ+p7z5QMIa5uvR9S7Mkd,OsMF9MfGC\",\n  \"previous\": \"https://PypEcvVMBxWsPbisOIFWnWszuXe.uaTQVlTILDWs0mGRStowDHXMHX19OW2Geu.UwtfrEPuBI3Ep5bE1nKX\",\n  \"results\": [\n    {\n      \"id\": \"ca75f5cd-2d3b-7211-53c9-c54a80ca443a\",\n      \"created_at\": \"1982-08-02T17:14:06.813Z\",\n      \"updated_at\": \"1987-01-02T23:46:50.066Z\",\n      \"given_by\": {\n        \"id\": \"e350bd1f-8efe-c45f-5fae-de6b0c7eae6b\",\n        \"email\": \"NuWsatHgaeJW@TbQVrDPdbjJaeaaGGXXTJYZK.xfzh\"\n      },\n      \"status\": \"<string>\",\n      \"feedback\": \"string\",\n      \"context\": {\n        \"conversation_id\": \"2fddea20-6ba3-c6fd-71bf-9e27fdfae09a\",\n        \"query_id\": 2462,\n        \"source\": \"string\"\n      },\n      \"is_positive\": true,\n      \"user_message\": \"string\",\n      \"conversation_title\": \"string\",\n      \"suggested_action_type\": \"string\",\n      \"suggested_action_data\": {}\n    },\n    {\n      \"id\": \"de6896ba-6beb-851c-e0ce-a0637764a1e5\",\n      \"created_at\": \"1995-11-14T07:29:17.212Z\",\n      \"updated_at\": \"2019-07-20T04:41:25.141Z\",\n      \"given_by\": {\n        \"id\": \"13f2d208-b21c-b1cb-2ebb-a6df38d2c7b3\",\n        \"email\": \"FFZTpmSngWC@SrvxuEFDFmEBYgswewUGhZcLSlJfcTHk.tzt\"\n      },\n      \"status\": \"<string>\",\n      \"feedback\": \"string\",\n      \"context\": {\n        \"conversation_id\": \"ded57115-815e-f213-c108-c59a1803e83d\",\n        \"query_id\": 6610,\n        \"source\": \"string\"\n      },\n      \"is_positive\": true,\n      \"user_message\": \"string\",\n      \"conversation_title\": \"string\",\n      \"suggested_action_type\": \"string\",\n      \"suggested_action_data\": {}\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "1b3d5dfe-c05d-4146-b951-6b7f1a2839e0",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "is_positive",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "search",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e5546a8f-878b-4325-b95d-1bb76a64a9f0",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "is_positive",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "search",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "0e75e7ee-83e2-4c81-af95-e127af27d3d0",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "is_positive",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "search",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "dc07eeaf-7aca-44ae-83e7-3d5fb02cd8d0",
+          "name": "Submit feedback on a message",
+          "request": {
+            "name": "Submit feedback on a message",
+            "description": {
+              "content": "Provide feedback on a specific message in a conversation.\n\n**Impersonation:**\n- When using impersonation, the feedback is submitted as the impersonated user\n\n## Feedback Types\n\n| Type | is_positive Value | Description |\n|------|-------------------|-------------|\n| Thumbs up | `true` | Positive feedback |\n| Thumbs down | `false` | Negative feedback |\n| Neutral | `null` | Neutral or no sentiment |\n\n## Query ID\n\nThe `query_id` identifies a specific user query and all related responses.\nIt can be obtained from:\n- The streaming response (each message contains `query_id`)\n- The `streaming_completed` event's `chat_history`\n- The conversation retrieval endpoint\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "feedbacks",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                "key": "X-Impersonate-Email",
+                "value": "<email>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"context\": {\n    \"conversation_id\": \"<uuid>\",\n    \"query_id\": \"<integer>\",\n    \"source\": \"<string>\"\n  },\n  \"feedback\": \"<string>\",\n  \"is_positive\": \"<boolean>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "6e4d5dd3-87b2-457e-94a4-5a3f501a39d3",
+              "name": "Feedback submitted successfully",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"context\": {\n    \"conversation_id\": \"<uuid>\",\n    \"query_id\": 0,\n    \"source\": \"<string>\"\n  },\n  \"feedback\": \"This answer was helpful and accurate\",\n  \"is_positive\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"48e5fc32-58b4-5ec3-2a28-eec90cde8589\",\n  \"created_at\": \"1983-09-09T19:54:18.141Z\",\n  \"updated_at\": \"1962-02-10T23:06:43.047Z\",\n  \"given_by\": {\n    \"id\": \"c483706f-4b5d-0721-7dd3-e6deccf42883\",\n    \"email\": \"BBJa@jiWAbJ.bxj\"\n  },\n  \"status\": \"<string>\",\n  \"feedback\": \"string\",\n  \"context\": {\n    \"conversation_id\": \"bb5add2b-69fe-3077-c21e-f044e3311404\",\n    \"query_id\": 7062,\n    \"source\": \"string\"\n  },\n  \"is_positive\": true,\n  \"user_message\": \"string\",\n  \"conversation_title\": \"string\",\n  \"suggested_action_type\": \"string\",\n  \"suggested_action_data\": {}\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "7e263fcb-134e-4fe8-b52c-b72aa2405264",
+              "name": "Bad request - invalid parameters or request body",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"context\": {\n    \"conversation_id\": \"<uuid>\",\n    \"query_id\": 0,\n    \"source\": \"<string>\"\n  },\n  \"feedback\": \"This answer was helpful and accurate\",\n  \"is_positive\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "a76b79c9-d836-44c6-8146-50530a197418",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"context\": {\n    \"conversation_id\": \"<uuid>\",\n    \"query_id\": 0,\n    \"source\": \"<string>\"\n  },\n  \"feedback\": \"This answer was helpful and accurate\",\n  \"is_positive\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "dc6f0d12-7c72-4a78-9bda-8514812a23c2",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"context\": {\n    \"conversation_id\": \"<uuid>\",\n    \"query_id\": 0,\n    \"source\": \"<string>\"\n  },\n  \"feedback\": \"This answer was helpful and accurate\",\n  \"is_positive\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "7ae48b8e-9d76-495f-b723-dc75488abb71",
+          "name": "Update feedback status",
+          "request": {
+            "name": "Update feedback status",
+            "description": {
+              "content": "Mark feedback as reviewed or update other fields.\n\n**Access Control:**\n- Admins can update any feedback\n- Regular users can only update feedback they submitted\n\n**Impersonation:**\n- When using impersonation, the ownership check is performed against the impersonated user\n- This allows updating feedback submitted by the impersonated user\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "feedbacks",
+                ":feedback_id",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "feedback_id",
+                  "description": "(Required) UUID of the feedback"
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                "key": "X-Impersonate-Email",
+                "value": "<email>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"<string>\",\n  \"feedback\": \"<string>\",\n  \"is_positive\": \"<boolean>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "3e12c222-9e78-4901-bd9d-ae2cbb371b58",
+              "name": "Feedback updated successfully",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ":feedback_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "feedback_id",
+                      "description": "(Required) UUID of the feedback"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"<string>\",\n  \"feedback\": \"<string>\",\n  \"is_positive\": \"<boolean>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"48e5fc32-58b4-5ec3-2a28-eec90cde8589\",\n  \"created_at\": \"1983-09-09T19:54:18.141Z\",\n  \"updated_at\": \"1962-02-10T23:06:43.047Z\",\n  \"given_by\": {\n    \"id\": \"c483706f-4b5d-0721-7dd3-e6deccf42883\",\n    \"email\": \"BBJa@jiWAbJ.bxj\"\n  },\n  \"status\": \"<string>\",\n  \"feedback\": \"string\",\n  \"context\": {\n    \"conversation_id\": \"bb5add2b-69fe-3077-c21e-f044e3311404\",\n    \"query_id\": 7062,\n    \"source\": \"string\"\n  },\n  \"is_positive\": true,\n  \"user_message\": \"string\",\n  \"conversation_title\": \"string\",\n  \"suggested_action_type\": \"string\",\n  \"suggested_action_data\": {}\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "16c1fec8-1d00-4052-9240-1c1d7ef94df5",
+              "name": "Bad request - invalid parameters or request body",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ":feedback_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "feedback_id",
+                      "description": "(Required) UUID of the feedback"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"<string>\",\n  \"feedback\": \"<string>\",\n  \"is_positive\": \"<boolean>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "598e647c-ebd8-4a0c-a9a4-8bac05b7d630",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ":feedback_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "feedback_id",
+                      "description": "(Required) UUID of the feedback"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"<string>\",\n  \"feedback\": \"<string>\",\n  \"is_positive\": \"<boolean>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "7945f5ef-7cfd-4b0b-8d1f-d7b2cdb356f7",
+              "name": "Forbidden - user does not own this feedback",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ":feedback_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "feedback_id",
+                      "description": "(Required) UUID of the feedback"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"<string>\",\n  \"feedback\": \"<string>\",\n  \"is_positive\": \"<boolean>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "0058c220-e18b-4c8a-bb7c-941a939f17fc",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ":feedback_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "feedback_id",
+                      "description": "(Required) UUID of the feedback"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"<string>\",\n  \"feedback\": \"<string>\",\n  \"is_positive\": \"<boolean>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "1dc9fc9f-ad09-4a4f-ba0a-feafc1b97a5b",
+          "name": "Delete feedback",
+          "request": {
+            "name": "Delete feedback",
+            "description": {
+              "content": "Remove feedback.\n\n**Access Control:**\n- Admins can delete any feedback\n- Regular users can only delete feedback they submitted\n\n**Impersonation:**\n- When using impersonation, the ownership check is performed against the impersonated user\n- This allows deleting feedback submitted by the impersonated user\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "feedbacks",
+                ":feedback_id",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "feedback_id",
+                  "description": "(Required) UUID of the feedback"
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                "key": "X-Impersonate-Email",
+                "value": "<email>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "DELETE",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "bb18382d-b2f1-4134-bd10-e3ed1cd1c79e",
+              "name": "Feedback deleted successfully",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ":feedback_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "feedback_id",
+                      "description": "(Required) UUID of the feedback"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "No Content",
+              "code": 204,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "357343fb-152c-4bbe-a31d-962ae8f931f3",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ":feedback_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "feedback_id",
+                      "description": "(Required) UUID of the feedback"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "51b33009-b1f9-43a5-8ea2-02016285f16f",
+              "name": "Forbidden - user does not own this feedback",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ":feedback_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "feedback_id",
+                      "description": "(Required) UUID of the feedback"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "453d5ce1-fea0-4417-a455-9ea71134b704",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    ":feedback_id",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "feedback_id",
+                      "description": "(Required) UUID of the feedback"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "0f36f286-6d9d-4b10-b129-18762f193e5f",
+          "name": "Get feedbacks grouped by conversation",
+          "request": {
+            "name": "Get feedbacks grouped by conversation",
+            "description": {
+              "content": "Retrieve feedbacks grouped by their associated playground conversation with unified pagination and sorting.\n\n**Access Control:**\n- Admins see all feedback in the project\n- Regular users see only feedback they submitted\n\n**Grouping Logic:**\n- Feedbacks are grouped by their `conversation` field (FK to PlaygroundConversation)\n- Conversation groups and ungrouped feedbacks are returned in a single flat array\n- Ungrouped feedbacks appear as single-item groups with `conversation_id: null`\n- Each group includes status counts and all associated feedbacks\n\n**Pagination:**\n- Paginates across the unified list of conversation groups and ungrouped feedbacks\n- Use `limit` and `offset` parameters to page through results\n- The `count` field reflects the total number of displayable groups (conversations + ungrouped)\n\n**Status Filtering:**\n- `status=to_review`: Groups with ANY unreviewed feedback\n- `status=reviewed`: Groups where ALL feedbacks are reviewed\n- No status filter: All groups\n\n**Sorting:**\n- All groups are sorted together by the most recent feedback update time\n- With `status=to_review`: Sorted by the most recent \"to_review\" feedback update\n- With `status=reviewed`: Sorted by the most recent \"reviewed\" feedback update\n- Without status filter: Sorted by the most recent feedback update (any status)\n- Feedbacks within each group are ordered by most recently updated first\n\n**Impersonation:**\n- When using impersonation, returns feedback submitted by the impersonated user\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "feedbacks",
+                "grouped_by_conversation",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "status",
+                  "value": "<string>",
+                  "description": "Filter by conversation status (based on feedback statuses)"
+                },
+                {
+                  "disabled": false,
+                  "key": "search",
+                  "value": "<string>",
+                  "description": "Search in feedback text or user email (case-insensitive)"
+                },
+                {
+                  "disabled": false,
+                  "key": "include_archived",
+                  "value": "<string>",
+                  "description": "Set to \"true\" to include feedbacks from archived conversations. Defaults to false."
+                },
+                {
+                  "disabled": false,
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Maximum number of results per page"
+                },
+                {
+                  "disabled": false,
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Number of results to skip for pagination"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                "key": "X-Impersonate-Email",
+                "value": "<email>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "86c2f39c-7555-4ee0-bd6f-755f7e5c6cf3",
+              "name": "Successful response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    "grouped_by_conversation",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "search",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "include_archived",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"count\": 2477,\n  \"next\": \"http://UUDzEnnCXYMu.mjWNnsSMNm5gWg-WpoklhOFud,8BNaA36pDfK4FdC4aze48SGKH25EKO5xRb2XO.iXmSbmUykQVmx\",\n  \"previous\": \"http://IywusYqslNB.naawmv1jPkH0A,O4TlMPdkgWV4nb7aQ1IuYAWP-B09sYdfml\",\n  \"results\": [\n    {\n      \"conversation_id\": \"7cab7a8a-861d-642b-8fe4-e5c80ea1471c\",\n      \"conversation_title\": \"Product pricing discussion\",\n      \"conversation_created_at\": \"1996-09-18T22:30:03.308Z\",\n      \"agent_name\": \"Customer Support Assistant\",\n      \"conversation_is_archived\": false,\n      \"to_review_count\": 3,\n      \"reviewed_count\": 1,\n      \"feedbacks\": [\n        {\n          \"id\": \"00079b20-05fd-26af-24c3-7105d7762be2\",\n          \"created_at\": \"1957-11-27T03:23:06.148Z\",\n          \"updated_at\": \"1954-11-03T18:01:50.174Z\",\n          \"given_by\": {\n            \"id\": \"e0dac2e9-cbcb-73b9-f1ac-cd1cffc66ef6\",\n            \"email\": \"WQfWofxPxWdUV@eAVswBxslVYmKIXrhZF.eqj\"\n          },\n          \"status\": \"<string>\",\n          \"feedback\": \"string\",\n          \"context\": {\n            \"conversation_id\": \"84431cb9-b237-cc97-a381-9ff18ca46a29\",\n            \"query_id\": 5482,\n            \"source\": \"string\"\n          },\n          \"is_positive\": false,\n          \"user_message\": \"string\",\n          \"conversation_title\": \"string\",\n          \"suggested_action_type\": \"string\",\n          \"suggested_action_data\": {}\n        },\n        {\n          \"id\": \"2c16b6d1-5298-5d94-59db-8aafc1eeb8ed\",\n          \"created_at\": \"1959-07-14T11:46:11.563Z\",\n          \"updated_at\": \"1983-11-06T02:31:53.236Z\",\n          \"given_by\": {\n            \"id\": \"81a5f64e-50e0-c2ed-0ae9-75f850144951\",\n            \"email\": \"sc0@bFaDpaLFOomYtLTESrpzk.vn\"\n          },\n          \"status\": \"<string>\",\n          \"feedback\": \"string\",\n          \"context\": {\n            \"conversation_id\": \"f93890d4-b387-17b5-cba8-06302ec80ce0\",\n            \"query_id\": 3458,\n            \"source\": \"string\"\n          },\n          \"is_positive\": true,\n          \"user_message\": \"string\",\n          \"conversation_title\": \"string\",\n          \"suggested_action_type\": \"string\",\n          \"suggested_action_data\": {}\n        }\n      ]\n    },\n    {\n      \"conversation_id\": \"e712577d-1ce9-4889-5eb7-faee48bb8eeb\",\n      \"conversation_title\": \"Product pricing discussion\",\n      \"conversation_created_at\": \"1985-05-13T10:28:15.211Z\",\n      \"agent_name\": \"Customer Support Assistant\",\n      \"conversation_is_archived\": false,\n      \"to_review_count\": 3,\n      \"reviewed_count\": 1,\n      \"feedbacks\": [\n        {\n          \"id\": \"dfb0c70e-091d-9669-eb11-e620f9a397cd\",\n          \"created_at\": \"1971-12-13T21:15:51.165Z\",\n          \"updated_at\": \"1981-09-22T02:23:13.337Z\",\n          \"given_by\": {\n            \"id\": \"4c87d7c3-8326-d3e2-e209-e4875321bb33\",\n            \"email\": \"U4WbJH@uoeHqdyIQy.mz\"\n          },\n          \"status\": \"<string>\",\n          \"feedback\": \"string\",\n          \"context\": {\n            \"conversation_id\": \"d489fb0c-bea8-936a-c463-af4a66cc9d56\",\n            \"query_id\": 361,\n            \"source\": \"string\"\n          },\n          \"is_positive\": false,\n          \"user_message\": \"string\",\n          \"conversation_title\": \"string\",\n          \"suggested_action_type\": \"string\",\n          \"suggested_action_data\": {}\n        },\n        {\n          \"id\": \"99e52489-61db-5559-f306-7a88967a329b\",\n          \"created_at\": \"1970-12-07T19:13:49.173Z\",\n          \"updated_at\": \"2003-04-15T03:27:51.294Z\",\n          \"given_by\": {\n            \"id\": \"7bebe816-0754-2732-0a1b-b854c69a11c8\",\n            \"email\": \"DZTDfvo@mjcujAEnGJPKLHsbxWp.yeg\"\n          },\n          \"status\": \"<string>\",\n          \"feedback\": \"string\",\n          \"context\": {\n            \"conversation_id\": \"0b186267-e343-d46b-8455-ced3d41c0ce5\",\n            \"query_id\": 2213,\n            \"source\": \"string\"\n          },\n          \"is_positive\": true,\n          \"user_message\": \"string\",\n          \"conversation_title\": \"string\",\n          \"suggested_action_type\": \"string\",\n          \"suggested_action_data\": {}\n        }\n      ]\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "8ac5f56d-494a-42e6-ae00-82222cdd03c5",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    "grouped_by_conversation",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "search",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "include_archived",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "05092696-13f1-40b0-b185-72efb4353302",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    "grouped_by_conversation",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "search",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "include_archived",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "51c577f1-99ce-41b7-a28a-9c555c9ab2d8",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    "grouped_by_conversation",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "search",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "include_archived",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "c9ab592a-a67f-4117-a8d6-84d8e406a392",
+          "name": "Mark all feedbacks in a conversation as reviewed",
+          "request": {
+            "name": "Mark all feedbacks in a conversation as reviewed",
+            "description": {
+              "content": "Update the status of all feedbacks associated with a specific conversation to \"reviewed\".\n\n**Access Control:**\n- Admins can update all feedbacks in the project\n- Regular users can only update feedback they submitted\n\n**Impersonation:**\n- When using impersonation, only updates feedback submitted by the impersonated user\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "feedbacks",
+                "mark_conversation_reviewed",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                "key": "X-Impersonate-Email",
+                "value": "<email>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversation_id\": \"<uuid>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "7f4abda9-d3ea-4ebc-a306-0301e91a5144",
+              "name": "Feedbacks updated successfully",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    "mark_conversation_reviewed",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"conversation_id\": \"123e4567-e89b-12d3-a456-426614174000\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"updated_count\": 3,\n  \"conversation_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"new_status\": \"reviewed\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "f3a1ac2e-4b18-480e-8c58-d004250ba5dc",
+              "name": "Bad request - invalid parameters or request body",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    "mark_conversation_reviewed",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"conversation_id\": \"123e4567-e89b-12d3-a456-426614174000\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"User not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e9f90d74-5292-497a-9264-72e079c98358",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    "mark_conversation_reviewed",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"conversation_id\": \"123e4567-e89b-12d3-a456-426614174000\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "f7813b04-4e9c-4a83-9ac2-17026bca378b",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    "mark_conversation_reviewed",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"conversation_id\": \"123e4567-e89b-12d3-a456-426614174000\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "8219cde3-12d1-4354-85af-b729ce3c84ae",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    "mark_conversation_reviewed",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"conversation_id\": \"123e4567-e89b-12d3-a456-426614174000\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "20a3014b-2b8f-469c-87cd-f1701d514029",
+          "name": "Get feedback counts by status",
+          "request": {
+            "name": "Get feedback counts by status",
+            "description": {
+              "content": "Retrieve comprehensive counts of feedbacks split by status, conversation grouping, and ungrouped feedbacks.\n\n**Access Control:**\n- Admins see counts for all feedback in the project\n- Regular users see counts only for feedback they submitted\n\n**Impersonation:**\n- When using impersonation, returns counts for feedback submitted by the impersonated user\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "projects",
+                ":project_id",
+                "feedbacks",
+                "counts",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "project_id",
+                  "description": "(Required) UUID of the project"
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                "key": "X-Impersonate-Email",
+                "value": "<email>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "e4803ab4-6466-4667-9e03-3997035a1bec",
+              "name": "Successful response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    "counts",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"to_review\": 8,\n  \"reviewed\": 15\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "ac5580f6-4e14-4672-87ba-0d7ac9166404",
+              "name": "Unauthorized - missing or invalid authentication",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    "counts",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authentication credentials were not provided.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "9d88e996-96fc-467b-9d69-c69d6b315f38",
+              "name": "Forbidden - insufficient permissions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    "counts",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"You do not have permission to perform this action.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "58798818-ced7-4d03-a1ec-31b8d899c375",
+              "name": "Not found - resource does not exist",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "projects",
+                    ":project_id",
+                    "feedbacks",
+                    "counts",
+                    ""
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "project_id",
+                      "description": "(Required) UUID of the project"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.\nIf the target user is not found or does not have access to the project, the request\nproceeds as the authenticated user. Contact Clarifeye to enable this permission.\n",
+                    "key": "X-Impersonate-Email",
+                    "value": "<email>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://eu.app.clarifeye.ai/api/v1",
+      "key": "baseUrl"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}"
+      }
+    ]
+  },
+  "info": {
+    "_postman_id": "036cc332-1fa4-4dbd-8c7c-c31e57507352",
+    "name": "Clarifeye Platform Agent Settings Feedback API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.\n\n## Authentication\nAll endpoints require authentication. Include the Authorization header in every request using either format:\n- `Authorization: Token <token_key>`\n- `Authorization: Bearer <token_key>`\n\n## Impersonation\n\nCertain endpoints support user impersonation for creating or listing data on behalf of other users.\nThis is useful for integrating external systems that need to attribute actions to specific users.\n\n**Header:** `X-Impersonate-Email`\n\n**Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)\n\n**Behavior:**\n- If the header is provided and the impersonator has the required permission, the action is performed as the target user\n- If the target user is not found, the request proceeds as the original authenticated user\n- If the target user does not have access to the project, the request proceeds as the original authenticated user\n- If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored\n\n\nContact Support:\n Name: Clarifeye Support",
+      "type": "text/plain"
+    }
+  }
+}

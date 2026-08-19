@@ -1,0 +1,111 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Clarifeye Platform Agent Settings Pipeline Runs API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Pipeline Runs",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List pipeline runs",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/pipeline-runs/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "status",
+                "value": "",
+                "type": "query",
+                "description": "Filter pipeline runs by status (e.g. `pending`, `running`, `completed`, `failed`)."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results per page"
+              },
+              {
+                "name": "offset",
+                "value": "",
+                "type": "query",
+                "description": "Number of results to skip for pagination"
+              }
+            ]
+          },
+          "docs": "List all pipeline runs in the project, ordered by creation date (most\nrecent first). Use this to discover the `id` of a run returned by an\nextraction flow `run-sync` / `publish` call, or to monitor recent\nactivity.\n\nThe list response uses a lightweight serializer that omits the very\nlarge `chunk_ids` / `document_ids` arrays and truncates `raw_logs` to\nthe most recent entries. Fetch a single run via the detail endpoint\nto get the full payload.\n"
+        },
+        {
+          "info": {
+            "name": "Get pipeline run details and status",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/pipeline-runs/:pipeline_run_id/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "pipeline_run_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the pipeline run"
+              }
+            ]
+          },
+          "docs": "Retrieve the full details of a single pipeline run, including its\ncurrent `status`, the list of executed steps with their per-step\nstatus, and the aggregated `raw_logs` produced during execution.\n\nPoll this endpoint to track the progress of a run started via an\nextraction flow `run-sync` or `publish` call. A run is in a terminal\nstate when `status` is one of `completed`, `completed_with_warnings`,\n`failed`, or `aborted`.\n"
+        },
+        {
+          "info": {
+            "name": "Abort a pipeline run",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/pipeline-runs/:pipeline_run_id/abort/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "pipeline_run_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the pipeline run"
+              }
+            ]
+          },
+          "docs": "Cancel a pipeline run that is `pending` or `running`. The run and any\nof its non-terminal steps transition to `aborted`.\n\nAborting an already-terminal run (`completed`, `completed_with_warnings`,\n`failed`, or `aborted`) is a no-op.\n"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

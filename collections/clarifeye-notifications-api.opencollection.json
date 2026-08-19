@@ -1,0 +1,241 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Clarifeye Platform Agent Settings Notifications API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Notifications",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List project notifications",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/notifications/",
+            "headers": [
+              {
+                "name": "X-Impersonate-Email",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "status",
+                "value": "",
+                "type": "query",
+                "description": "Filter by notification status"
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results per page"
+              },
+              {
+                "name": "offset",
+                "value": "",
+                "type": "query",
+                "description": "Number of results to skip for pagination"
+              }
+            ]
+          },
+          "docs": "List notifications for the effective user (authenticated user or impersonated user).\n\n**Filtering:**\n- Only PROJECT-scoped notifications are returned (not account-level)\n- Returns all unread notifications plus read notifications from the last 7 days\n- Optionally filter by status using the `status` query parameter\n\n**Impersonation:**\nWhen using the `X-Impersonate-Email` header, returns notifications for the target user\ninstead of the authenticated user.\n"
+        },
+        {
+          "info": {
+            "name": "Retrieve a notification",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/notifications/:notification_id/",
+            "headers": [
+              {
+                "name": "X-Impersonate-Email",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "notification_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the notification"
+              }
+            ]
+          },
+          "docs": "Retrieve details of a single notification for the effective user.\n\n**Impersonation:**\nWhen using the `X-Impersonate-Email` header, retrieves the notification for the target user.\n"
+        },
+        {
+          "info": {
+            "name": "Delete a notification",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/notifications/:notification_id/",
+            "headers": [
+              {
+                "name": "X-Impersonate-Email",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "notification_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the notification"
+              }
+            ]
+          },
+          "docs": "Delete a single notification for the effective user.\n\n**Impersonation:**\nWhen using the `X-Impersonate-Email` header, deletes the notification for the target user.\n"
+        },
+        {
+          "info": {
+            "name": "Mark notification as read",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/notifications/:notification_id/mark-as-read/",
+            "headers": [
+              {
+                "name": "X-Impersonate-Email",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "notification_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the notification"
+              }
+            ]
+          },
+          "docs": "Mark a single notification as read for the effective user.\n\n**Impersonation:**\nWhen using the `X-Impersonate-Email` header, marks the notification as read for the target user.\n"
+        },
+        {
+          "info": {
+            "name": "Mark notification as unread",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/notifications/:notification_id/mark-as-unread/",
+            "headers": [
+              {
+                "name": "X-Impersonate-Email",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "notification_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the notification"
+              }
+            ]
+          },
+          "docs": "Mark a single notification as unread for the effective user.\n\n**Impersonation:**\nWhen using the `X-Impersonate-Email` header, marks the notification as unread for the target user.\n"
+        },
+        {
+          "info": {
+            "name": "Mark all notifications as read",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/notifications/mark-all-as-read/",
+            "headers": [
+              {
+                "name": "X-Impersonate-Email",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              }
+            ]
+          },
+          "docs": "Mark all unread project notifications as read for the effective user.\n\n**Impersonation:**\nWhen using the `X-Impersonate-Email` header, marks all notifications as read for the target user.\n"
+        },
+        {
+          "info": {
+            "name": "Delete all read notifications",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/notifications/delete-read/",
+            "headers": [
+              {
+                "name": "X-Impersonate-Email",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              }
+            ]
+          },
+          "docs": "Delete all read project notifications for the effective user.\n\n**Impersonation:**\nWhen using the `X-Impersonate-Email` header, deletes all read notifications for the target user.\n"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

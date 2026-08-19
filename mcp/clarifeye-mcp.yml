@@ -13,20 +13,22 @@ server:
   auth:
     type: oauth2
     flow: authorizationCode
-    dcr: true            # Dynamic Client Registration supported
+    dcr: true
     pkce: S256
     authorization_url: https://eu.app.clarifeye.ai/o/authorize/
     token_url: https://eu.app.clarifeye.ai/o/token/
-    scopes: [claudeai, openid, offline_access]
+    scopes:
+    - claudeai
+    - openid
+    - offline_access
     also_supported: 'user-token (Authorization: Bearer <token>)'
   protected_resource: https://eu.app.clarifeye.ai/.well-known/oauth-protected-resource
-description: >
-  Clarifeye publishes a hosted, per-knowledge-store MCP server that exposes an
-  organization's captured knowledge (briefs, playbooks, mental maps, tags,
-  objects) to AI clients (Claude, ChatGPT, Microsoft Copilot, or any MCP-capable
-  client). Installed alongside a downloadable "Clarifeye skill" from the Deploy
-  tab. Tools are workflow-shaped across discover / inspect / run / feedback /
-  review / edit stages.
+description: 'Clarifeye publishes a hosted, per-knowledge-store MCP server that exposes an organization''s
+  captured knowledge (briefs, playbooks, mental maps, tags, objects) to AI clients (Claude, ChatGPT, Microsoft
+  Copilot, or any MCP-capable client). Installed alongside a downloadable "Clarifeye skill" from the Deploy
+  tab. Tools are workflow-shaped across discover / inspect / run / feedback / review / edit stages.
+
+  '
 tools:
 - name: list_knowledge_stores
   description: List the knowledge stores the current token can access; returns [{id, name, brief}].
@@ -68,3 +70,10 @@ tools:
   description: Batch-edit a playbook artifact (admin).
 - name: edit_mental_map
   description: Batch-edit the mental map / ontology (admin).
+deployment:
+  mode: remote
+  endpoint: https://eu.app.clarifeye.ai/mcp
+  verified: probed
+  probe: gated
+  checked: '2026-08-12'
+  source: catalog MCP census

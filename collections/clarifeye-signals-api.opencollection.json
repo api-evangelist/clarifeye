@@ -1,0 +1,125 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Clarifeye Platform Agent Settings Signals API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Signals",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List signals",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/signals/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "status",
+                "value": "",
+                "type": "query",
+                "description": "Filter by signal status"
+              },
+              {
+                "name": "is_positive",
+                "value": "",
+                "type": "query",
+                "description": "Filter by sentiment"
+              },
+              {
+                "name": "search",
+                "value": "",
+                "type": "query",
+                "description": "Search in signal text or user email (case-insensitive)"
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results per page"
+              },
+              {
+                "name": "offset",
+                "value": "",
+                "type": "query",
+                "description": "Number of results to skip for pagination"
+              }
+            ]
+          },
+          "docs": "Retrieve all signals for a project with optional filtering.\n\n**Access Control:**\n- Admins see all signals in the project\n- Regular users see only signals they submitted\n\n**Sorting:**\n- Results are ordered by most recently updated first (`updated_at` field)\n\n**Note:** For grouped views by conversation, use `/projects/{project_id}/signals/grouped_by_conversation/`"
+        },
+        {
+          "info": {
+            "name": "Submit a signal",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/signals/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Submit a signal about the project's content: the signal text itself,\nplus optional `context.additional_details` with extra context for the\nreviewer. The signal shows up in the review UI for domain experts.\n\n## Signal Types\n\n| Type | is_positive Value | Description |\n|------|-------------------|-------------|\n| Thumbs up | `true` | Positive signal |\n| Thumbs down | `false` | Negative signal |\n| Neutral | `null` | Neutral or no sentiment |"
+        },
+        {
+          "info": {
+            "name": "Update signal status",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://eu.app.clarifeye.ai/api/v1/projects/:project_id/signals/:signal_id/",
+            "params": [
+              {
+                "name": "project_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the project"
+              },
+              {
+                "name": "signal_id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the signal"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Mark a signal as reviewed or update other fields.\n\n**Access Control:**\n- Admins can update any signal\n- Regular users can only update signals they submitted"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}
