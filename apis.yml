@@ -38,6 +38,15 @@ modified: '2026-07-18'
 tags:
 - Company
 - Artificial Intelligence
+- Knowledge-Management
+- MCP
+- Document Intelligence
+- Agents
+- Enterprise AI
+- Retrieval
+tags_raw:
+- Company
+- Artificial Intelligence
 - Knowledge Management
 - Model Context Protocol
 - Document Intelligence
@@ -122,6 +131,8 @@ apis:
   humanURL: https://docs.clarifeye.ai/api-reference
   baseURL: https://eu.app.clarifeye.ai/api/v1
   tags:
+  - Notification
+  tags_raw:
   - Notifications
   properties:
   - type: OpenAPI
@@ -174,6 +185,8 @@ apis:
   humanURL: https://docs.clarifeye.ai/api-reference
   baseURL: https://eu.app.clarifeye.ai/api/v1
   tags:
+  - User
+  tags_raw:
   - Users
   properties:
   - type: OpenAPI
