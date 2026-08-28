@@ -12,6 +12,18 @@ description: >-
   to source. Clarifeye targets regulated industries where undocumented processes
   create key-person risk, offers EU and US data localization with PII redaction
   at ingestion, and is SOC 2 Type II certified. Backed by EQT Ventures.
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: true
+  label: Hosted service · you call their endpoint
+  confidence: high
+  source:
+  - openapi
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 accessModel:
   pricing: unknown
   onboarding: self-serve
