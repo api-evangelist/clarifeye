@@ -1,43 +1,7 @@
-openapi: 3.0.3
+openapi: 3.2.0
 info:
-  title: Clarifeye Platform Agent Settings Pipeline Runs API
-  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
-
-
-    ## Authentication
-
-    All endpoints require authentication. Include the Authorization header in every request using either format:
-
-    - `Authorization: Token <token_key>`
-
-    - `Authorization: Bearer <token_key>`
-
-
-    ## Impersonation
-
-
-    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
-
-    This is useful for integrating external systems that need to attribute actions to specific users.
-
-
-    **Header:** `X-Impersonate-Email`
-
-
-    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
-
-
-    **Behavior:**
-
-    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
-
-    - If the target user is not found, the request proceeds as the original authenticated user
-
-    - If the target user does not have access to the project, the request proceeds as the original authenticated user
-
-    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
-
-    '
+  title: Clarifeye Platform Pipeline Runs API
+  description: REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
   version: 1.0.0
   contact:
     name: Clarifeye Support
@@ -73,9 +37,7 @@ paths:
 
         the most recent entries. Fetch a single run via the detail endpoint
 
-        to get the full payload.
-
-        '
+        to get the full payload.'
       operationId: listPipelineRuns
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -124,9 +86,7 @@ paths:
 
         state when `status` is one of `completed`, `completed_with_warnings`,
 
-        `failed`, or `aborted`.
-
-        '
+        `failed`, or `aborted`.'
       operationId: getPipelineRun
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -156,9 +116,7 @@ paths:
 
         Aborting an already-terminal run (`completed`, `completed_with_warnings`,
 
-        `failed`, or `aborted`) is a no-op.
-
-        '
+        `failed`, or `aborted`) is a no-op.'
       operationId: abortPipelineRun
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -181,227 +139,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
-  schemas:
-    PipelineRun:
-      type: object
-      description: Full pipeline run payload returned by the detail endpoint.
-      properties:
-        id:
-          type: string
-          format: uuid
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-        status:
-          $ref: '#/components/schemas/PipelineRunStatus'
-        project:
-          type: string
-          format: uuid
-        pipeline_name:
-          type: string
-        mode:
-          type: string
-          description: Run mode (e.g. `recreate-all`, `recreate-single`, `upsert-single`, `upsert-all`).
-        celery_task_id:
-          type: string
-        user:
-          type: string
-          format: uuid
-          nullable: true
-          description: ID of the user who triggered the run.
-        tables:
-          type: object
-          nullable: true
-          description: Map of table name → table version UUID for the run.
-        steps:
-          type: array
-          items:
-            $ref: '#/components/schemas/PipelineRunStep'
-        document_ids:
-          type: array
-          items:
-            type: string
-            format: uuid
-          nullable: true
-          description: UUIDs of documents this run targets.
-        chunk_ids:
-          type: array
-          items:
-            type: string
-            format: uuid
-          nullable: true
-          description: UUIDs of chunks this run targets.
-        raw_logs:
-          type: string
-          description: Concatenated logs produced during execution.
-    PipelineRunStatus:
-      type: string
-      description: 'Lifecycle status of a pipeline run or step:
-
-        - `pending` — queued, not yet started
-
-        - `running` — currently executing
-
-        - `completed` — finished successfully
-
-        - `completed_with_warnings` — finished, but some steps emitted warnings
-
-        - `failed` — terminated with an error
-
-        - `aborted` — cancelled via the `abort` action
-
-        '
-      enum:
-      - pending
-      - running
-      - completed
-      - completed_with_warnings
-      - failed
-      - aborted
-    PipelineRunListItem:
-      type: object
-      description: 'Lightweight pipeline run representation returned by the list endpoint.
-
-        Excludes the large `chunk_ids` / `document_ids` arrays and truncates
-
-        `raw_logs` to the most recent entries. Use the detail endpoint to get
-
-        the full payload.
-
-        '
-      properties:
-        id:
-          type: string
-          format: uuid
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-        status:
-          $ref: '#/components/schemas/PipelineRunStatus'
-        project:
-          type: string
-          format: uuid
-        pipeline_name:
-          type: string
-        mode:
-          type: string
-          description: Run mode (e.g. `recreate-all`, `recreate-single`, `upsert-single`, `upsert-all`).
-        celery_task_id:
-          type: string
-        user:
-          type: string
-          format: uuid
-          nullable: true
-          description: ID of the user who triggered the run.
-        tables:
-          type: object
-          nullable: true
-          description: Map of table name → table version UUID for the run.
-        steps:
-          type: array
-          items:
-            $ref: '#/components/schemas/PipelineRunStep'
-        document_count:
-          type: integer
-          description: Number of documents this run targets.
-        chunk_count:
-          type: integer
-          description: Number of chunks this run targets.
-        raw_logs:
-          type: string
-          description: Truncated tail of run logs (most recent entries only).
-    PipelineRunStep:
-      type: object
-      description: One step within a pipeline run's DAG.
-      properties:
-        id:
-          type: string
-          format: uuid
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-        step:
-          type: string
-          description: The pipeline step type (parsing, chunking, tag-extraction, etc.).
-        name:
-          type: string
-          nullable: true
-          description: Human-readable name of the step within the DAG.
-        status:
-          $ref: '#/components/schemas/PipelineRunStatus'
-        inputs:
-          type: object
-          description: Map of input table name → resolved table version UUID.
-          additionalProperties:
-            type: string
-            format: uuid
-            nullable: true
-        outputs:
-          type: object
-          description: Map of output table name → resolved table version UUID.
-          additionalProperties:
-            type: string
-            format: uuid
-            nullable: true
-        warnings:
-          nullable: true
-          description: Warnings emitted by the step, when any.
-        depends_on:
-          type: array
-          items:
-            type: string
-          description: Names of the steps this step depends on.
-        params:
-          type: object
-          description: Step-specific parameters used at execution time.
-        tag_extractor_id:
-          type: string
-          format: uuid
-          nullable: true
-        object_extractor_id:
-          type: string
-          format: uuid
-          nullable: true
-        chunks_extractor_id:
-          type: string
-          format: uuid
-          nullable: true
-    PaginatedResponse:
-      type: object
-      properties:
-        count:
-          type: integer
-          description: Total number of results
-        next:
-          type: string
-          format: uri
-          nullable: true
-          description: URL to next page of results
-        previous:
-          type: string
-          format: uri
-          nullable: true
-          description: URL to previous page of results
-        results:
-          type: array
-          items: {}
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
   parameters:
     Limit:
       name: limit
@@ -436,7 +173,249 @@ components:
       schema:
         type: string
         format: uuid
+  schemas:
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    PipelineRun:
+      type: object
+      description: Full pipeline run payload returned by the detail endpoint.
+      properties:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/PipelineRunStatus'
+        project:
+          type: string
+          format: uuid
+        pipeline_name:
+          type: string
+        mode:
+          type: string
+          description: Run mode (e.g. `recreate-all`, `recreate-single`, `upsert-single`, `upsert-all`).
+        celery_task_id:
+          type: string
+        user:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: ID of the user who triggered the run.
+        tables:
+          type:
+          - object
+          - 'null'
+          description: Map of table name → table version UUID for the run.
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/PipelineRunStep'
+        document_ids:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+            format: uuid
+          description: UUIDs of documents this run targets.
+        chunk_ids:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+            format: uuid
+          description: UUIDs of chunks this run targets.
+        raw_logs:
+          type: string
+          description: Concatenated logs produced during execution.
+    PipelineRunStep:
+      type: object
+      description: One step within a pipeline run's DAG.
+      properties:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        step:
+          type: string
+          description: The pipeline step type (parsing, chunking, tag-extraction, etc.).
+        name:
+          type:
+          - string
+          - 'null'
+          description: Human-readable name of the step within the DAG.
+        status:
+          $ref: '#/components/schemas/PipelineRunStatus'
+        inputs:
+          type: object
+          description: Map of input table name → resolved table version UUID.
+          additionalProperties:
+            type:
+            - string
+            - 'null'
+            format: uuid
+        outputs:
+          type: object
+          description: Map of output table name → resolved table version UUID.
+          additionalProperties:
+            type:
+            - string
+            - 'null'
+            format: uuid
+        warnings:
+          description: Warnings emitted by the step, when any.
+        depends_on:
+          type: array
+          items:
+            type: string
+          description: Names of the steps this step depends on.
+        params:
+          type: object
+          description: Step-specific parameters used at execution time.
+        tag_extractor_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        object_extractor_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        chunks_extractor_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+    PipelineRunListItem:
+      type: object
+      description: 'Lightweight pipeline run representation returned by the list endpoint.
+
+        Excludes the large `chunk_ids` / `document_ids` arrays and truncates
+
+        `raw_logs` to the most recent entries. Use the detail endpoint to get
+
+        the full payload.
+
+        '
+      properties:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/PipelineRunStatus'
+        project:
+          type: string
+          format: uuid
+        pipeline_name:
+          type: string
+        mode:
+          type: string
+          description: Run mode (e.g. `recreate-all`, `recreate-single`, `upsert-single`, `upsert-all`).
+        celery_task_id:
+          type: string
+        user:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: ID of the user who triggered the run.
+        tables:
+          type:
+          - object
+          - 'null'
+          description: Map of table name → table version UUID for the run.
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/PipelineRunStep'
+        document_count:
+          type: integer
+          description: Number of documents this run targets.
+        chunk_count:
+          type: integer
+          description: Number of chunks this run targets.
+        raw_logs:
+          type: string
+          description: Truncated tail of run logs (most recent entries only).
+    PipelineRunStatus:
+      type: string
+      description: 'Lifecycle status of a pipeline run or step:
+
+        - `pending` — queued, not yet started
+
+        - `running` — currently executing
+
+        - `completed` — finished successfully
+
+        - `completed_with_warnings` — finished, but some steps emitted warnings
+
+        - `failed` — terminated with an error
+
+        - `aborted` — cancelled via the `abort` action
+
+        '
+      enum:
+      - pending
+      - running
+      - completed
+      - completed_with_warnings
+      - failed
+      - aborted
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
   responses:
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
     Forbidden:
       description: Forbidden - insufficient permissions
       content:
@@ -453,14 +432,6 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: Authentication credentials were not provided.
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
   securitySchemes:
     BearerAuth:
       type: http

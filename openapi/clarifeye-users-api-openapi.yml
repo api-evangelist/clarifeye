@@ -1,46 +1,10 @@
-openapi: 3.0.3
+openapi: 3.2.0
 info:
-  title: Clarifeye Platform Agent Settings Users API
-  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
-
-
-    ## Authentication
-
-    All endpoints require authentication. Include the Authorization header in every request using either format:
-
-    - `Authorization: Token <token_key>`
-
-    - `Authorization: Bearer <token_key>`
-
-
-    ## Impersonation
-
-
-    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
-
-    This is useful for integrating external systems that need to attribute actions to specific users.
-
-
-    **Header:** `X-Impersonate-Email`
-
-
-    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
-
-
-    **Behavior:**
-
-    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
-
-    - If the target user is not found, the request proceeds as the original authenticated user
-
-    - If the target user does not have access to the project, the request proceeds as the original authenticated user
-
-    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
-
-    '
+  title: Clarifeye Users API
   version: 1.0.0
   contact:
     name: Clarifeye Support
+  description: 'Operations tagged Users across 2 of this provider''s published API definitions: clarifeye-backoffice-openapi-original.yaml, clarifeye-openapi-original.yaml. Each path carries the servers of the definition it was published in.'
 servers:
 - url: https://eu.app.clarifeye.ai/api/v1
   description: EU
@@ -89,6 +53,11 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+    servers:
+    - url: https://eu.app.clarifeye.ai/api/v1
+      description: EU
+    - url: https://us.app.clarifeye.ai/api/v1
+      description: US
   /projects/{project_id}/users/remove-by-email/:
     post:
       tags:
@@ -125,6 +94,11 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+    servers:
+    - url: https://eu.app.clarifeye.ai/api/v1
+      description: EU
+    - url: https://us.app.clarifeye.ai/api/v1
+      description: US
   /projects/{project_id}/users/{permission_id}/:
     patch:
       tags:
@@ -172,120 +146,12 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+    servers:
+    - url: https://eu.app.clarifeye.ai/api/v1
+      description: EU
+    - url: https://us.app.clarifeye.ai/api/v1
+      description: US
 components:
-  responses:
-    BadRequest:
-      description: Bad request - invalid parameters or request body
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ValidationError'
-    Forbidden:
-      description: Forbidden - insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: You do not have permission to perform this action.
-    Unauthorized:
-      description: Unauthorized - missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Authentication credentials were not provided.
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
-  schemas:
-    ProjectPermission:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        user:
-          $ref: '#/components/schemas/User'
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/PermissionType'
-    ValidationError:
-      type: object
-      additionalProperties:
-        type: array
-        items:
-          type: string
-      example:
-        email:
-        - This field is required.
-    PermissionType:
-      type: string
-      enum:
-      - CAN_PERFORM_ADMIN_ACTIONS
-      - CAN_VIEW_DATA
-      - CAN_RUN_TASKS
-      - CAN_VIEW_TECHNICAL_INTERFACE
-      - CAN_IMPERSONATE_OTHER_USERS
-      description: '- `CAN_PERFORM_ADMIN_ACTIONS`: Full administrative access
-
-        - `CAN_VIEW_DATA`: Read-only access to project data
-
-        - `CAN_RUN_TASKS`: Execute background tasks and pipelines
-
-        - `CAN_VIEW_TECHNICAL_INTERFACE`: Access to technical features
-
-        - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls (contact Clarifeye to enable)
-
-        '
-    PaginatedResponse:
-      type: object
-      properties:
-        count:
-          type: integer
-          description: Total number of results
-        next:
-          type: string
-          format: uri
-          nullable: true
-          description: URL to next page of results
-        previous:
-          type: string
-          format: uri
-          nullable: true
-          description: URL to previous page of results
-        results:
-          type: array
-          items: {}
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        email:
-          type: string
-          format: email
-        date_joined:
-          type: string
-          format: date-time
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
   parameters:
     Limit:
       name: limit
@@ -312,6 +178,169 @@ components:
       schema:
         type: string
         format: uuid
+  schemas:
+    ValidationError:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email:
+        - This field is required.
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        date_joined:
+          type: string
+          format: date-time
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    ProjectPermission:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user:
+          $ref: '#/components/schemas/User'
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionType'
+    PermissionType:
+      type: string
+      enum:
+      - CAN_PERFORM_ADMIN_ACTIONS
+      - CAN_VIEW_DATA
+      - CAN_RUN_TASKS
+      - CAN_VIEW_TECHNICAL_INTERFACE
+      - CAN_IMPERSONATE_OTHER_USERS
+      description: '- `CAN_PERFORM_ADMIN_ACTIONS`: Full administrative access
+
+        - `CAN_VIEW_DATA`: Read-only access to project data
+
+        - `CAN_RUN_TASKS`: Execute background tasks and pipelines
+
+        - `CAN_VIEW_TECHNICAL_INTERFACE`: Access to technical features
+
+        - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls (contact Clarifeye to enable)
+
+        '
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    ProjectPermission_2:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user:
+          $ref: '#/components/schemas/User'
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionType_2'
+        profile:
+          $ref: '#/components/schemas/ProjectProfile'
+    PermissionType_2:
+      type: string
+      enum:
+      - CAN_PERFORM_ADMIN_ACTIONS
+      - CAN_VIEW_DATA
+      - CAN_IMPERSONATE_OTHER_USERS
+      description: '- `CAN_PERFORM_ADMIN_ACTIONS`: Full administrative access
+
+        - `CAN_VIEW_DATA`: Read-only access to project data
+
+        - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls (contact Clarifeye to enable)
+
+        '
+    ProjectProfile:
+      type: string
+      enum:
+      - tech
+      - contributor
+      - user
+      default: contributor
+      description: 'Profile of the user on the project. The profile shapes the UI surface a
+
+        user sees (sidebar, available views) and complements the fine-grained
+
+        `permissions` list.
+
+
+        - `tech`: Technical profile with access to advanced/technical interfaces
+
+        - `contributor`: Default profile for users who contribute to the project
+
+        - `user`: End-user profile with the most restricted UI surface
+
+        '
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ValidationError'
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
   securitySchemes:
     BearerAuth:
       type: http
@@ -322,3 +351,6 @@ components:
       in: header
       name: Authorization
       description: 'Use Authorization: Token <token>'
+x-refined-from:
+- clarifeye-backoffice-openapi-original.yaml
+- clarifeye-openapi-original.yaml

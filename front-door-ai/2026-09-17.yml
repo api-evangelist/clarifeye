@@ -1,0 +1,27 @@
+# Front Door AI Index — clarifeye — 2026-09-17
+# AI vocabulary counted on the provider's root page. Generated; do not edit.
+# `score` is null unless ownership is `own` — see front_door_ai.py.
+front_door_ai:
+  slug: clarifeye
+  lexicon_version: '1.0'
+  probed_at: '2026-09-17'
+  host: www.clarifeye.ai
+  final_host: www.clarifeye.ai
+  ownership: own
+  owner: clarifeye
+  shares_host_with: null
+  inherited_from: null
+  verdict: scored
+  score: 12
+  host_score: 12
+  density: 13.9
+  words: 863
+  tiers:
+    agentic: 3
+    core: 9
+    model: 0
+  ambiguous: 1
+  top_terms:
+    AI: 9
+    MCP: 3
+    agent: 1

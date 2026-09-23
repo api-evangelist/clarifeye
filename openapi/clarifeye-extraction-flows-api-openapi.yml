@@ -1,43 +1,7 @@
-openapi: 3.0.3
+openapi: 3.2.0
 info:
-  title: Clarifeye Platform Agent Settings Extraction Flows API
-  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
-
-
-    ## Authentication
-
-    All endpoints require authentication. Include the Authorization header in every request using either format:
-
-    - `Authorization: Token <token_key>`
-
-    - `Authorization: Bearer <token_key>`
-
-
-    ## Impersonation
-
-
-    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
-
-    This is useful for integrating external systems that need to attribute actions to specific users.
-
-
-    **Header:** `X-Impersonate-Email`
-
-
-    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
-
-
-    **Behavior:**
-
-    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
-
-    - If the target user is not found, the request proceeds as the original authenticated user
-
-    - If the target user does not have access to the project, the request proceeds as the original authenticated user
-
-    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
-
-    '
+  title: Clarifeye Platform Extraction Flows API
+  description: REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
   version: 1.0.0
   contact:
     name: Clarifeye Support
@@ -58,9 +22,7 @@ paths:
       tags:
       - Extraction Flows
       summary: List extraction flows
-      description: 'List all extraction flows for the project, ordered by most recently updated.
-
-        '
+      description: List all extraction flows for the project, ordered by most recently updated.
       operationId: listExtractionFlows
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -84,7 +46,26 @@ paths:
       tags:
       - Extraction Flows
       summary: Update an extraction flow
-      description: "Partially update an extraction flow. The most common use is to switch its\n**publish mode** between `auto_publish` and `manual_publish`.\n\n**Publish modes:**\n- `auto_publish` — Each successful flow run automatically publishes the\n  extracted data. No separate publish step\n  is required.\n- `manual_publish` — Flow runs only compute and persist extracted data in\n  the warehouse. Publishing to downstream indexes must be triggered\n  explicitly via the `publish` action. Use this when you want to review\n  the results of a run before exposing them to search / agents.\n"
+      description: 'Partially update an extraction flow. The most common use is to switch its
+
+        **publish mode** between `auto_publish` and `manual_publish`.
+
+
+        **Publish modes:**
+
+        - `auto_publish` — Each successful flow run automatically publishes the
+
+        extracted data. No separate publish step
+
+        is required.
+
+        - `manual_publish` — Flow runs only compute and persist extracted data in
+
+        the warehouse. Publishing to downstream indexes must be triggered
+
+        explicitly via the `publish` action. Use this when you want to review
+
+        the results of a run before exposing them to search / agents.'
       operationId: updateExtractionFlow
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -141,9 +122,7 @@ paths:
         documents (or all project documents if `document_ids` is omitted).
 
 
-        Returns the `pipeline_run_id` you can poll to track progress.
-
-        '
+        Returns the `pipeline_run_id` you can poll to track progress.'
       operationId: runExtractionFlow
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -199,9 +178,7 @@ paths:
 
         inputs would be reused from cache vs. recomputed, without actually
 
-        executing any extraction. Useful to preview the cost/impact of a run.
-
-        '
+        executing any extraction. Useful to preview the cost/impact of a run.'
       operationId: getExtractionFlowStatistics
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -262,9 +239,7 @@ paths:
 
         > For `auto_publish` flows, publishing happens automatically at the end
 
-        > of each `run-sync`, so calling this endpoint is unnecessary.
-
-        '
+        > of each `run-sync`, so calling this endpoint is unnecessary.'
       operationId: publishExtractionFlow
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -330,6 +305,14 @@ components:
         type: string
         format: uuid
   responses:
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
     Forbidden:
       description: Forbidden - insufficient permissions
       content:
@@ -346,33 +329,7 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: Authentication credentials were not provided.
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
   schemas:
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
-    ExtractionFlowPublishMode:
-      type: string
-      enum:
-      - auto_publish
-      - manual_publish
-      description: '- `auto_publish` — runs automatically push extracted data to downstream indexes.
-
-        - `manual_publish` — publishing is triggered explicitly via the `publish` action.
-
-        '
     ExtractionFlow:
       type: object
       properties:
@@ -390,15 +347,34 @@ components:
           type: object
           description: Per-namespace-type TurboPuffer namespace mapping populated on publish.
         last_pushed_to_tpuf:
-          type: string
+          type:
+          - string
+          - 'null'
           format: date-time
-          nullable: true
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
+    ExtractionFlowPublishMode:
+      type: string
+      enum:
+      - auto_publish
+      - manual_publish
+      description: '- `auto_publish` — runs automatically push extracted data to downstream indexes.
+
+        - `manual_publish` — publishing is triggered explicitly via the `publish` action.
+
+        '
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
   securitySchemes:
     BearerAuth:
       type: http

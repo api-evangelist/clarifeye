@@ -1,19 +1,8 @@
 {
   "provider": "clarifeye",
   "sources": [
-    "clarifeye-agent-settings-api-openapi.yml",
-    "clarifeye-conversations-api-openapi.yml",
-    "clarifeye-documents-api-openapi.yml",
-    "clarifeye-extraction-flows-api-openapi.yml",
-    "clarifeye-feedback-api-openapi.yml",
-    "clarifeye-interviews-api-openapi.yml",
-    "clarifeye-invitations-api-openapi.yml",
-    "clarifeye-notifications-api-openapi.yml",
-    "clarifeye-pipeline-runs-api-openapi.yml",
-    "clarifeye-signals-api-openapi.yml",
-    "clarifeye-tables-api-openapi.yml",
-    "clarifeye-tools-api-openapi.yml",
-    "clarifeye-users-api-openapi.yml"
+    "_original/clarifeye-backoffice-openapi-original.yaml",
+    "_original/clarifeye-openapi-original.yaml"
   ],
   "outputs": [
     "clarifeye-agent-settings-api-openapi.yml",
@@ -21,18 +10,43 @@
     "clarifeye-documents-api-openapi.yml",
     "clarifeye-extraction-flows-api-openapi.yml",
     "clarifeye-feedback-api-openapi.yml",
-    "clarifeye-interviews-api-openapi.yml",
     "clarifeye-invitations-api-openapi.yml",
     "clarifeye-notifications-api-openapi.yml",
     "clarifeye-pipeline-runs-api-openapi.yml",
-    "clarifeye-signals-api-openapi.yml",
     "clarifeye-tables-api-openapi.yml",
     "clarifeye-tools-api-openapi.yml",
-    "clarifeye-users-api-openapi.yml"
+    "clarifeye-users-api-openapi.yml",
+    "clarifeye-interviews-api-openapi.yml",
+    "clarifeye-signals-api-openapi.yml"
   ],
   "archived": [],
   "errors": [],
   "warnings": [],
-  "notes": [],
-  "skipped": []
+  "notes": [
+    "sourced from openapi/_original/ (2 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "clarifeye-backoffice-openapi-original.yaml: upgraded openapi 3.0.3 -> OpenAPI 3.2.0",
+    "clarifeye-openapi-original.yaml: upgraded openapi 3.0.3 -> OpenAPI 3.2.0",
+    "clarifeye-openapi-original.yaml: declared missing tag: Conversations",
+    "tag 'Conversations' spans 2 source specs (clarifeye-backoffice-openapi-original.yaml, clarifeye-openapi-original.yaml): per-path servers applied",
+    "tag 'Documents' spans 2 source specs (clarifeye-backoffice-openapi-original.yaml, clarifeye-openapi-original.yaml): per-path servers applied",
+    "tag 'Invitations' spans 2 source specs (clarifeye-backoffice-openapi-original.yaml, clarifeye-openapi-original.yaml): per-path servers applied",
+    "tag 'Tools' spans 2 source specs (clarifeye-backoffice-openapi-original.yaml, clarifeye-openapi-original.yaml): per-path servers applied",
+    "tag 'Users' spans 2 source specs (clarifeye-backoffice-openapi-original.yaml, clarifeye-openapi-original.yaml): per-path servers applied",
+    "apis.yml register: already-registered"
+  ],
+  "skipped": [
+    "clarifeye-agent-settings-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "clarifeye-conversations-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "clarifeye-documents-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "clarifeye-extraction-flows-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "clarifeye-feedback-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "clarifeye-interviews-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "clarifeye-invitations-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "clarifeye-notifications-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "clarifeye-pipeline-runs-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "clarifeye-signals-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "clarifeye-tables-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "clarifeye-tools-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "clarifeye-users-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
 }

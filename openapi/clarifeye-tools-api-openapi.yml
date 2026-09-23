@@ -1,46 +1,10 @@
-openapi: 3.0.3
+openapi: 3.2.0
 info:
-  title: Clarifeye Platform Agent Settings Tools API
-  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
-
-
-    ## Authentication
-
-    All endpoints require authentication. Include the Authorization header in every request using either format:
-
-    - `Authorization: Token <token_key>`
-
-    - `Authorization: Bearer <token_key>`
-
-
-    ## Impersonation
-
-
-    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
-
-    This is useful for integrating external systems that need to attribute actions to specific users.
-
-
-    **Header:** `X-Impersonate-Email`
-
-
-    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
-
-
-    **Behavior:**
-
-    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
-
-    - If the target user is not found, the request proceeds as the original authenticated user
-
-    - If the target user does not have access to the project, the request proceeds as the original authenticated user
-
-    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
-
-    '
+  title: Clarifeye Tools API
   version: 1.0.0
   contact:
     name: Clarifeye Support
+  description: 'Operations tagged Tools across 2 of this provider''s published API definitions: clarifeye-backoffice-openapi-original.yaml, clarifeye-openapi-original.yaml. Each path carries the servers of the definition it was published in.'
 servers:
 - url: https://eu.app.clarifeye.ai/api/v1
   description: EU
@@ -63,9 +27,7 @@ paths:
 
         The request body varies based on the tool type. Most tools accept a `query` parameter
 
-        and optional parameters like `top_k` for controlling result count.
-
-        '
+        and optional parameters like `top_k` for controlling result count.'
       operationId: runTool
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -116,6 +78,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ToolError'
+    servers:
+    - url: https://eu.app.clarifeye.ai/api/v1
+      description: EU
+    - url: https://us.app.clarifeye.ai/api/v1
+      description: US
   /projects/{project_id}/tools/:
     get:
       tags:
@@ -130,13 +97,11 @@ paths:
 
         Use the returned `id` together with
 
-        [`getToolParameters`](#operation/getToolParameters) to discover the
+        `getToolParameters` to discover the
 
         request body schema for a given tool, then call
 
-        [`runTool`](#operation/runTool) to execute it.
-
-        '
+        `runTool` to execute it.'
       operationId: listTools
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -194,6 +159,11 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+    servers:
+    - url: https://eu.app.clarifeye.ai/api/v1
+      description: EU
+    - url: https://us.app.clarifeye.ai/api/v1
+      description: US
   /projects/{project_id}/tools/{tool_id}/parameters/:
     get:
       tags:
@@ -201,7 +171,7 @@ paths:
       summary: Get tool parameters schema
       description: 'Return the JSON schema describing the parameters accepted by
 
-        [`runTool`](#operation/runTool) for this tool.
+        `runTool` for this tool.
 
 
         The schema is a list of parameter specs (`id`, `type`, `description`,
@@ -217,9 +187,7 @@ paths:
 
         Use the `id` of each entry as the key in the JSON body sent to
 
-        [`runTool`](#operation/runTool).
-
-        '
+        `runTool`.'
       operationId: getToolParameters
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -276,41 +244,12 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+    servers:
+    - url: https://eu.app.clarifeye.ai/api/v1
+      description: EU
+    - url: https://us.app.clarifeye.ai/api/v1
+      description: US
 components:
-  parameters:
-    Limit:
-      name: limit
-      in: query
-      description: Maximum number of results per page
-      schema:
-        type: integer
-        default: 100
-        minimum: 1
-        maximum: 1000
-    ToolId:
-      name: tool_id
-      in: path
-      required: true
-      description: UUID of the tool
-      schema:
-        type: string
-        format: uuid
-    Offset:
-      name: offset
-      in: query
-      description: Number of results to skip for pagination
-      schema:
-        type: integer
-        default: 0
-        minimum: 0
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
   schemas:
     ToolRunResponse:
       type: array
@@ -319,67 +258,52 @@ components:
         type: object
         description: Individual result object (structure varies by tool type)
         additionalProperties: true
-    Tool:
+    ToolError:
+      type: object
+      description: Error response from tool execution
+      properties:
+        error_type:
+          type: string
+          description: Category of the error
+          example: syntax_error
+        error_code:
+          type: string
+          description: Specific error code
+          example: INVALID_QUERY
+        status:
+          type: string
+          description: Error status
+          example: error
+        message:
+          type: string
+          description: Human-readable error message
+          example: Invalid query syntax
+    ToolRunRequest:
+      type: object
+      description: 'Request body for running a tool. Parameters vary by tool type.
+
+        Most tools accept a `query` parameter and optional `top_k` for result count.
+
+        '
+      properties:
+        query:
+          type: string
+          description: The search query or input for the tool
+          example: What are the key findings about revenue growth?
+        top_k:
+          type: integer
+          description: Maximum number of results to return
+          default: 10
+          example: 10
+      additionalProperties: true
+    Error:
       type: object
       properties:
-        id:
+        error:
           type: string
-          format: uuid
-        name:
-          type: string
-        description:
-          type: string
-          nullable: true
-        tool_type:
-          $ref: '#/components/schemas/ToolType'
-        retrieval_mode:
-          type: string
-          description: 'For tools with `tool_type: retrieval`, the specific retrieval
-
-            variant (e.g. `semantic-chunks`, `semantic-objects`,
-
-            `templated-query`). Ignored for other tool types.
-
-            '
-        category:
-          type: string
-          enum:
-          - local
-          - imported
-          description: '- `local`: tool is owned by the current project.
-
-            - `imported`: tool is owned by another project and exported into the current one.
-
-            '
-        owner_project_id:
-          type: string
-          format: uuid
-          description: UUID of the project that owns the tool.
-        owner_project_name:
-          type: string
-          nullable: true
-          description: Name of the project that owns the tool.
-        readonly:
-          type: boolean
-          description: When true, the tool cannot be modified through the API.
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
+          description: Error message
       example:
-        id: 4f4a0a36-2c3d-4e6c-9a3b-2b1f0f1a2c11
-        name: Search financial chunks
-        description: Semantic search over chunks tagged as financial reports.
-        tool_type: retrieval
-        retrieval_mode: semantic-chunks
-        category: local
-        owner_project_id: 9c2b1c0a-7a1d-4d1d-8e3a-1d2b3c4d5e6f
-        owner_project_name: Finance Analytics
-        readonly: false
-        created_at: '2026-04-12T10:21:33Z'
-        updated_at: '2026-05-02T08:44:01Z'
+        error: User not found
     ToolParameterSpec:
       type: object
       description: 'Specification for a single parameter accepted by a tool''s `run`
@@ -424,44 +348,83 @@ components:
           type: integer
           description: Total number of results
         next:
-          type: string
+          type:
+          - string
+          - 'null'
           format: uri
-          nullable: true
           description: URL to next page of results
         previous:
-          type: string
+          type:
+          - string
+          - 'null'
           format: uri
-          nullable: true
           description: URL to previous page of results
         results:
           type: array
           items: {}
-    ToolRunRequest:
-      type: object
-      description: 'Request body for running a tool. Parameters vary by tool type.
-
-        Most tools accept a `query` parameter and optional `top_k` for result count.
-
-        '
-      properties:
-        query:
-          type: string
-          description: The search query or input for the tool
-          example: What are the key findings about revenue growth?
-        top_k:
-          type: integer
-          description: Maximum number of results to return
-          default: 10
-          example: 10
-      additionalProperties: true
-    Error:
+    Tool:
       type: object
       properties:
-        error:
+        id:
           type: string
-          description: Error message
+          format: uuid
+        name:
+          type: string
+        description:
+          type:
+          - string
+          - 'null'
+        tool_type:
+          $ref: '#/components/schemas/ToolType'
+        retrieval_mode:
+          type: string
+          description: 'For tools with `tool_type: retrieval`, the specific retrieval
+
+            variant (e.g. `semantic-chunks`, `semantic-objects`,
+
+            `templated-query`). Ignored for other tool types.
+
+            '
+        category:
+          type: string
+          enum:
+          - local
+          - imported
+          description: '- `local`: tool is owned by the current project.
+
+            - `imported`: tool is owned by another project and exported into the current one.
+
+            '
+        owner_project_id:
+          type: string
+          format: uuid
+          description: UUID of the project that owns the tool.
+        owner_project_name:
+          type:
+          - string
+          - 'null'
+          description: Name of the project that owns the tool.
+        readonly:
+          type: boolean
+          description: When true, the tool cannot be modified through the API.
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
       example:
-        error: User not found
+        id: 4f4a0a36-2c3d-4e6c-9a3b-2b1f0f1a2c11
+        name: Search financial chunks
+        description: Semantic search over chunks tagged as financial reports.
+        tool_type: retrieval
+        retrieval_mode: semantic-chunks
+        category: local
+        owner_project_id: 9c2b1c0a-7a1d-4d1d-8e3a-1d2b3c4d5e6f
+        owner_project_name: Finance Analytics
+        readonly: false
+        created_at: '2026-04-12T10:21:33Z'
+        updated_at: '2026-05-02T08:44:01Z'
     ToolType:
       type: string
       enum:
@@ -480,26 +443,40 @@ components:
         `templated-query`).
 
         '
-    ToolError:
-      type: object
-      description: Error response from tool execution
-      properties:
-        error_type:
-          type: string
-          description: Category of the error
-          example: syntax_error
-        error_code:
-          type: string
-          description: Specific error code
-          example: INVALID_QUERY
-        status:
-          type: string
-          description: Error status
-          example: error
-        message:
-          type: string
-          description: Human-readable error message
-          example: Invalid query syntax
+  parameters:
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+    ToolId:
+      name: tool_id
+      in: path
+      required: true
+      description: UUID of the tool
+      schema:
+        type: string
+        format: uuid
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
   responses:
     Forbidden:
       description: Forbidden - insufficient permissions
@@ -535,3 +512,6 @@ components:
       in: header
       name: Authorization
       description: 'Use Authorization: Token <token>'
+x-refined-from:
+- clarifeye-backoffice-openapi-original.yaml
+- clarifeye-openapi-original.yaml

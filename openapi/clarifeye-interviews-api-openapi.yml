@@ -1,43 +1,23 @@
-openapi: 3.0.3
+openapi: 3.2.0
 info:
-  title: Clarifeye Platform Agent Settings Interviews API
-  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
+  title: Clarifeye Platform API — Public Interviews API
+  description: 'Forward-facing, supported REST API for new integrators of the Clarifeye Platform.
+
+
+    Covers the curated public surface: authentication, knowledge management
+
+    (documents), users & teams, signals, and tool execution. New integrations
+
+    should target these endpoints.
 
 
     ## Authentication
 
     All endpoints require authentication. Include the Authorization header in every request using either format:
 
-    - `Authorization: Token <token_key>`
+    - `Authorization: Token `
 
-    - `Authorization: Bearer <token_key>`
-
-
-    ## Impersonation
-
-
-    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
-
-    This is useful for integrating external systems that need to attribute actions to specific users.
-
-
-    **Header:** `X-Impersonate-Email`
-
-
-    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
-
-
-    **Behavior:**
-
-    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
-
-    - If the target user is not found, the request proceeds as the original authenticated user
-
-    - If the target user does not have access to the project, the request proceeds as the original authenticated user
-
-    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
-
-    '
+    - `Authorization: Bearer `'
   version: 1.0.0
   contact:
     name: Clarifeye Support
@@ -63,9 +43,7 @@ paths:
 
         - Admins see all interviews in the project.
 
-        - Other members see only interviews assigned to them or that they created.
-
-        '
+        - Other members see only interviews assigned to them or that they created.'
       operationId: listInterviews
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -129,9 +107,7 @@ paths:
 
         assignee to already be a project admin and cannot be combined with
 
-        `invite_emails`.
-
-        '
+        `invite_emails`.'
       operationId: assignInterviews
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -200,9 +176,7 @@ paths:
 
         Non-admins can only retrieve interviews assigned to them or that they
 
-        created; admins can retrieve any interview in the project.
-
-        '
+        created; admins can retrieve any interview in the project.'
       operationId: getInterview
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -227,40 +201,63 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
-  responses:
-    BadRequest:
-      description: Bad request - invalid parameters or request body
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ValidationError'
-    Forbidden:
-      description: Forbidden - insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: You do not have permission to perform this action.
-    Unauthorized:
-      description: Unauthorized - missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Authentication credentials were not provided.
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
   schemas:
+    ValidationError:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email:
+        - This field is required.
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
     InterviewListItem:
       type: object
       description: Lightweight interview representation used in list responses (omits the transcript).
@@ -270,38 +267,44 @@ components:
           format: uuid
           readOnly: true
         name:
-          type: string
-          nullable: true
+          type:
+          - string
+          - 'null'
         created_by:
           type: string
           format: uuid
           readOnly: true
         created_by_email:
-          type: string
+          type:
+          - string
+          - 'null'
           format: email
-          nullable: true
           readOnly: true
         type:
           type: string
         assigned_to:
-          type: string
+          type:
+          - string
+          - 'null'
           format: uuid
-          nullable: true
           readOnly: true
         assigned_by:
-          type: string
+          type:
+          - string
+          - 'null'
           format: uuid
-          nullable: true
           readOnly: true
         assigned_to_email:
-          type: string
+          type:
+          - string
+          - 'null'
           format: email
-          nullable: true
           readOnly: true
         assigned_by_email:
-          type: string
+          type:
+          - string
+          - 'null'
           format: email
-          nullable: true
           readOnly: true
         is_pending_invite:
           type: boolean
@@ -332,42 +335,6 @@ components:
           type: string
           format: date-time
           readOnly: true
-    ValidationError:
-      type: object
-      additionalProperties:
-        type: array
-        items:
-          type: string
-      example:
-        email:
-        - This field is required.
-    PaginatedResponse:
-      type: object
-      properties:
-        count:
-          type: integer
-          description: Total number of results
-        next:
-          type: string
-          format: uri
-          nullable: true
-          description: URL to next page of results
-        previous:
-          type: string
-          format: uri
-          nullable: true
-          description: URL to previous page of results
-        results:
-          type: array
-          items: {}
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
     Interview:
       type: object
       description: A structured interview conversation, including its full transcript.
@@ -377,8 +344,9 @@ components:
           format: uuid
           readOnly: true
         name:
-          type: string
-          nullable: true
+          type:
+          - string
+          - 'null'
           description: Interview title (auto-generated from the topic when not provided).
         created_by:
           type: string
@@ -407,27 +375,31 @@ components:
             type: string
             format: uuid
         assigned_to:
-          type: string
+          type:
+          - string
+          - 'null'
           format: uuid
-          nullable: true
           readOnly: true
           description: UUID of the assigned user (null while a pending invite has not yet joined).
         assigned_by:
-          type: string
+          type:
+          - string
+          - 'null'
           format: uuid
-          nullable: true
           readOnly: true
           description: UUID of the user who created the assignment.
         assigned_to_email:
-          type: string
+          type:
+          - string
+          - 'null'
           format: email
-          nullable: true
           readOnly: true
           description: Assignee email, falling back to the invite email for not-yet-joined invitees.
         assigned_by_email:
-          type: string
+          type:
+          - string
+          - 'null'
           format: email
-          nullable: true
           readOnly: true
         is_pending_invite:
           type: boolean
@@ -454,32 +426,47 @@ components:
           type: string
           format: date-time
           readOnly: true
-  parameters:
-    Limit:
-      name: limit
-      in: query
-      description: Maximum number of results per page
-      schema:
-        type: integer
-        default: 100
-        minimum: 1
-        maximum: 1000
-    Offset:
-      name: offset
-      in: query
-      description: Number of results to skip for pagination
-      schema:
-        type: integer
-        default: 0
-        minimum: 0
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ValidationError'
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
   securitySchemes:
     BearerAuth:
       type: http

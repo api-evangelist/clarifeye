@@ -1,43 +1,7 @@
-openapi: 3.0.3
+openapi: 3.2.0
 info:
-  title: Clarifeye Platform Agent Settings Tables API
-  description: 'REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
-
-
-    ## Authentication
-
-    All endpoints require authentication. Include the Authorization header in every request using either format:
-
-    - `Authorization: Token <token_key>`
-
-    - `Authorization: Bearer <token_key>`
-
-
-    ## Impersonation
-
-
-    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
-
-    This is useful for integrating external systems that need to attribute actions to specific users.
-
-
-    **Header:** `X-Impersonate-Email`
-
-
-    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (contact Clarifeye to enable this permission)
-
-
-    **Behavior:**
-
-    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
-
-    - If the target user is not found, the request proceeds as the original authenticated user
-
-    - If the target user does not have access to the project, the request proceeds as the original authenticated user
-
-    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
-
-    '
+  title: Clarifeye Platform Tables API
+  description: REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
   version: 1.0.0
   contact:
     name: Clarifeye Support
@@ -81,9 +45,7 @@ paths:
 
         **Column Selection:**
 
-        Use the `columns` parameter to specify which fields to return in the response.
-
-        '
+        Use the `columns` parameter to specify which fields to return in the response.'
       operationId: dataOperations
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -153,23 +115,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/DataOperationErrorResponse'
 components:
-  responses:
-    Forbidden:
-      description: Forbidden - insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: You do not have permission to perform this action.
-    Unauthorized:
-      description: Unauthorized - missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Authentication credentials were not provided.
   schemas:
     DataOperationResponse:
       type: object
@@ -187,6 +132,18 @@ components:
         success:
           type: boolean
           description: Whether the operation completed successfully
+    DataOperationErrorResponse:
+      type: object
+      description: Error response from a data operation
+      properties:
+        errors:
+          type: array
+          description: Array of error messages
+          items:
+            type: string
+        error:
+          type: string
+          description: Single error message
     DataOperationRequest:
       type: object
       required:
@@ -233,14 +190,6 @@ components:
           type: integer
           description: Number of records to skip for pagination (for read operations)
           default: 0
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
     DataOperationType:
       type: string
       enum:
@@ -259,18 +208,14 @@ components:
         - `delete`: Remove records
 
         '
-    DataOperationErrorResponse:
+    Error:
       type: object
-      description: Error response from a data operation
       properties:
-        errors:
-          type: array
-          description: Array of error messages
-          items:
-            type: string
         error:
           type: string
-          description: Single error message
+          description: Error message
+      example:
+        error: User not found
   parameters:
     ProjectId:
       name: project_id
@@ -288,6 +233,23 @@ components:
       schema:
         type: string
         format: uuid
+  responses:
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
   securitySchemes:
     BearerAuth:
       type: http
