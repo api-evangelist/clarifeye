@@ -53,7 +53,7 @@ x-docs-platform-checked: 2026-09-21
 tags:
 - Company
 - Artificial Intelligence
-- Knowledge-Management
+- Knowledge Management
 - MCP
 - Document Intelligence
 - Agents
@@ -68,6 +68,7 @@ tags_raw:
 - Agents
 - Enterprise AI
 - Retrieval
+- Knowledge-Management
 apis:
 - aid: clarifeye:clarifeye-agent-settings-api
   name: Clarifeye Agent Settings API

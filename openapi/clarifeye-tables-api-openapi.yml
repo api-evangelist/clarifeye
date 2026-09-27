@@ -116,6 +116,26 @@ paths:
                 $ref: '#/components/schemas/DataOperationErrorResponse'
 components:
   schemas:
+    DataOperationErrorResponse:
+      type: object
+      description: Error response from a data operation
+      properties:
+        errors:
+          type: array
+          description: Array of error messages
+          items:
+            type: string
+        error:
+          type: string
+          description: Single error message
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
     DataOperationResponse:
       type: object
       description: Response from a data operation
@@ -132,18 +152,6 @@ components:
         success:
           type: boolean
           description: Whether the operation completed successfully
-    DataOperationErrorResponse:
-      type: object
-      description: Error response from a data operation
-      properties:
-        errors:
-          type: array
-          description: Array of error messages
-          items:
-            type: string
-        error:
-          type: string
-          description: Single error message
     DataOperationRequest:
       type: object
       required:
@@ -208,31 +216,6 @@ components:
         - `delete`: Remove records
 
         '
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
-  parameters:
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
-    TableId:
-      name: table_id
-      in: path
-      required: true
-      description: UUID of the table
-      schema:
-        type: string
-        format: uuid
   responses:
     Forbidden:
       description: Forbidden - insufficient permissions
@@ -250,6 +233,23 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: Authentication credentials were not provided.
+  parameters:
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+    TableId:
+      name: table_id
+      in: path
+      required: true
+      description: UUID of the table
+      schema:
+        type: string
+        format: uuid
   securitySchemes:
     BearerAuth:
       type: http

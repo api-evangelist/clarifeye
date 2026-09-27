@@ -139,62 +139,15 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
-  parameters:
-    Limit:
-      name: limit
-      in: query
-      description: Maximum number of results per page
-      schema:
-        type: integer
-        default: 100
-        minimum: 1
-        maximum: 1000
-    PipelineRunId:
-      name: pipeline_run_id
-      in: path
-      required: true
-      description: UUID of the pipeline run
-      schema:
-        type: string
-        format: uuid
-    Offset:
-      name: offset
-      in: query
-      description: Number of results to skip for pagination
-      schema:
-        type: integer
-        default: 0
-        minimum: 0
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
   schemas:
-    PaginatedResponse:
+    Error:
       type: object
       properties:
-        count:
-          type: integer
-          description: Total number of results
-        next:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to next page of results
-        previous:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to previous page of results
-        results:
-          type: array
-          items: {}
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
     PipelineRun:
       type: object
       description: Full pipeline run payload returned by the detail endpoint.
@@ -318,6 +271,27 @@ components:
           - string
           - 'null'
           format: uuid
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
     PipelineRunListItem:
       type: object
       description: 'Lightweight pipeline run representation returned by the list endpoint.
@@ -399,23 +373,41 @@ components:
       - completed_with_warnings
       - failed
       - aborted
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    PipelineRunId:
+      name: pipeline_run_id
+      in: path
+      required: true
+      description: UUID of the pipeline run
+      schema:
+        type: string
+        format: uuid
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
   responses:
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
     Forbidden:
       description: Forbidden - insufficient permissions
       content:
@@ -424,6 +416,14 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: You do not have permission to perform this action.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
     Unauthorized:
       description: Unauthorized - missing or invalid authentication
       content:

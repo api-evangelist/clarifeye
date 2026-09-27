@@ -620,84 +620,6 @@ paths:
       description: US
 components:
   schemas:
-    ChatMessage:
-      type: object
-      description: 'A message in the conversation. The `query_id` groups all messages from a single
-
-        user interaction (user message, assistant response, tool calls).
-
-        '
-      properties:
-        role:
-          type: string
-          enum:
-          - user
-          - assistant
-        content:
-          type: string
-        type:
-          type: string
-          enum:
-          - message
-          - tool_call
-          - reasoning_flow
-        query_id:
-          type: integer
-          description: 'Unique identifier for this query. All messages from one interaction share the same query_id.
-
-            Use this value when submitting feedback on a specific message.
-
-            '
-        user_id:
-          type: string
-          format: uuid
-        used_tokens_input:
-          type: integer
-        used_tokens_output:
-          type: integer
-        timestamp:
-          type: string
-          format: date-time
-        tool_type:
-          type: string
-          description: Type of tool (only for tool_call messages)
-        input_parameters:
-          type: object
-          description: Tool input parameters (only for tool_call messages)
-        results:
-          type: array
-          items: {}
-          description: Tool results (only for tool_call messages)
-    ValidationError:
-      type: object
-      additionalProperties:
-        type: array
-        items:
-          type: string
-      example:
-        email:
-        - This field is required.
-    PaginatedResponse:
-      type: object
-      properties:
-        count:
-          type: integer
-          description: Total number of results
-        next:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to next page of results
-        previous:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to previous page of results
-        results:
-          type: array
-          items: {}
     Conversation:
       type: object
       properties:
@@ -777,11 +699,20 @@ components:
           description: Error message
       example:
         error: User not found
-    ChatMessage_2:
+    ValidationError:
       type: object
-      description: 'A message in the conversation. The `query_id` groups all messages from a
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email:
+        - This field is required.
+    ChatMessage:
+      type: object
+      description: 'A message in the conversation. The `query_id` groups all messages from a single
 
-        single user interaction (user message, assistant response, tool calls).
+        user interaction (user message, assistant response, tool calls).
 
         '
       properties:
@@ -800,19 +731,52 @@ components:
           - reasoning_flow
         query_id:
           type: integer
+          description: 'Unique identifier for this query. All messages from one interaction share the same query_id.
+
+            Use this value when submitting feedback on a specific message.
+
+            '
+        user_id:
+          type: string
+          format: uuid
+        used_tokens_input:
+          type: integer
+        used_tokens_output:
+          type: integer
         timestamp:
           type: string
           format: date-time
         tool_type:
           type: string
-          description: Type of tool (only for tool_call messages).
+          description: Type of tool (only for tool_call messages)
         input_parameters:
           type: object
-          description: Tool input parameters (only for tool_call messages).
+          description: Tool input parameters (only for tool_call messages)
         results:
           type: array
           items: {}
-          description: Tool results (only for tool_call messages).
+          description: Tool results (only for tool_call messages)
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
     Conversation_2:
       type: object
       description: A conversation with its complete chat history.
@@ -859,6 +823,42 @@ components:
           - string
           - 'null'
           format: date-time
+    ChatMessage_2:
+      type: object
+      description: 'A message in the conversation. The `query_id` groups all messages from a
+
+        single user interaction (user message, assistant response, tool calls).
+
+        '
+      properties:
+        role:
+          type: string
+          enum:
+          - user
+          - assistant
+        content:
+          type: string
+        type:
+          type: string
+          enum:
+          - message
+          - tool_call
+          - reasoning_flow
+        query_id:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        tool_type:
+          type: string
+          description: Type of tool (only for tool_call messages).
+        input_parameters:
+          type: object
+          description: Tool input parameters (only for tool_call messages).
+        results:
+          type: array
+          items: {}
+          description: Tool results (only for tool_call messages).
   parameters:
     Limit:
       name: limit
@@ -869,14 +869,6 @@ components:
         default: 100
         minimum: 1
         maximum: 1000
-    Offset:
-      name: offset
-      in: query
-      description: Number of results to skip for pagination
-      schema:
-        type: integer
-        default: 0
-        minimum: 0
     ProjectId:
       name: project_id
       in: path
@@ -885,6 +877,22 @@ components:
       schema:
         type: string
         format: uuid
+    ConversationId:
+      name: conversation_id
+      in: path
+      required: true
+      description: UUID of the conversation
+      schema:
+        type: string
+        format: uuid
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
     ImpersonateEmail:
       name: X-Impersonate-Email
       in: header
@@ -899,14 +907,6 @@ components:
       schema:
         type: string
         format: email
-    ConversationId:
-      name: conversation_id
-      in: path
-      required: true
-      description: UUID of the conversation
-      schema:
-        type: string
-        format: uuid
   responses:
     BadRequest:
       description: Bad request - invalid parameters or request body
@@ -916,14 +916,6 @@ components:
             oneOf:
             - $ref: '#/components/schemas/Error'
             - $ref: '#/components/schemas/ValidationError'
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
     Forbidden:
       description: Forbidden - insufficient permissions
       content:
@@ -932,6 +924,14 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: You do not have permission to perform this action.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
     Unauthorized:
       description: Unauthorized - missing or invalid authentication
       content:

@@ -152,33 +152,34 @@ paths:
     - url: https://us.app.clarifeye.ai/api/v1
       description: US
 components:
-  parameters:
-    Limit:
-      name: limit
-      in: query
-      description: Maximum number of results per page
-      schema:
-        type: integer
-        default: 100
-        minimum: 1
-        maximum: 1000
-    Offset:
-      name: offset
-      in: query
-      description: Number of results to skip for pagination
-      schema:
-        type: integer
-        default: 0
-        minimum: 0
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
   schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    PermissionType:
+      type: string
+      enum:
+      - CAN_PERFORM_ADMIN_ACTIONS
+      - CAN_VIEW_DATA
+      - CAN_RUN_TASKS
+      - CAN_VIEW_TECHNICAL_INTERFACE
+      - CAN_IMPERSONATE_OTHER_USERS
+      description: '- `CAN_PERFORM_ADMIN_ACTIONS`: Full administrative access
+
+        - `CAN_VIEW_DATA`: Read-only access to project data
+
+        - `CAN_RUN_TASKS`: Execute background tasks and pipelines
+
+        - `CAN_VIEW_TECHNICAL_INTERFACE`: Access to technical features
+
+        - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls (contact Clarifeye to enable)
+
+        '
     ValidationError:
       type: object
       additionalProperties:
@@ -188,18 +189,18 @@ components:
       example:
         email:
         - This field is required.
-    User:
+    ProjectPermission:
       type: object
       properties:
         id:
           type: string
           format: uuid
-        email:
-          type: string
-          format: email
-        date_joined:
-          type: string
-          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionType'
     PaginatedResponse:
       type: object
       properties:
@@ -221,45 +222,31 @@ components:
         results:
           type: array
           items: {}
-    ProjectPermission:
+    User:
       type: object
       properties:
         id:
           type: string
           format: uuid
-        user:
-          $ref: '#/components/schemas/User'
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/PermissionType'
-    PermissionType:
+        email:
+          type: string
+          format: email
+        date_joined:
+          type: string
+          format: date-time
+    PermissionType_2:
       type: string
       enum:
       - CAN_PERFORM_ADMIN_ACTIONS
       - CAN_VIEW_DATA
-      - CAN_RUN_TASKS
-      - CAN_VIEW_TECHNICAL_INTERFACE
       - CAN_IMPERSONATE_OTHER_USERS
       description: '- `CAN_PERFORM_ADMIN_ACTIONS`: Full administrative access
 
         - `CAN_VIEW_DATA`: Read-only access to project data
 
-        - `CAN_RUN_TASKS`: Execute background tasks and pipelines
-
-        - `CAN_VIEW_TECHNICAL_INTERFACE`: Access to technical features
-
         - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls (contact Clarifeye to enable)
 
         '
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
     ProjectPermission_2:
       type: object
       properties:
@@ -274,19 +261,6 @@ components:
             $ref: '#/components/schemas/PermissionType_2'
         profile:
           $ref: '#/components/schemas/ProjectProfile'
-    PermissionType_2:
-      type: string
-      enum:
-      - CAN_PERFORM_ADMIN_ACTIONS
-      - CAN_VIEW_DATA
-      - CAN_IMPERSONATE_OTHER_USERS
-      description: '- `CAN_PERFORM_ADMIN_ACTIONS`: Full administrative access
-
-        - `CAN_VIEW_DATA`: Read-only access to project data
-
-        - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls (contact Clarifeye to enable)
-
-        '
     ProjectProfile:
       type: string
       enum:
@@ -317,14 +291,6 @@ components:
             oneOf:
             - $ref: '#/components/schemas/Error'
             - $ref: '#/components/schemas/ValidationError'
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
     Forbidden:
       description: Forbidden - insufficient permissions
       content:
@@ -333,6 +299,14 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: You do not have permission to perform this action.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
     Unauthorized:
       description: Unauthorized - missing or invalid authentication
       content:
@@ -341,6 +315,32 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: Authentication credentials were not provided.
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
   securitySchemes:
     BearerAuth:
       type: http

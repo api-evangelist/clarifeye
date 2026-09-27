@@ -749,7 +749,61 @@ paths:
     - url: https://us.app.clarifeye.ai/api/v1
       description: US
 components:
+  parameters:
+    DocumentId:
+      name: document_id
+      in: path
+      required: true
+      description: UUID of the document
+      schema:
+        type: string
+        format: uuid
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
   schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    MetadataKeyValue:
+      type: object
+      required:
+      - key
+      - value
+      properties:
+        key:
+          type: string
+          description: Metadata key
+        value:
+          type: string
+          description: Metadata value
     DocumentMinimal:
       type: object
       properties:
@@ -857,14 +911,6 @@ components:
           - deleting
           - deleted
           description: Document deletion status
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
     PaginatedResponse:
       type: object
       properties:
@@ -886,52 +932,6 @@ components:
         results:
           type: array
           items: {}
-    MetadataKeyValue:
-      type: object
-      required:
-      - key
-      - value
-      properties:
-        key:
-          type: string
-          description: Metadata key
-        value:
-          type: string
-          description: Metadata value
-  parameters:
-    Limit:
-      name: limit
-      in: query
-      description: Maximum number of results per page
-      schema:
-        type: integer
-        default: 100
-        minimum: 1
-        maximum: 1000
-    Offset:
-      name: offset
-      in: query
-      description: Number of results to skip for pagination
-      schema:
-        type: integer
-        default: 0
-        minimum: 0
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
-    DocumentId:
-      name: document_id
-      in: path
-      required: true
-      description: UUID of the document
-      schema:
-        type: string
-        format: uuid
   responses:
     Forbidden:
       description: Forbidden - insufficient permissions
@@ -941,14 +941,6 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: You do not have permission to perform this action.
-    Unauthorized:
-      description: Unauthorized - missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Authentication credentials were not provided.
     NotFound:
       description: Not found - resource does not exist
       content:
@@ -957,6 +949,14 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: Not found.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
   securitySchemes:
     BearerAuth:
       type: http

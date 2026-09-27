@@ -543,47 +543,15 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
-  parameters:
-    Limit:
-      name: limit
-      in: query
-      description: Maximum number of results per page
-      schema:
-        type: integer
-        default: 100
-        minimum: 1
-        maximum: 1000
-    Offset:
-      name: offset
-      in: query
-      description: Number of results to skip for pagination
-      schema:
-        type: integer
-        default: 0
-        minimum: 0
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
-    ImpersonateEmail:
-      name: X-Impersonate-Email
-      in: header
-      required: false
-      description: 'Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.
-
-        If the target user is not found or does not have access to the project, the request
-
-        proceeds as the authenticated user. Contact Clarifeye to enable this permission.
-
-        '
-      schema:
-        type: string
-        format: email
   schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
     ValidationError:
       type: object
       additionalProperties:
@@ -661,6 +629,37 @@ components:
         feedback_count: 4
         latest_updated_at: '2026-02-26T10:30:00Z'
         has_unreviewed: true
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    FeedbackStatus:
+      type: string
+      enum:
+      - to_review
+      - reviewed
+      description: '- `to_review`: Feedback pending review (default)
+
+        - `reviewed`: Feedback has been reviewed
+
+        '
     Feedback:
       type: object
       properties:
@@ -726,45 +725,46 @@ components:
         suggested_action_data:
           type: object
           description: Auto-generated suggested action data
-    FeedbackStatus:
-      type: string
-      enum:
-      - to_review
-      - reviewed
-      description: '- `to_review`: Feedback pending review (default)
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    ImpersonateEmail:
+      name: X-Impersonate-Email
+      in: header
+      required: false
+      description: 'Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.
 
-        - `reviewed`: Feedback has been reviewed
+        If the target user is not found or does not have access to the project, the request
+
+        proceeds as the authenticated user. Contact Clarifeye to enable this permission.
 
         '
-    PaginatedResponse:
-      type: object
-      properties:
-        count:
-          type: integer
-          description: Total number of results
-        next:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to next page of results
-        previous:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to previous page of results
-        results:
-          type: array
-          items: {}
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
+      schema:
+        type: string
+        format: email
   responses:
     BadRequest:
       description: Bad request - invalid parameters or request body
@@ -774,14 +774,6 @@ components:
             oneOf:
             - $ref: '#/components/schemas/Error'
             - $ref: '#/components/schemas/ValidationError'
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
     Forbidden:
       description: Forbidden - insufficient permissions
       content:
@@ -790,6 +782,14 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: You do not have permission to perform this action.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
     Unauthorized:
       description: Unauthorized - missing or invalid authentication
       content:
