@@ -178,71 +178,6 @@ components:
           description: Error message
       example:
         error: User not found
-    PermissionType:
-      type: string
-      enum:
-      - CAN_PERFORM_ADMIN_ACTIONS
-      - CAN_VIEW_DATA
-      - CAN_RUN_TASKS
-      - CAN_VIEW_TECHNICAL_INTERFACE
-      - CAN_IMPERSONATE_OTHER_USERS
-      description: '- `CAN_PERFORM_ADMIN_ACTIONS`: Full administrative access
-
-        - `CAN_VIEW_DATA`: Read-only access to project data
-
-        - `CAN_RUN_TASKS`: Execute background tasks and pipelines
-
-        - `CAN_VIEW_TECHNICAL_INTERFACE`: Access to technical features
-
-        - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls (contact Clarifeye to enable)
-
-        '
-    InvitationStatus:
-      type: string
-      enum:
-      - pending
-      - accepted
-      - cancelled
-      description: '- `pending`: Invitation sent, awaiting response
-
-        - `accepted`: User accepted the invitation
-
-        - `cancelled`: Invitation was cancelled
-
-        '
-    PaginatedResponse:
-      type: object
-      properties:
-        count:
-          type: integer
-          description: Total number of results
-        next:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to next page of results
-        previous:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to previous page of results
-        results:
-          type: array
-          items: {}
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        email:
-          type: string
-          format: email
-        date_joined:
-          type: string
-          format: date-time
     ProjectInvite:
       type: object
       properties:
@@ -266,19 +201,71 @@ components:
           format: date-time
         invited_by:
           $ref: '#/components/schemas/User'
-    PermissionType_2:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        date_joined:
+          type: string
+          format: date-time
+    InvitationStatus:
+      type: string
+      enum:
+      - pending
+      - accepted
+      - cancelled
+      description: '- `pending`: Invitation sent, awaiting response
+
+        - `accepted`: User accepted the invitation
+
+        - `cancelled`: Invitation was cancelled
+
+        '
+    PermissionType:
       type: string
       enum:
       - CAN_PERFORM_ADMIN_ACTIONS
       - CAN_VIEW_DATA
+      - CAN_RUN_TASKS
+      - CAN_VIEW_TECHNICAL_INTERFACE
       - CAN_IMPERSONATE_OTHER_USERS
       description: '- `CAN_PERFORM_ADMIN_ACTIONS`: Full administrative access
 
         - `CAN_VIEW_DATA`: Read-only access to project data
 
+        - `CAN_RUN_TASKS`: Execute background tasks and pipelines
+
+        - `CAN_VIEW_TECHNICAL_INTERFACE`: Access to technical features
+
         - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls (contact Clarifeye to enable)
 
         '
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
     ProjectInvite_2:
       type: object
       properties:
@@ -325,6 +312,44 @@ components:
         - `user`: End-user profile with the most restricted UI surface
 
         '
+    PermissionType_2:
+      type: string
+      enum:
+      - CAN_PERFORM_ADMIN_ACTIONS
+      - CAN_VIEW_DATA
+      - CAN_IMPERSONATE_OTHER_USERS
+      description: '- `CAN_PERFORM_ADMIN_ACTIONS`: Full administrative access
+
+        - `CAN_VIEW_DATA`: Read-only access to project data
+
+        - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls (contact Clarifeye to enable)
+
+        '
+  responses:
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
   parameters:
     Limit:
       name: limit
@@ -335,14 +360,6 @@ components:
         default: 100
         minimum: 1
         maximum: 1000
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
     Offset:
       name: offset
       in: query
@@ -351,31 +368,14 @@ components:
         type: integer
         default: 0
         minimum: 0
-  responses:
-    Forbidden:
-      description: Forbidden - insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: You do not have permission to perform this action.
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
-    Unauthorized:
-      description: Unauthorized - missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Authentication credentials were not provided.
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
   securitySchemes:
     BearerAuth:
       type: http

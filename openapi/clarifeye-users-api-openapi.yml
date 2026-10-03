@@ -161,6 +161,27 @@ components:
           description: Error message
       example:
         error: User not found
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        date_joined:
+          type: string
+          format: date-time
+    ValidationError:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email:
+        - This field is required.
     PermissionType:
       type: string
       enum:
@@ -180,15 +201,6 @@ components:
         - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls (contact Clarifeye to enable)
 
         '
-    ValidationError:
-      type: object
-      additionalProperties:
-        type: array
-        items:
-          type: string
-      example:
-        email:
-        - This field is required.
     ProjectPermission:
       type: object
       properties:
@@ -222,18 +234,27 @@ components:
         results:
           type: array
           items: {}
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        email:
-          type: string
-          format: email
-        date_joined:
-          type: string
-          format: date-time
+    ProjectProfile:
+      type: string
+      enum:
+      - tech
+      - contributor
+      - user
+      default: contributor
+      description: 'Profile of the user on the project. The profile shapes the UI surface a
+
+        user sees (sidebar, available views) and complements the fine-grained
+
+        `permissions` list.
+
+
+        - `tech`: Technical profile with access to advanced/technical interfaces
+
+        - `contributor`: Default profile for users who contribute to the project
+
+        - `user`: End-user profile with the most restricted UI surface
+
+        '
     PermissionType_2:
       type: string
       enum:
@@ -261,28 +282,15 @@ components:
             $ref: '#/components/schemas/PermissionType_2'
         profile:
           $ref: '#/components/schemas/ProjectProfile'
-    ProjectProfile:
-      type: string
-      enum:
-      - tech
-      - contributor
-      - user
-      default: contributor
-      description: 'Profile of the user on the project. The profile shapes the UI surface a
-
-        user sees (sidebar, available views) and complements the fine-grained
-
-        `permissions` list.
-
-
-        - `tech`: Technical profile with access to advanced/technical interfaces
-
-        - `contributor`: Default profile for users who contribute to the project
-
-        - `user`: End-user profile with the most restricted UI surface
-
-        '
   responses:
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
     BadRequest:
       description: Bad request - invalid parameters or request body
       content:
@@ -299,14 +307,6 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: You do not have permission to perform this action.
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
     Unauthorized:
       description: Unauthorized - missing or invalid authentication
       content:
@@ -325,14 +325,6 @@ components:
         default: 100
         minimum: 1
         maximum: 1000
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
     Offset:
       name: offset
       in: query
@@ -341,6 +333,14 @@ components:
         type: integer
         default: 0
         minimum: 0
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
   securitySchemes:
     BearerAuth:
       type: http

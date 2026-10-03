@@ -239,6 +239,25 @@ paths:
           $ref: '#/components/responses/NotFound'
 components:
   schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    NotificationBulkActionResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Human-readable message describing the action taken
+          example: Marked 5 notifications as read
+        count:
+          type: integer
+          description: Number of notifications affected by the action
+          example: 5
     ProjectScopedNotification:
       description: 'A project-scoped notification. Returned by project notification endpoints.
 
@@ -261,24 +280,16 @@ components:
             type: string
             format: uuid
             description: UUID of the project this notification belongs to (always non-null)
-    NotificationStatus:
+    NotificationAccessLevel:
       type: string
       enum:
-      - unread
-      - read
-      description: '- `unread`: Notification has not been read
+      - admin
+      - viewer
+      description: '- `admin`: Notification visible only to project admins
 
-        - `read`: Notification has been read
+        - `viewer`: Notification visible to all project members
 
         '
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
     NotificationBase:
       type: object
       description: Base notification properties shared by all notification types
@@ -374,27 +385,41 @@ components:
         results:
           type: array
           items: {}
-    NotificationAccessLevel:
+    NotificationStatus:
       type: string
       enum:
-      - admin
-      - viewer
-      description: '- `admin`: Notification visible only to project admins
+      - unread
+      - read
+      description: '- `unread`: Notification has not been read
 
-        - `viewer`: Notification visible to all project members
+        - `read`: Notification has been read
 
         '
-    NotificationBulkActionResponse:
-      type: object
-      properties:
-        message:
-          type: string
-          description: Human-readable message describing the action taken
-          example: Marked 5 notifications as read
-        count:
-          type: integer
-          description: Number of notifications affected by the action
-          example: 5
+  responses:
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
   parameters:
     Limit:
       name: limit
@@ -405,14 +430,6 @@ components:
         default: 100
         minimum: 1
         maximum: 1000
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
     NotificationId:
       name: notification_id
       in: path
@@ -429,6 +446,14 @@ components:
         type: integer
         default: 0
         minimum: 0
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
     ImpersonateEmail:
       name: X-Impersonate-Email
       in: header
@@ -443,31 +468,6 @@ components:
       schema:
         type: string
         format: email
-  responses:
-    Forbidden:
-      description: Forbidden - insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: You do not have permission to perform this action.
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
-    Unauthorized:
-      description: Unauthorized - missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Authentication credentials were not provided.
   securitySchemes:
     BearerAuth:
       type: http

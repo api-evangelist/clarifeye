@@ -116,6 +116,14 @@ paths:
                 $ref: '#/components/schemas/DataOperationErrorResponse'
 components:
   schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
     DataOperationErrorResponse:
       type: object
       description: Error response from a data operation
@@ -128,30 +136,6 @@ components:
         error:
           type: string
           description: Single error message
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
-    DataOperationResponse:
-      type: object
-      description: Response from a data operation
-      properties:
-        data:
-          type: array
-          description: Array of result records (for read operations)
-          items:
-            type: object
-            additionalProperties: true
-        count:
-          type: integer
-          description: Total number of affected/returned records
-        success:
-          type: boolean
-          description: Whether the operation completed successfully
     DataOperationRequest:
       type: object
       required:
@@ -216,6 +200,22 @@ components:
         - `delete`: Remove records
 
         '
+    DataOperationResponse:
+      type: object
+      description: Response from a data operation
+      properties:
+        data:
+          type: array
+          description: Array of result records (for read operations)
+          items:
+            type: object
+            additionalProperties: true
+        count:
+          type: integer
+          description: Total number of affected/returned records
+        success:
+          type: boolean
+          description: Whether the operation completed successfully
   responses:
     Forbidden:
       description: Forbidden - insufficient permissions
@@ -234,19 +234,19 @@ components:
           example:
             error: Authentication credentials were not provided.
   parameters:
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
     TableId:
       name: table_id
       in: path
       required: true
       description: UUID of the table
+      schema:
+        type: string
+        format: uuid
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
       schema:
         type: string
         format: uuid

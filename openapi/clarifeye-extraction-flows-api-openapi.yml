@@ -296,6 +296,16 @@ components:
           description: Error message
       example:
         error: User not found
+    ExtractionFlowPublishMode:
+      type: string
+      enum:
+      - auto_publish
+      - manual_publish
+      description: '- `auto_publish` — runs automatically push extracted data to downstream indexes.
+
+        - `manual_publish` — publishing is triggered explicitly via the `publish` action.
+
+        '
     ExtractionFlow:
       type: object
       properties:
@@ -323,25 +333,7 @@ components:
         updated_at:
           type: string
           format: date-time
-    ExtractionFlowPublishMode:
-      type: string
-      enum:
-      - auto_publish
-      - manual_publish
-      description: '- `auto_publish` — runs automatically push extracted data to downstream indexes.
-
-        - `manual_publish` — publishing is triggered explicitly via the `publish` action.
-
-        '
   responses:
-    Forbidden:
-      description: Forbidden - insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: You do not have permission to perform this action.
     NotFound:
       description: Not found - resource does not exist
       content:
@@ -350,6 +342,14 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: Not found.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
     Unauthorized:
       description: Unauthorized - missing or invalid authentication
       content:
@@ -359,19 +359,19 @@ components:
           example:
             error: Authentication credentials were not provided.
   parameters:
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
     FlowId:
       name: flow_id
       in: path
       required: true
       description: UUID of the extraction flow
+      schema:
+        type: string
+        format: uuid
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
       schema:
         type: string
         format: uuid
