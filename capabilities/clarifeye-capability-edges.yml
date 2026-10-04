@@ -1,0 +1,27 @@
+slug: clarifeye
+provider: Clarifeye
+generated_by: planning/capability-mapping/scripts/classify_capabilities.py
+model: claude-opus-5
+frame:
+- Software & Technology
+min_confidence: 0.7
+capability_model:
+  source: https://github.com/vincentmakes/turbo-ea-capabilities
+  license: CC-BY-4.0
+  attribution: Turbo EA Capabilities by Vincent Verdet — Turbo EA, https://github.com/vincentmakes/turbo-ea-capabilities,
+    CC BY 4.0
+  notice: NOTICE
+edge_count: 1
+edges:
+- tag: Interviews
+  spec_file: clarifeye-interviews-api-openapi.yml
+  capability_id: BC-830.10
+  capability_id_l1: BC-830
+  capability_name: Knowledge Capture Management
+  confidence: 0.78
+  evidence: 'POST /projects/{project_id}/interviews/assign/ ''Create and assign interviews''; GET .../interviews/{interview_id}/
+    ''Retrieve interview content''; vendor: ''AI interviewer, Clara, runs document-aware interviews with
+    subject-matter experts'''
+  reason: The operations schedule and retrieve structured expert interviews whose purpose is to elicit
+    undocumented expertise into reusable artefacts — this is knowledge capture from experts, not HR recruiting
+    interviews (no candidate/applicant schemas; scope is projects and knowledge artefacts).
