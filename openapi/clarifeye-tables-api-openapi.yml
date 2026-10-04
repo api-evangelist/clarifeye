@@ -116,14 +116,24 @@ paths:
                 $ref: '#/components/schemas/DataOperationErrorResponse'
 components:
   schemas:
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
+    DataOperationType:
+      type: string
+      enum:
+      - read
+      - create
+      - update
+      - delete
+      description: 'Type of data operation:
+
+        - `read`: Retrieve records with optional filtering
+
+        - `create`: Insert new records
+
+        - `update`: Update existing records
+
+        - `delete`: Remove records
+
+        '
     DataOperationErrorResponse:
       type: object
       description: Error response from a data operation
@@ -182,24 +192,14 @@ components:
           type: integer
           description: Number of records to skip for pagination (for read operations)
           default: 0
-    DataOperationType:
-      type: string
-      enum:
-      - read
-      - create
-      - update
-      - delete
-      description: 'Type of data operation:
-
-        - `read`: Retrieve records with optional filtering
-
-        - `create`: Insert new records
-
-        - `update`: Update existing records
-
-        - `delete`: Remove records
-
-        '
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
     DataOperationResponse:
       type: object
       description: Response from a data operation
@@ -234,19 +234,19 @@ components:
           example:
             error: Authentication credentials were not provided.
   parameters:
-    TableId:
-      name: table_id
-      in: path
-      required: true
-      description: UUID of the table
-      schema:
-        type: string
-        format: uuid
     ProjectId:
       name: project_id
       in: path
       required: true
       description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+    TableId:
+      name: table_id
+      in: path
+      required: true
+      description: UUID of the table
       schema:
         type: string
         format: uuid

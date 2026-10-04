@@ -749,7 +749,105 @@ paths:
     - url: https://us.app.clarifeye.ai/api/v1
       description: US
 components:
+  responses:
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
   schemas:
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    MetadataKeyValue:
+      type: object
+      required:
+      - key
+      - value
+      properties:
+        key:
+          type: string
+          description: Metadata key
+        value:
+          type: string
+          description: Metadata value
+    DocumentMinimal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Document filename
+        content_type:
+          type: string
+          description: MIME type of the document
+        page_count:
+          type:
+          - integer
+          - 'null'
+          description: Number of pages in the document
+        file_size:
+          type:
+          - integer
+          - 'null'
+          description: File size in bytes
+        metadata:
+          type: array
+          description: 'List of key-value metadata pairs. Each element is a two-element array `[key, value]`.
+
+            '
+          items:
+            type: array
+            items:
+              type: string
+            minItems: 2
+            maxItems: 2
+        status:
+          type: string
+          enum:
+          - active
+          - deleting
+          - deleted
+          description: Document deletion status
     Error:
       type: object
       properties:
@@ -825,88 +923,7 @@ components:
           - deleting
           - deleted
           description: Document deletion status
-    DocumentMinimal:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          description: Document filename
-        content_type:
-          type: string
-          description: MIME type of the document
-        page_count:
-          type:
-          - integer
-          - 'null'
-          description: Number of pages in the document
-        file_size:
-          type:
-          - integer
-          - 'null'
-          description: File size in bytes
-        metadata:
-          type: array
-          description: 'List of key-value metadata pairs. Each element is a two-element array `[key, value]`.
-
-            '
-          items:
-            type: array
-            items:
-              type: string
-            minItems: 2
-            maxItems: 2
-        status:
-          type: string
-          enum:
-          - active
-          - deleting
-          - deleted
-          description: Document deletion status
-    MetadataKeyValue:
-      type: object
-      required:
-      - key
-      - value
-      properties:
-        key:
-          type: string
-          description: Metadata key
-        value:
-          type: string
-          description: Metadata value
-    PaginatedResponse:
-      type: object
-      properties:
-        count:
-          type: integer
-          description: Total number of results
-        next:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to next page of results
-        previous:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to previous page of results
-        results:
-          type: array
-          items: {}
   parameters:
-    DocumentId:
-      name: document_id
-      in: path
-      required: true
-      description: UUID of the document
-      schema:
-        type: string
-        format: uuid
     Limit:
       name: limit
       in: query
@@ -916,14 +933,6 @@ components:
         default: 100
         minimum: 1
         maximum: 1000
-    Offset:
-      name: offset
-      in: query
-      description: Number of results to skip for pagination
-      schema:
-        type: integer
-        default: 0
-        minimum: 0
     ProjectId:
       name: project_id
       in: path
@@ -932,31 +941,22 @@ components:
       schema:
         type: string
         format: uuid
-  responses:
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
-    Forbidden:
-      description: Forbidden - insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: You do not have permission to perform this action.
-    Unauthorized:
-      description: Unauthorized - missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Authentication credentials were not provided.
+    DocumentId:
+      name: document_id
+      in: path
+      required: true
+      description: UUID of the document
+      schema:
+        type: string
+        format: uuid
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
   securitySchemes:
     BearerAuth:
       type: http

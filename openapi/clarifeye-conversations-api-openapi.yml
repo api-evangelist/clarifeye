@@ -619,63 +619,40 @@ paths:
     - url: https://us.app.clarifeye.ai/api/v1
       description: US
 components:
+  responses:
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ValidationError'
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
   schemas:
-    ChatMessage:
-      type: object
-      description: 'A message in the conversation. The `query_id` groups all messages from a single
-
-        user interaction (user message, assistant response, tool calls).
-
-        '
-      properties:
-        role:
-          type: string
-          enum:
-          - user
-          - assistant
-        content:
-          type: string
-        type:
-          type: string
-          enum:
-          - message
-          - tool_call
-          - reasoning_flow
-        query_id:
-          type: integer
-          description: 'Unique identifier for this query. All messages from one interaction share the same query_id.
-
-            Use this value when submitting feedback on a specific message.
-
-            '
-        user_id:
-          type: string
-          format: uuid
-        used_tokens_input:
-          type: integer
-        used_tokens_output:
-          type: integer
-        timestamp:
-          type: string
-          format: date-time
-        tool_type:
-          type: string
-          description: Type of tool (only for tool_call messages)
-        input_parameters:
-          type: object
-          description: Tool input parameters (only for tool_call messages)
-        results:
-          type: array
-          items: {}
-          description: Tool results (only for tool_call messages)
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
     Conversation:
       type: object
       properties:
@@ -777,11 +754,11 @@ components:
         results:
           type: array
           items: {}
-    ChatMessage_2:
+    ChatMessage:
       type: object
-      description: 'A message in the conversation. The `query_id` groups all messages from a
+      description: 'A message in the conversation. The `query_id` groups all messages from a single
 
-        single user interaction (user message, assistant response, tool calls).
+        user interaction (user message, assistant response, tool calls).
 
         '
       properties:
@@ -800,19 +777,39 @@ components:
           - reasoning_flow
         query_id:
           type: integer
+          description: 'Unique identifier for this query. All messages from one interaction share the same query_id.
+
+            Use this value when submitting feedback on a specific message.
+
+            '
+        user_id:
+          type: string
+          format: uuid
+        used_tokens_input:
+          type: integer
+        used_tokens_output:
+          type: integer
         timestamp:
           type: string
           format: date-time
         tool_type:
           type: string
-          description: Type of tool (only for tool_call messages).
+          description: Type of tool (only for tool_call messages)
         input_parameters:
           type: object
-          description: Tool input parameters (only for tool_call messages).
+          description: Tool input parameters (only for tool_call messages)
         results:
           type: array
           items: {}
-          description: Tool results (only for tool_call messages).
+          description: Tool results (only for tool_call messages)
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
     Conversation_2:
       type: object
       description: A conversation with its complete chat history.
@@ -859,39 +856,42 @@ components:
           - string
           - 'null'
           format: date-time
-  responses:
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
-    BadRequest:
-      description: Bad request - invalid parameters or request body
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ValidationError'
-    Forbidden:
-      description: Forbidden - insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: You do not have permission to perform this action.
-    Unauthorized:
-      description: Unauthorized - missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Authentication credentials were not provided.
+    ChatMessage_2:
+      type: object
+      description: 'A message in the conversation. The `query_id` groups all messages from a
+
+        single user interaction (user message, assistant response, tool calls).
+
+        '
+      properties:
+        role:
+          type: string
+          enum:
+          - user
+          - assistant
+        content:
+          type: string
+        type:
+          type: string
+          enum:
+          - message
+          - tool_call
+          - reasoning_flow
+        query_id:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        tool_type:
+          type: string
+          description: Type of tool (only for tool_call messages).
+        input_parameters:
+          type: object
+          description: Tool input parameters (only for tool_call messages).
+        results:
+          type: array
+          items: {}
+          description: Tool results (only for tool_call messages).
   parameters:
     Limit:
       name: limit
@@ -902,6 +902,14 @@ components:
         default: 100
         minimum: 1
         maximum: 1000
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
     ConversationId:
       name: conversation_id
       in: path
@@ -918,14 +926,6 @@ components:
         type: integer
         default: 0
         minimum: 0
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
     ImpersonateEmail:
       name: X-Impersonate-Email
       in: header

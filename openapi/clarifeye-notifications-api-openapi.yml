@@ -238,26 +238,101 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
+  responses:
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+  parameters:
+    NotificationId:
+      name: notification_id
+      in: path
+      required: true
+      description: UUID of the notification
+      schema:
+        type: string
+        format: uuid
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    ImpersonateEmail:
+      name: X-Impersonate-Email
+      in: header
+      required: false
+      description: 'Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.
+
+        If the target user is not found or does not have access to the project, the request
+
+        proceeds as the authenticated user. Contact Clarifeye to enable this permission.
+
+        '
+      schema:
+        type: string
+        format: email
   schemas:
-    Error:
+    PaginatedResponse:
       type: object
       properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
-    NotificationBulkActionResponse:
-      type: object
-      properties:
-        message:
-          type: string
-          description: Human-readable message describing the action taken
-          example: Marked 5 notifications as read
         count:
           type: integer
-          description: Number of notifications affected by the action
-          example: 5
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
     ProjectScopedNotification:
       description: 'A project-scoped notification. Returned by project notification endpoints.
 
@@ -280,14 +355,14 @@ components:
             type: string
             format: uuid
             description: UUID of the project this notification belongs to (always non-null)
-    NotificationAccessLevel:
+    NotificationStatus:
       type: string
       enum:
-      - admin
-      - viewer
-      description: '- `admin`: Notification visible only to project admins
+      - unread
+      - read
+      description: '- `unread`: Notification has not been read
 
-        - `viewer`: Notification visible to all project members
+        - `read`: Notification has been read
 
         '
     NotificationBase:
@@ -364,110 +439,35 @@ components:
           type: string
           format: date-time
           description: ISO format absolute timestamp
-    PaginatedResponse:
+    NotificationBulkActionResponse:
       type: object
       properties:
+        message:
+          type: string
+          description: Human-readable message describing the action taken
+          example: Marked 5 notifications as read
         count:
           type: integer
-          description: Total number of results
-        next:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to next page of results
-        previous:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to previous page of results
-        results:
-          type: array
-          items: {}
-    NotificationStatus:
+          description: Number of notifications affected by the action
+          example: 5
+    NotificationAccessLevel:
       type: string
       enum:
-      - unread
-      - read
-      description: '- `unread`: Notification has not been read
+      - admin
+      - viewer
+      description: '- `admin`: Notification visible only to project admins
 
-        - `read`: Notification has been read
-
-        '
-  responses:
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
-    Forbidden:
-      description: Forbidden - insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: You do not have permission to perform this action.
-    Unauthorized:
-      description: Unauthorized - missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Authentication credentials were not provided.
-  parameters:
-    Limit:
-      name: limit
-      in: query
-      description: Maximum number of results per page
-      schema:
-        type: integer
-        default: 100
-        minimum: 1
-        maximum: 1000
-    NotificationId:
-      name: notification_id
-      in: path
-      required: true
-      description: UUID of the notification
-      schema:
-        type: string
-        format: uuid
-    Offset:
-      name: offset
-      in: query
-      description: Number of results to skip for pagination
-      schema:
-        type: integer
-        default: 0
-        minimum: 0
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
-    ImpersonateEmail:
-      name: X-Impersonate-Email
-      in: header
-      required: false
-      description: 'Email of the user to impersonate. Requires `CAN_IMPERSONATE_OTHER_USERS` permission.
-
-        If the target user is not found or does not have access to the project, the request
-
-        proceeds as the authenticated user. Contact Clarifeye to enable this permission.
+        - `viewer`: Notification visible to all project members
 
         '
-      schema:
-        type: string
-        format: email
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
   securitySchemes:
     BearerAuth:
       type: http

@@ -543,25 +543,49 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
+  responses:
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ValidationError'
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
   schemas:
-    Error:
+    ValidationError:
       type: object
-      properties:
-        error:
+      additionalProperties:
+        type: array
+        items:
           type: string
-          description: Error message
       example:
-        error: User not found
-    FeedbackStatus:
-      type: string
-      enum:
-      - to_review
-      - reviewed
-      description: '- `to_review`: Feedback pending review (default)
-
-        - `reviewed`: Feedback has been reviewed
-
-        '
+        email:
+        - This field is required.
     PaginatedResponse:
       type: object
       properties:
@@ -583,15 +607,71 @@ components:
         results:
           type: array
           items: {}
-    ValidationError:
+    Feedback:
       type: object
-      additionalProperties:
-        type: array
-        items:
+      properties:
+        id:
           type: string
-      example:
-        email:
-        - This field is required.
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        given_by:
+          type: object
+          description: User who submitted the feedback
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+        status:
+          $ref: '#/components/schemas/FeedbackStatus'
+        feedback:
+          type: string
+          description: Feedback text comment
+        context:
+          type: object
+          description: Legacy context object (conversation_id is now available as a direct field)
+          properties:
+            conversation_id:
+              type: string
+              format: uuid
+              deprecated: true
+              description: Use the top-level `conversation` field instead
+            query_id:
+              type: integer
+            source:
+              type: string
+        is_positive:
+          type:
+          - boolean
+          - 'null'
+          description: '- `true`: Positive feedback
+
+            - `false`: Negative feedback
+
+            - `null`: Neutral
+
+            '
+        user_message:
+          type: string
+          description: The user message that was responded to (computed field)
+        conversation_title:
+          type: string
+          description: Title of the conversation (computed field)
+        suggested_action_type:
+          type:
+          - string
+          - 'null'
+          description: Auto-generated suggested action type
+        suggested_action_data:
+          type: object
+          description: Auto-generated suggested action data
     ConversationFeedbackGroup:
       type: object
       description: A group of feedbacks from the same playground conversation
@@ -660,104 +740,24 @@ components:
         feedback_count: 4
         latest_updated_at: '2026-02-26T10:30:00Z'
         has_unreviewed: true
-    Feedback:
+    Error:
       type: object
       properties:
-        id:
+        error:
           type: string
-          format: uuid
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-        given_by:
-          type: object
-          description: User who submitted the feedback
-          properties:
-            id:
-              type: string
-              format: uuid
-            email:
-              type: string
-              format: email
-        status:
-          $ref: '#/components/schemas/FeedbackStatus'
-        feedback:
-          type: string
-          description: Feedback text comment
-        context:
-          type: object
-          description: Legacy context object (conversation_id is now available as a direct field)
-          properties:
-            conversation_id:
-              type: string
-              format: uuid
-              deprecated: true
-              description: Use the top-level `conversation` field instead
-            query_id:
-              type: integer
-            source:
-              type: string
-        is_positive:
-          type:
-          - boolean
-          - 'null'
-          description: '- `true`: Positive feedback
+          description: Error message
+      example:
+        error: User not found
+    FeedbackStatus:
+      type: string
+      enum:
+      - to_review
+      - reviewed
+      description: '- `to_review`: Feedback pending review (default)
 
-            - `false`: Negative feedback
+        - `reviewed`: Feedback has been reviewed
 
-            - `null`: Neutral
-
-            '
-        user_message:
-          type: string
-          description: The user message that was responded to (computed field)
-        conversation_title:
-          type: string
-          description: Title of the conversation (computed field)
-        suggested_action_type:
-          type:
-          - string
-          - 'null'
-          description: Auto-generated suggested action type
-        suggested_action_data:
-          type: object
-          description: Auto-generated suggested action data
-  responses:
-    NotFound:
-      description: Not found - resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
-    BadRequest:
-      description: Bad request - invalid parameters or request body
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ValidationError'
-    Forbidden:
-      description: Forbidden - insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: You do not have permission to perform this action.
-    Unauthorized:
-      description: Unauthorized - missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Authentication credentials were not provided.
+        '
   parameters:
     Limit:
       name: limit
@@ -768,14 +768,6 @@ components:
         default: 100
         minimum: 1
         maximum: 1000
-    Offset:
-      name: offset
-      in: query
-      description: Number of results to skip for pagination
-      schema:
-        type: integer
-        default: 0
-        minimum: 0
     ProjectId:
       name: project_id
       in: path
@@ -784,6 +776,14 @@ components:
       schema:
         type: string
         format: uuid
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
     ImpersonateEmail:
       name: X-Impersonate-Email
       in: header
