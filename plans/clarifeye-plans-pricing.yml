@@ -1,0 +1,117 @@
+# Pricing transcribed from the provider's own page — see provenance. Numbers are quoted, not derived.
+generated: '2026-10-07'
+method: searched
+source: https://www.clarifeye.ai/pricing/
+sources:
+- https://www.clarifeye.ai/pricing/
+- https://www.clarifeye.ai/pricing
+provenance:
+  tool: all/0-working/economics/harvest_pricing.py
+  run: 20261007T104522
+  grounding: every price_text was found verbatim in the fetched page text
+audience: business-product
+pricing_basis: per-seat
+delivery:
+  delivery: managed+licensed
+  method: page
+  read: '2026-10-07'
+  evidence: Customer Cloud , Clarifeye running inside your own cloud account, still managed by us.
+  managed_tier: Team
+published: true
+note: Platform fee plus per-seat pricing with monthly credit wallets; credit consumption rates stated
+  (3 credits/page parsing, 500 credits/M input tokens, 3,000 credits/M output tokens). 14-day free trial
+  of Team plan. MCP calls from external clients not metered.
+plan_count: 5
+currency: EUR
+plans:
+- name: Team
+  price_text: €500 / month
+  price: 500
+  currency: EUR
+  period: month
+  unit: platform fee
+  included_quota: Cloud deployment, capped at 50 seats, Clara MCP access, SharePoint & Drive connectors,
+    SSO, per-seat credit wallets, standard support
+  overage: Extra credits billed at €0.01 per credit
+- name: Business
+  price_text: €1,500 / month
+  price: 1500
+  currency: EUR
+  period: month
+  unit: platform fee
+  included_quota: Everything in Team, unlimited seats, EU or US data residency, org-level management,
+    custom workspace templates, priority support
+  overage: Extra credits billed at €0.01 per credit
+- name: Enterprise
+  price_text: Contact us
+  period: none
+  included_quota: Cloud, dedicated or yours; unlimited seats; BYOK; full credit mode pooled budget; dedicated
+    support
+- name: Knowledge users (seat)
+  price_text: €20 / month
+  price: 20
+  currency: EUR
+  period: month
+  unit: seat
+  included_quota: 3,000 credits included per month
+  overage: €0.01 per credit
+- name: Project owners (seat)
+  price_text: €200 / month
+  price: 200
+  currency: EUR
+  period: month
+  unit: seat
+  included_quota: 30,000 credits included per month
+  overage: €0.01 per credit
+rate_limit_statements:
+- In Seats mode every wallet is capped at its monthly allowance. In Full credit mode the pooled budget
+  is the cap.
+- Seats Capped at 50 seats
+x-canonical:
+  generated: '2026-10-08'
+  vocabulary: all/0-working/economics/plans-canonical.yml
+  models:
+  - hybrid
+  - seat
+  units:
+  - seat
+  plans:
+  - name: Team
+    access: other
+    model: hybrid
+    model_how: derived
+    units:
+    - other
+    periods:
+    - month
+  - name: Business
+    access: other
+    model: hybrid
+    model_how: derived
+    units:
+    - other
+    periods:
+    - month
+  - name: Enterprise
+    access: other
+    model: unstated
+    model_how: derived
+    units: []
+    periods:
+    - none
+  - name: Knowledge users (seat)
+    access: other
+    model: seat
+    model_how: derived
+    units:
+    - seat
+    periods:
+    - month
+  - name: Project owners (seat)
+    access: other
+    model: seat
+    model_how: derived
+    units:
+    - seat
+    periods:
+    - month
