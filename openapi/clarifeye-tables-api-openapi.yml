@@ -116,6 +116,42 @@ paths:
                 $ref: '#/components/schemas/DataOperationErrorResponse'
 components:
   schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    DataOperationResponse:
+      type: object
+      description: Response from a data operation
+      properties:
+        data:
+          type: array
+          description: Array of result records (for read operations)
+          items:
+            type: object
+            additionalProperties: true
+        count:
+          type: integer
+          description: Total number of affected/returned records
+        success:
+          type: boolean
+          description: Whether the operation completed successfully
+    DataOperationErrorResponse:
+      type: object
+      description: Error response from a data operation
+      properties:
+        errors:
+          type: array
+          description: Array of error messages
+          items:
+            type: string
+        error:
+          type: string
+          description: Single error message
     DataOperationType:
       type: string
       enum:
@@ -134,18 +170,6 @@ components:
         - `delete`: Remove records
 
         '
-    DataOperationErrorResponse:
-      type: object
-      description: Error response from a data operation
-      properties:
-        errors:
-          type: array
-          description: Array of error messages
-          items:
-            type: string
-        error:
-          type: string
-          description: Single error message
     DataOperationRequest:
       type: object
       required:
@@ -192,39 +216,7 @@ components:
           type: integer
           description: Number of records to skip for pagination (for read operations)
           default: 0
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
-    DataOperationResponse:
-      type: object
-      description: Response from a data operation
-      properties:
-        data:
-          type: array
-          description: Array of result records (for read operations)
-          items:
-            type: object
-            additionalProperties: true
-        count:
-          type: integer
-          description: Total number of affected/returned records
-        success:
-          type: boolean
-          description: Whether the operation completed successfully
   responses:
-    Forbidden:
-      description: Forbidden - insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: You do not have permission to perform this action.
     Unauthorized:
       description: Unauthorized - missing or invalid authentication
       content:
@@ -233,6 +225,14 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: Authentication credentials were not provided.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
   parameters:
     ProjectId:
       name: project_id
