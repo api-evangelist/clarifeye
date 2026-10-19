@@ -1,0 +1,1167 @@
+openapi: 3.2.0
+info:
+  title: Clarifeye Platform API — Full API Documentation Artifacts…
+  description: 'Complete REST API reference for the Clarifeye Platform.
+
+
+    Documents every endpoint exposed by the platform — the public surface plus
+
+    the advanced surface: pipeline customization (extraction flows, pipeline
+
+    runs, warehouse tables, document tag/metadata configuration), the pre-MCP
+
+    AI surface (agent settings, playground conversations, conversation-scoped
+
+    feedback views, notifications), and the impersonation header. New AI
+
+    integrations should consume knowledge via MCP rather than the
+
+    conversation/agent-settings endpoints documented here.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token `
+
+    - `Authorization: Bearer `
+
+
+    ## Service accounts and API keys
+
+    Integrations authenticate with an **API key** of a **service account**:
+
+    - `Authorization: Bearer ` (keys start with `cfk_`)
+
+
+    A service account is an ordinary member (role `member`) of one organization that cannot log
+
+    in. Organization admins create it and mint its keys on the organization''s *Service
+
+    accounts* page (`/organizations/{id}/service-accounts/`, `/organization-api-keys/`), and
+
+    give it access to knowledge stores with ordinary store permissions. A key is valid on every
+
+    endpoint and acts as its service account: it reaches exactly the stores, with exactly the
+
+    rights, the account was given. An account can hold several keys (each with its own name,
+
+    optional expiry and revocation), so a key can be rotated without changing identity.
+
+
+    A refused key answers **403** with one of: `Invalid API key.`, `API key revoked.`,
+
+    `API key expired.`, `API key disabled.` (the service account is disabled).
+
+
+    Any valid key may also call `POST /organizations/{id}/provision-user/` and
+
+    `POST /organizations/{id}/deprovision-user/` for its own organization (the `{id}` in the
+
+    path must be the key''s organization). The email domains these may pre-create accounts for
+
+    are configured by Clarifeye on the organization (`allowed_provisioning_domains`).
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (for a person, contact Clarifeye to enable it; org admins grant it to a service account on the organization''s Service accounts page)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+
+    **With an API key** the request fails instead (**403**) whenever impersonation cannot
+
+    happen: missing permission, unknown target, target without access to the store, target that
+
+    is itself a service account, or an endpoint outside a store. A key never silently acts as
+
+    its own service account when impersonation was asked for.'
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Artifacts
+  description: 'Knowledge-store artifact catalog — list artifacts, create/edit custom
+
+    artifacts, manage scope membership, read and publish versions, configure
+
+    the cohesion guide, and export/import the whole catalog. For type-aware
+
+    reads and edits of artifact content, prefer the
+
+    `read-write-*-artifact` tool endpoints.'
+paths:
+  /projects/{project_id}/artifacts/:
+    get:
+      tags:
+      - Artifacts
+      summary: List artifacts in the catalog
+      description: 'List the project''s artifact catalog (paginated). In-scope artifacts sort
+
+        before out-of-scope ones, then by `display_order` and `slug`. Requires
+
+        view permission.'
+      operationId: listArtifacts
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: scope
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - in_scope
+          - out_of_scope
+          - all
+          default: all
+        description: Filter by catalog scope membership.
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ArtifactSummary'
+        '400':
+          description: Invalid scope value
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+      - Artifacts
+      summary: Create a custom artifact
+      description: 'Create a custom artifact (`semantic_type` is always `custom`; predefined
+
+        artifacts are seeded by the platform). The slug must be unique within the
+
+        project. An initial empty version is published automatically. Requires
+
+        admin permission.'
+      operationId: createArtifact
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtifactCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactDetail'
+        '400':
+          description: Validation error (e.g. duplicate slug, reserved group name)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/artifacts/cohesion-guide/:
+    get:
+      tags:
+      - Artifacts
+      summary: Read the cohesion guide
+      description: 'Read the default artifact snapshot''s cross-artifact cohesion guide.
+
+        `default_cohesion_guide` carries the platform default text so clients
+
+        can preview what `mode=default` resolves to. Requires view permission.'
+      operationId: getArtifactCohesionGuide
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactCohesionGuide'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Artifact snapshot not found
+    patch:
+      tags:
+      - Artifacts
+      summary: Update the cohesion guide
+      description: 'Update the default snapshot''s cohesion guide. When `cohesion_guide_mode`
+
+        is `default`, `cohesion_guide_text` is cleared server-side. Requires
+
+        admin permission.'
+      operationId: updateArtifactCohesionGuide
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - cohesion_guide_mode
+              properties:
+                cohesion_guide_mode:
+                  type: string
+                  enum:
+                  - default
+                  - custom
+                cohesion_guide_text:
+                  type: string
+                  description: Snapshot-specific guide text; only meaningful with `mode=custom`.
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactCohesionGuide'
+        '400':
+          description: Invalid mode
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Artifact snapshot not found
+  /projects/{project_id}/artifacts/export-catalog/:
+    get:
+      tags:
+      - Artifacts
+      summary: Export the artifact catalog
+      description: 'Export the full artifact catalog — artifact metadata, complete version
+
+        history (payloads included), and snapshot settings — for migration to
+
+        another project. Requires view permission.'
+      operationId: exportArtifactCatalog
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactCatalogExport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/artifacts/import-catalog/:
+    post:
+      tags:
+      - Artifacts
+      summary: Import an artifact catalog
+      description: 'Import a full catalog (same shape as the export) into a project whose
+
+        catalog is still empty — the import is rejected if the project already
+
+        has catalog rows. Only `in_scope_latest` snapshots are supported.
+
+        Requires admin permission.'
+      operationId: importArtifactCatalog
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtifactCatalogExport'
+      responses:
+        '201':
+          description: Imported
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  artifact_count:
+                    type: integer
+                  version_count:
+                    type: integer
+                  artifact_snapshot_ids:
+                    type: array
+                    items:
+                      type: string
+                      format: uuid
+                  artifact_snapshot_id:
+                    type:
+                    - string
+                    - 'null'
+                    format: uuid
+        '400':
+          description: Validation error (e.g. project already has a catalog)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/artifacts/{slug}/:
+    parameters:
+    - $ref: '#/components/parameters/ProjectId'
+    - $ref: '#/components/parameters/ArtifactSlug'
+    get:
+      tags:
+      - Artifacts
+      summary: Retrieve an artifact
+      description: 'Retrieve one artifact with its definitions and the payload of the
+
+        selected version (head by default; pass `version` to read an older
+
+        one). Requires view permission.'
+      operationId: getArtifact
+      parameters:
+      - name: version
+        in: query
+        required: false
+        schema:
+          type: integer
+        description: Version number to read instead of the head version.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactDetail'
+        '400':
+          description: Non-integer version
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Artifacts
+      summary: Update a custom artifact
+      description: 'Update a custom artifact''s metadata (title, group, definitions).
+
+        Only fields present in the request are touched. Predefined artifacts
+
+        cannot be edited. Requires admin permission.'
+      operationId: updateArtifact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtifactUpdateRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactDetail'
+        '400':
+          description: Validation error (e.g. not a custom artifact, reserved group name)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+      - Artifacts
+      summary: Delete an artifact
+      description: 'Delete an artifact and its versions. Rejected when the artifact''s
+
+        delete preconditions are not met (see `can_delete` on the summary).
+
+        Requires admin permission.'
+      operationId: deleteArtifact
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          description: Artifact cannot be deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/artifacts/{slug}/remove-from-scope/:
+    post:
+      tags:
+      - Artifacts
+      summary: Remove an artifact from scope
+      description: 'Take the artifact out of the knowledge-store scope (it stays in the
+
+        catalog and keeps its history). The brief artifact cannot be removed
+
+        from scope. Requires admin permission.'
+      operationId: removeArtifactFromScope
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ArtifactSlug'
+      responses:
+        '200':
+          description: Updated artifact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactDetail'
+        '400':
+          description: Artifact cannot be removed from scope (brief)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/artifacts/{slug}/restore-to-scope/:
+    post:
+      tags:
+      - Artifacts
+      summary: Restore an artifact to scope
+      description: Put an out-of-scope artifact back in scope. Requires admin permission.
+      operationId: restoreArtifactToScope
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ArtifactSlug'
+      responses:
+        '200':
+          description: Updated artifact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/artifacts/{slug}/versions/:
+    parameters:
+    - $ref: '#/components/parameters/ProjectId'
+    - $ref: '#/components/parameters/ArtifactSlug'
+    get:
+      tags:
+      - Artifacts
+      summary: List artifact versions
+      description: 'List all versions of an artifact, newest first, payloads included.
+
+        Not paginated. Requires view permission.'
+      operationId: listArtifactVersions
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArtifactVersion'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+      - Artifacts
+      summary: Publish a new artifact version
+      description: 'Publish a new head version with the given payload. The payload shape
+
+        depends on the artifact''s `technical_type` — string for `markdown` /
+
+        `bpmn_xml`, object for `mental_map`, array for `playbook_list` /
+
+        `design_template_list`. A null payload clears the artifact.
+
+        Emits the same side effects as agent edits (knowledge-changelog entry
+
+        with `edit_source: "ui"`, analytics). Requires admin permission.'
+      operationId: createArtifactVersion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - payload
+              properties:
+                payload:
+                  description: Version content; shape depends on the artifact's `technical_type`. Null clears the artifact.
+                change_summary:
+                  type: string
+                short_name:
+                  type: string
+                  maxLength: 128
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactVersion'
+        '400':
+          description: Invalid payload
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/artifacts/{slug}/versions/history/:
+    get:
+      tags:
+      - Artifacts
+      summary: Artifact version history
+      description: 'Paginated version history for an artifact, newest first. Rows are lean —
+
+        no payloads — and carry provenance context: who made the change, its
+
+        `edit_source`, the linked knowledge-changelog entry, and the coach
+
+        conversation that produced it (when one exists). Requires admin permission.'
+      operationId: getArtifactVersionHistory
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ArtifactSlug'
+      - name: limit
+        in: query
+        description: Page size (default 20, maximum 100).
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ArtifactVersionHistoryEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/artifacts/{slug}/versions/{version_number}/:
+    get:
+      tags:
+      - Artifacts
+      summary: Retrieve an artifact version
+      description: Retrieve one version of an artifact by number. Requires view permission.
+      operationId: getArtifactVersion
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ArtifactSlug'
+      - name: version_number
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Version number (1-based, unique per artifact)
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactVersion'
+        '400':
+          description: Non-integer version number
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/artifacts/{slug}/versions/{version_number}/restore/:
+    post:
+      tags:
+      - Artifacts
+      summary: Restore an artifact version
+      description: 'Publish a new head version copying the payload of an older version
+
+        (nothing is deleted; history stays intact). The restore itself goes
+
+        through the normal publish path, so it appears in the knowledge
+
+        changelog and the version history with `edit_source: "ui"`.
+
+        Rejected (400) for out-of-scope artifacts. Requires admin permission.'
+      operationId: restoreArtifactVersion
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ArtifactSlug'
+      - name: version_number
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Version number to restore (1-based, unique per artifact)
+      responses:
+        '201':
+          description: The newly published head version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactVersion'
+        '400':
+          description: Out-of-scope artifact or non-integer version number
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  schemas:
+    ArtifactVersion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        version_number:
+          type: integer
+        short_name:
+          type: string
+        change_summary:
+          type: string
+        edit_source:
+          type: string
+          description: 'Where the edit came from: "chat", "clara", "mcp", "ui"; empty for legacy/system writes.'
+        coach_conversation_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: Coach conversation whose agent produced this version, when known.
+        created_at:
+          type: string
+          format: date-time
+        created_by_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        created_by_email:
+          type:
+          - string
+          - 'null'
+          format: email
+        conversation:
+          type:
+          - object
+          - 'null'
+          description: Coach conversation that produced this version, when known.
+          properties:
+            id:
+              type: string
+              format: uuid
+            type:
+              type:
+              - string
+              - 'null'
+              description: Conversation type (e.g. "interview", "onboarding", "work_with_clara").
+            name:
+              type:
+              - string
+              - 'null'
+        payload:
+          description: Version content; shape depends on the artifact's `technical_type`. Null allowed.
+    ArtifactCatalogExport:
+      type: object
+      required:
+      - artifacts
+      properties:
+        artifact_snapshots:
+          type: array
+          items:
+            type: object
+            properties:
+              snapshot_type:
+                type: string
+                enum:
+                - in_scope_latest
+              cohesion_guide_mode:
+                type: string
+                enum:
+                - default
+                - custom
+              cohesion_guide_text:
+                type: string
+              created_at:
+                type:
+                - string
+                - 'null'
+                format: date-time
+              updated_at:
+                type:
+                - string
+                - 'null'
+                format: date-time
+        artifacts:
+          type: array
+          items:
+            type: object
+            required:
+            - slug
+            - semantic_type
+            - technical_type
+            - versions
+            properties:
+              slug:
+                type: string
+              title:
+                type: string
+              semantic_type:
+                $ref: '#/components/schemas/ArtifactSemanticType'
+              technical_type:
+                $ref: '#/components/schemas/ArtifactTechnicalType'
+              display_order:
+                type: integer
+              group:
+                type: string
+              out_scoped_at:
+                type:
+                - string
+                - 'null'
+                format: date-time
+              definition_short:
+                type: string
+              definition_long:
+                type: string
+              versions:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - version_number
+                  properties:
+                    version_number:
+                      type: integer
+                      minimum: 1
+                    short_name:
+                      type: string
+                    change_summary:
+                      type: string
+                    payload:
+                      description: Version content; shape depends on the artifact's `technical_type`. Null allowed.
+                    created_at:
+                      type:
+                      - string
+                      - 'null'
+                      format: date-time
+    ArtifactCreateRequest:
+      type: object
+      description: 'The slug is always generated server-side by slugifying the title; the created
+
+        artifact''s slug is returned in the response. A title whose slug is already taken
+
+        in the project is rejected with 400 keyed to `title` — pick a different title.
+
+        '
+      required:
+      - technical_type
+      - title
+      - definition_short
+      - capture_discipline
+      properties:
+        technical_type:
+          $ref: '#/components/schemas/ArtifactTechnicalType'
+        title:
+          type: string
+          maxLength: 255
+        group:
+          type: string
+          maxLength: 64
+          description: 'Optional group label; "Foundation" and "Other" are reserved. The standard
+
+            section names ("Project Management", …) are allowed and file the artifact
+
+            alongside the predefined ones.
+
+            '
+        definition_short:
+          type: string
+          description: Purpose of the artifact.
+        format_description:
+          type: string
+          description: How the content should be structured.
+        capture_discipline:
+          type: string
+          description: Knowledge capture rules for the artifact.
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    ArtifactSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        title:
+          type: string
+        semantic_type:
+          $ref: '#/components/schemas/ArtifactSemanticType'
+        technical_type:
+          $ref: '#/components/schemas/ArtifactTechnicalType'
+        in_scope:
+          type: boolean
+        display_order:
+          type: integer
+        group:
+          type: string
+          description: 'Catalog group label; empty for predefined artifacts (their section derives
+
+            from `semantic_type`) and for ungrouped custom ones. "Foundation" and
+
+            "Other" are reserved for UI-derived sections and cannot be set; the four
+
+            standard section names ("Project Management", …) are NOT reserved — a
+
+            custom artifact may use one to file itself alongside the predefined
+
+            artifacts.
+
+            '
+        definition_short:
+          type: string
+        head_version_number:
+          type:
+          - integer
+          - 'null'
+        head_updated_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        version_count:
+          type: integer
+        can_delete:
+          type: boolean
+    ArtifactVersionHistoryEntry:
+      type: object
+      description: Lean history row — attribution and linked context, no payload.
+      properties:
+        id:
+          type: string
+          format: uuid
+        version_number:
+          type: integer
+        short_name:
+          type: string
+        change_summary:
+          type: string
+        edit_source:
+          type: string
+          description: 'Where the edit came from: "chat", "clara", "mcp", "ui"; empty for legacy/system writes.'
+        created_at:
+          type: string
+          format: date-time
+        created_by_email:
+          type:
+          - string
+          - 'null'
+          format: email
+        conversation:
+          type:
+          - object
+          - 'null'
+          description: Coach conversation that produced this version, when known.
+          properties:
+            id:
+              type: string
+              format: uuid
+            type:
+              type:
+              - string
+              - 'null'
+              description: Conversation type (e.g. "interview", "onboarding", "work_with_clara").
+            name:
+              type:
+              - string
+              - 'null'
+        changelog_entry:
+          type:
+          - object
+          - 'null'
+          description: Linked knowledge-changelog entry, when one was written for this version.
+          properties:
+            id:
+              type: string
+              format: uuid
+            description:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+            user_email:
+              type:
+              - string
+              - 'null'
+              format: email
+    ArtifactSemanticType:
+      type: string
+      description: 'What the artifact means in the knowledge store. Predefined types are
+
+        seeded by the platform; `custom` artifacts are user-created.
+
+        '
+      enum:
+      - brief
+      - project_plan
+      - mental_map
+      - general_knowledge
+      - playbooks
+      - library_description
+      - design_templates
+      - custom
+    ArtifactDetail:
+      allOf:
+      - $ref: '#/components/schemas/ArtifactSummary'
+      - type: object
+        properties:
+          definition_long:
+            type: string
+          format_description:
+            type: string
+            description: Custom artifacts only; empty string for predefined types.
+          capture_discipline:
+            type: string
+            description: Custom artifacts only; empty string for predefined types.
+          selected_version_number:
+            type:
+            - integer
+            - 'null'
+          payload:
+            description: 'Content of the selected version; shape depends on
+
+              `technical_type`. Null when the artifact has no versions.
+
+              '
+    ArtifactUpdateRequest:
+      type: object
+      description: 'PATCH semantics — only fields present in the request are updated.
+
+        Applies to custom artifacts only.
+
+        '
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        group:
+          type: string
+          maxLength: 64
+        definition_short:
+          type: string
+        format_description:
+          type: string
+        capture_discipline:
+          type: string
+    ArtifactCohesionGuide:
+      type: object
+      properties:
+        cohesion_guide_mode:
+          type: string
+          enum:
+          - default
+          - custom
+        cohesion_guide_text:
+          type: string
+          description: Snapshot-specific text; empty when mode is `default`.
+        default_cohesion_guide:
+          type: string
+          readOnly: true
+          description: The platform default guide text that `mode=default` resolves to.
+    ArtifactTechnicalType:
+      type: string
+      description: 'Storage/editing format of the artifact''s payload — string for
+
+        `markdown` and `bpmn_xml`, object for `mental_map`, array for
+
+        `playbook_list` and `design_template_list`.
+
+        '
+      enum:
+      - markdown
+      - mental_map
+      - playbook_list
+      - design_template_list
+      - bpmn_xml
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+  parameters:
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    ArtifactSlug:
+      name: slug
+      in: path
+      required: true
+      description: Slug of the artifact within the project's catalog
+      schema:
+        type: string
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use `Authorization: Bearer <token>`. The token is either a user token / OAuth access
+
+        token, or a service-account API key (`cfk_...`). A key is valid on every endpoint and
+
+        acts as its service account, an organization member with per-store permissions.
+
+        Refused keys answer 403 with `Invalid API key.`, `API key revoked.`,
+
+        `API key expired.` or `API key disabled.`.
+
+        '
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'
+x-tagGroups:
+- name: Extractors
+  tags:
+  - Object Extractors
+  - Tag Extractors
+  - Chunks Extractors
+  - Parsing Extractors
+  - Document Filter Extractors
+  - Chunk Tag Filter Extractors
+  - Document Tag Extractors
+  - Tag Alerts Extractors
+  - Object Alerts Extractors
+  - Imported Object Extractors

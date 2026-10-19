@@ -1,0 +1,491 @@
+openapi: 3.2.0
+info:
+  title: Clarifeye Platform API — Full API Documentation Chunk Tag…
+  description: 'Complete REST API reference for the Clarifeye Platform.
+
+
+    Documents every endpoint exposed by the platform — the public surface plus
+
+    the advanced surface: pipeline customization (extraction flows, pipeline
+
+    runs, warehouse tables, document tag/metadata configuration), the pre-MCP
+
+    AI surface (agent settings, playground conversations, conversation-scoped
+
+    feedback views, notifications), and the impersonation header. New AI
+
+    integrations should consume knowledge via MCP rather than the
+
+    conversation/agent-settings endpoints documented here.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token `
+
+    - `Authorization: Bearer `
+
+
+    ## Service accounts and API keys
+
+    Integrations authenticate with an **API key** of a **service account**:
+
+    - `Authorization: Bearer ` (keys start with `cfk_`)
+
+
+    A service account is an ordinary member (role `member`) of one organization that cannot log
+
+    in. Organization admins create it and mint its keys on the organization''s *Service
+
+    accounts* page (`/organizations/{id}/service-accounts/`, `/organization-api-keys/`), and
+
+    give it access to knowledge stores with ordinary store permissions. A key is valid on every
+
+    endpoint and acts as its service account: it reaches exactly the stores, with exactly the
+
+    rights, the account was given. An account can hold several keys (each with its own name,
+
+    optional expiry and revocation), so a key can be rotated without changing identity.
+
+
+    A refused key answers **403** with one of: `Invalid API key.`, `API key revoked.`,
+
+    `API key expired.`, `API key disabled.` (the service account is disabled).
+
+
+    Any valid key may also call `POST /organizations/{id}/provision-user/` and
+
+    `POST /organizations/{id}/deprovision-user/` for its own organization (the `{id}` in the
+
+    path must be the key''s organization). The email domains these may pre-create accounts for
+
+    are configured by Clarifeye on the organization (`allowed_provisioning_domains`).
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (for a person, contact Clarifeye to enable it; org admins grant it to a service account on the organization''s Service accounts page)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+
+    **With an API key** the request fails instead (**403**) whenever impersonation cannot
+
+    happen: missing permission, unknown target, target without access to the store, target that
+
+    is itself a service account, or an endpoint outside a store. A key never silently acts as
+
+    its own service account when impersonation was asked for.'
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Chunk Tag Filter Extractors
+  description: 'Restrict a downstream pipeline branch to chunks carrying specific tags.
+
+    Update auto-creates a new version when the filter changes.'
+paths:
+  /projects/{project_id}/chunk-tag-filter-extractors/:
+    get:
+      tags:
+      - Chunk Tag Filter Extractors
+      summary: List chunk tag filter extractors
+      operationId: listChunkTagFilterExtractors
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ChunkTagFilterExtractor'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+      - Chunk Tag Filter Extractors
+      summary: Create chunk tag filter extractor
+      description: 'Create a `ChunkTagFilterExtractor` — restricts a downstream pipeline
+
+        branch to chunks carrying specific tags.'
+      operationId: createChunkTagFilterExtractor
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChunkTagFilterExtractor'
+            example:
+              name: Pricing & SLA chunks
+              brief: Keep only chunks tagged with pricing or SLA topics.
+              filter:
+                tag_key: topic
+                values:
+                - pricing
+                - sla
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChunkTagFilterExtractor'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/chunk-tag-filter-extractors/{extractor_id}/:
+    get:
+      tags:
+      - Chunk Tag Filter Extractors
+      summary: Retrieve chunk tag filter extractor
+      operationId: getChunkTagFilterExtractor
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ExtractorId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChunkTagFilterExtractor'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Chunk Tag Filter Extractors
+      summary: Update chunk tag filter extractor (auto-creates new version)
+      description: 'Partial update. Version-bearing field: `filter`.
+
+
+        Pass `set_latest_as_default: true` to promote the new version.'
+      operationId: updateChunkTagFilterExtractor
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ExtractorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/ChunkTagFilterExtractor'
+              - type: object
+                properties:
+                  set_latest_as_default:
+                    type: boolean
+                    writeOnly: true
+            examples:
+              renameOnly:
+                summary: Rename — does NOT create a new version
+                value:
+                  name: Pricing & SLA chunks (renamed)
+              addTopic:
+                summary: Add another topic — creates a new version
+                value:
+                  filter:
+                    tag_key: topic
+                    values:
+                    - pricing
+                    - sla
+                    - support
+                  set_latest_as_default: true
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChunkTagFilterExtractor'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+      - Chunk Tag Filter Extractors
+      summary: Delete chunk tag filter extractor
+      operationId: deleteChunkTagFilterExtractor
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ExtractorId'
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    ExtractorId:
+      name: extractor_id
+      in: path
+      required: true
+      description: UUID of the extractor
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    ChunkTagFilterExtractor:
+      type: object
+      description: Restricts a downstream pipeline branch to chunks carrying specific tags.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          example: Pricing & SLA chunks
+        brief:
+          type: string
+          example: Keep only chunks tagged with pricing or SLA topics.
+        filter:
+          type: object
+          example:
+            tag_key: topic
+            values:
+            - pricing
+            - sla
+        import_mode:
+          type: boolean
+          writeOnly: true
+          default: false
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        versions:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/ChunkTagFilterExtractorVersion'
+        default_version:
+          allOf:
+          - $ref: '#/components/schemas/ChunkTagFilterExtractorVersion'
+          readOnly: true
+        latest_version:
+          allOf:
+          - $ref: '#/components/schemas/ChunkTagFilterExtractorVersion'
+          readOnly: true
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    ChunkTagFilterExtractorVersion:
+      type: object
+      description: Immutable snapshot of a `ChunkTagFilterExtractor`'s version-bearing configuration.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        is_default:
+          type: boolean
+          readOnly: true
+        filter:
+          type: object
+          description: JSON filter expression applied to the tagged-chunk set.
+          example:
+            tag_key: topic
+            values:
+            - pricing
+            - sla
+    ValidationError:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email:
+        - This field is required.
+  responses:
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ValidationError'
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use `Authorization: Bearer <token>`. The token is either a user token / OAuth access
+
+        token, or a service-account API key (`cfk_...`). A key is valid on every endpoint and
+
+        acts as its service account, an organization member with per-store permissions.
+
+        Refused keys answer 403 with `Invalid API key.`, `API key revoked.`,
+
+        `API key expired.` or `API key disabled.`.
+
+        '
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'
+x-tagGroups:
+- name: Extractors
+  tags:
+  - Object Extractors
+  - Tag Extractors
+  - Chunks Extractors
+  - Parsing Extractors
+  - Document Filter Extractors
+  - Chunk Tag Filter Extractors
+  - Document Tag Extractors
+  - Tag Alerts Extractors
+  - Object Alerts Extractors
+  - Imported Object Extractors

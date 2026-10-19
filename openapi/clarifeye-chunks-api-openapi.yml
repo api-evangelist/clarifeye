@@ -1,0 +1,265 @@
+openapi: 3.2.0
+info:
+  title: Clarifeye Platform API — Full API Documentation Chunks API
+  description: 'Complete REST API reference for the Clarifeye Platform.
+
+
+    Documents every endpoint exposed by the platform — the public surface plus
+
+    the advanced surface: pipeline customization (extraction flows, pipeline
+
+    runs, warehouse tables, document tag/metadata configuration), the pre-MCP
+
+    AI surface (agent settings, playground conversations, conversation-scoped
+
+    feedback views, notifications), and the impersonation header. New AI
+
+    integrations should consume knowledge via MCP rather than the
+
+    conversation/agent-settings endpoints documented here.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token `
+
+    - `Authorization: Bearer `
+
+
+    ## Service accounts and API keys
+
+    Integrations authenticate with an **API key** of a **service account**:
+
+    - `Authorization: Bearer ` (keys start with `cfk_`)
+
+
+    A service account is an ordinary member (role `member`) of one organization that cannot log
+
+    in. Organization admins create it and mint its keys on the organization''s *Service
+
+    accounts* page (`/organizations/{id}/service-accounts/`, `/organization-api-keys/`), and
+
+    give it access to knowledge stores with ordinary store permissions. A key is valid on every
+
+    endpoint and acts as its service account: it reaches exactly the stores, with exactly the
+
+    rights, the account was given. An account can hold several keys (each with its own name,
+
+    optional expiry and revocation), so a key can be rotated without changing identity.
+
+
+    A refused key answers **403** with one of: `Invalid API key.`, `API key revoked.`,
+
+    `API key expired.`, `API key disabled.` (the service account is disabled).
+
+
+    Any valid key may also call `POST /organizations/{id}/provision-user/` and
+
+    `POST /organizations/{id}/deprovision-user/` for its own organization (the `{id}` in the
+
+    path must be the key''s organization). The email domains these may pre-create accounts for
+
+    are configured by Clarifeye on the organization (`allowed_provisioning_domains`).
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (for a person, contact Clarifeye to enable it; org admins grant it to a service account on the organization''s Service accounts page)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+
+    **With an API key** the request fails instead (**403**) whenever impersonation cannot
+
+    happen: missing permission, unknown target, target without access to the store, target that
+
+    is itself a service account, or an endpoint outside a store. A key never silently acts as
+
+    its own service account when impersonation was asked for.'
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Chunks
+paths:
+  /projects/{project_id}/chunks/{chunk_id}/:
+    get:
+      tags:
+      - Chunks
+      summary: Get a single chunk by id (version-agnostic)
+      description: 'Fetch one chunk row by its id, independent of which extractor version
+
+        produced it. Chunk ids are random UUIDs (unique within the chunk table),
+
+        so the lookup is unambiguous and does not require the extractor version.
+
+
+        Used by the standalone reference viewer
+
+        (`//reference/`) so a citation still resolves even
+
+        when the chunk was created by an old / non-default extractor version.'
+      operationId: getChunkById
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: chunk_id
+        in: path
+        required: true
+        description: UUID of the chunk
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: The chunk row.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - id
+                - document_id
+                properties:
+                  id:
+                    type: string
+                    description: Chunk id (UUID).
+                  document_id:
+                    type: string
+                    description: Id of the source document this chunk belongs to.
+                  content:
+                    type:
+                    - string
+                    - 'null'
+                    description: Chunk text content.
+                  blocks:
+                    type:
+                    - array
+                    - 'null'
+                    description: Layout blocks (with bounding boxes) backing this chunk.
+                    items:
+                      type: object
+                  previous_chunk_id:
+                    type:
+                    - string
+                    - 'null'
+                  next_chunk_id:
+                    type:
+                    - string
+                    - 'null'
+                  start_char_idx:
+                    type:
+                    - integer
+                    - 'null'
+                  end_char_idx:
+                    type:
+                    - integer
+                    - 'null'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Project or chunk not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Chunk not found.
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+  responses:
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+  parameters:
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use `Authorization: Bearer <token>`. The token is either a user token / OAuth access
+
+        token, or a service-account API key (`cfk_...`). A key is valid on every endpoint and
+
+        acts as its service account, an organization member with per-store permissions.
+
+        Refused keys answer 403 with `Invalid API key.`, `API key revoked.`,
+
+        `API key expired.` or `API key disabled.`.
+
+        '
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'
+x-tagGroups:
+- name: Extractors
+  tags:
+  - Object Extractors
+  - Tag Extractors
+  - Chunks Extractors
+  - Parsing Extractors
+  - Document Filter Extractors
+  - Chunk Tag Filter Extractors
+  - Document Tag Extractors
+  - Tag Alerts Extractors
+  - Object Alerts Extractors
+  - Imported Object Extractors

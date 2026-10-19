@@ -1,0 +1,1431 @@
+openapi: 3.2.0
+info:
+  title: Clarifeye Platform API — Full API Documentation Meetings API
+  description: 'Complete REST API reference for the Clarifeye Platform.
+
+
+    Documents every endpoint exposed by the platform — the public surface plus
+
+    the advanced surface: pipeline customization (extraction flows, pipeline
+
+    runs, warehouse tables, document tag/metadata configuration), the pre-MCP
+
+    AI surface (agent settings, playground conversations, conversation-scoped
+
+    feedback views, notifications), and the impersonation header. New AI
+
+    integrations should consume knowledge via MCP rather than the
+
+    conversation/agent-settings endpoints documented here.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token `
+
+    - `Authorization: Bearer `
+
+
+    ## Service accounts and API keys
+
+    Integrations authenticate with an **API key** of a **service account**:
+
+    - `Authorization: Bearer ` (keys start with `cfk_`)
+
+
+    A service account is an ordinary member (role `member`) of one organization that cannot log
+
+    in. Organization admins create it and mint its keys on the organization''s *Service
+
+    accounts* page (`/organizations/{id}/service-accounts/`, `/organization-api-keys/`), and
+
+    give it access to knowledge stores with ordinary store permissions. A key is valid on every
+
+    endpoint and acts as its service account: it reaches exactly the stores, with exactly the
+
+    rights, the account was given. An account can hold several keys (each with its own name,
+
+    optional expiry and revocation), so a key can be rotated without changing identity.
+
+
+    A refused key answers **403** with one of: `Invalid API key.`, `API key revoked.`,
+
+    `API key expired.`, `API key disabled.` (the service account is disabled).
+
+
+    Any valid key may also call `POST /organizations/{id}/provision-user/` and
+
+    `POST /organizations/{id}/deprovision-user/` for its own organization (the `{id}` in the
+
+    path must be the key''s organization). The email domains these may pre-create accounts for
+
+    are configured by Clarifeye on the organization (`allowed_provisioning_domains`).
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (for a person, contact Clarifeye to enable it; org admins grant it to a service account on the organization''s Service accounts page)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+
+    **With an API key** the request fails instead (**403**) whenever impersonation cannot
+
+    happen: missing permission, unknown target, target without access to the store, target that
+
+    is itself a service account, or an endpoint outside a store. A key never silently acts as
+
+    its own service account when impersonation was asked for.'
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Meetings
+  description: Meetings Clara attends as a bot (Recall.ai) — live transcript, live insights, recording, and calendar scheduling (CLA-1843). Store admins only.
+paths:
+  /projects/{project_id}/meetings/:
+    get:
+      tags:
+      - Meetings
+      summary: List meetings
+      description: 'Every meeting of the store (scheduled, live, over, failed, cancelled), newest
+
+        `join_at` first. **Admin only.** `conversation_id` is null until the call is over
+
+        and transcribed; from then on the transcript is the interview conversation of type
+
+        `meeting` (see `/interviews/`).'
+      operationId: listMeetings
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: status
+        in: query
+        description: 'Comma-separated statuses, or the literal `live` for every in-call status
+
+          (joining, waiting_room, in_call_not_recording, recording).
+
+          '
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Meetings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Meeting'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+      - Meetings
+      summary: Send Clara to a meeting
+      description: 'Create a meeting from a Google Meet, Zoom or Microsoft Teams link and dispatch the
+
+        bot (joins within seconds, asks to be admitted). **Admin only**; requires meetings
+
+        enabled for the organisation (`403` otherwise). If Clara is already joining the
+
+        same call in this store the answer is `409` with the existing `meeting_id`; if
+
+        another store of the organisation already sent her, the new meeting shares that
+
+        bot (no second Clara in the call). A `brief` books a preparation insights pass.'
+      operationId: createMeeting
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeetingCreate'
+      responses:
+        '201':
+          description: Meeting created and bot dispatched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meeting'
+        '400':
+          description: Unsupported meeting link
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Clara is already joining this meeting in this store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                  meeting_id:
+                    type: string
+                    format: uuid
+                  project_id:
+                    type: string
+                    format: uuid
+        '502':
+          description: The provider refused the bot (the meeting row is kept as `failed`)
+        '503':
+          description: No bot seat available right now — retry in a minute
+  /projects/{project_id}/meetings/summary/:
+    get:
+      tags:
+      - Meetings
+      summary: Meetings feature summary
+      description: Whether meetings are enabled for this store, plus the live count for the sidebar badge.
+      operationId: getMeetingsSummary
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+                  live_count:
+                    type: integer
+                  default_languages:
+                    type: object
+                    description: 'Present when enabled: the languages a meeting this user sends Clara to
+
+                      starts with (the organisation''s meeting languages, else their own).
+
+                      '
+                    properties:
+                      language:
+                        type: string
+                      secondary_languages:
+                        type: array
+                        items:
+                          type: string
+  /projects/{project_id}/meetings/{meeting_id}/:
+    parameters:
+    - $ref: '#/components/parameters/ProjectId'
+    - name: meeting_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    get:
+      tags:
+      - Meetings
+      summary: Get a meeting
+      operationId: getMeeting
+      responses:
+        '200':
+          description: Meeting
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meeting'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Meetings
+      summary: Update a meeting's title, brief or language
+      description: 'The brief (what the meeting is about) can change until Clara is in the call and
+
+        recording; afterwards the answer is `409`. Changing it books a preparation
+
+        insights pass. The language can change only while the meeting is `scheduled` — the
+
+        booked bot is updated with it — and is refused with `409` once Clara is on her way.'
+      operationId: updateMeeting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeetingUpdate'
+      responses:
+        '200':
+          description: Updated meeting
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meeting'
+        '409':
+          description: The brief is locked once Clara is in the call, or the language once she is on her way
+    delete:
+      tags:
+      - Meetings
+      summary: Delete a meeting
+      description: 'Removes the meeting, its transcript conversation, its recording copy and — unless
+
+        another store shares the bot — the bot and its media on the provider.'
+      operationId: deleteMeeting
+      responses:
+        '204':
+          description: Deleted
+  /projects/{project_id}/meetings/{meeting_id}/transcript/:
+    get:
+      tags:
+      - Meetings
+      summary: Meeting transcript
+      description: 'The meeting''s transcript, for delta polling: pass back the `cursor` of the previous page
+
+        to get what arrived since. While the call runs these are the utterances heard live
+
+        (`source: live`), paged by arrival: overlapping speakers mean a line can arrive after a
+
+        later-starting one, so clients merge by `id` and sort by `start_ms`. Once post-call has
+
+        rebuilt the transcript from the provider''s recording it is served instead
+
+        (`source: final`), from the top whatever cursor is passed; a client that sees `source`
+
+        change replaces what it holds. It is complete even if live delivery dropped, and is the
+
+        same text the meeting''s conversation holds.'
+      operationId: getMeetingTranscript
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: meeting_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: cursor
+        in: query
+        description: The `cursor` of the previous page; omit for the start.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Segments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MeetingTranscriptSegment'
+                  has_more:
+                    type: boolean
+                  cursor:
+                    type: string
+                    description: Opaque; pass it back to get the next delta.
+                  source:
+                    type: string
+                    enum:
+                    - live
+                    - final
+  /projects/{project_id}/meetings/{meeting_id}/leave/:
+    post:
+      tags:
+      - Meetings
+      summary: Ask Clara to leave the call
+      description: 'The status moves when the provider confirms. A meeting still `scheduled` is
+
+        cancelled instead. When the bot is shared with other stores it leaves for them too.'
+      operationId: leaveMeeting
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: meeting_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Meeting
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meeting'
+        '502':
+          description: The provider could not be reached or refused the leave; retry.
+  /projects/{project_id}/meetings/{meeting_id}/insights/:
+    get:
+      tags:
+      - Meetings
+      summary: Clara's live insights
+      description: 'Active and resolved insights (dismissed ones are hidden) plus the state of the
+
+        insights loop. Kinds: one `summary` (whose `title` is a one-line "now" while the
+
+        call is live, else `Summary`), `contradiction`s with the store''s artifacts, `question`s
+
+        worth asking, `action` items and `takeaway`s. `anchor_ms` points into the transcript.'
+      operationId: getMeetingInsights
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: meeting_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Insights
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingInsightsResponse'
+  /projects/{project_id}/meetings/{meeting_id}/insights/refresh/:
+    post:
+      tags:
+      - Meetings
+      summary: Run an insights pass now
+      description: Bypasses the debounce and skip rules (not the per-meeting lock). `202` when queued.
+      operationId: refreshMeetingInsights
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: meeting_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '202':
+          description: Queued
+        '409':
+          description: A pass is already running, or the meeting is not live
+  /projects/{project_id}/meetings/{meeting_id}/insights/{insight_id}/dismiss/:
+    post:
+      tags:
+      - Meetings
+      summary: Dismiss an insight
+      description: The agent never recreates a dismissed insight or returns to its topic.
+      operationId: dismissMeetingInsight
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: meeting_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: insight_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: The dismissed insight
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingInsight'
+  /projects/{project_id}/meetings/{meeting_id}/insights/{insight_id}/asked/:
+    post:
+      tags:
+      - Meetings
+      summary: Mark a question as asked
+      description: 'The administrator put an open `question` to the room. Clara reads the transcript from
+
+        `asked_at_ms` on and resolves the question with the answer as its `resolution_reason`.
+
+        `{"asked": false}` undoes it. `409` for anything but an active question.'
+      operationId: markMeetingInsightAsked
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: meeting_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: insight_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                asked:
+                  type: boolean
+                  default: true
+      responses:
+        '200':
+          description: The question
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingInsight'
+        '409':
+          description: Not an active question
+  /projects/{project_id}/meetings/{meeting_id}/local-documents/:
+    get:
+      tags:
+      - Meetings
+      summary: List a meeting's context documents
+      description: 'Agenda, slides or notes an admin attached so Clara prepares before the call
+
+        (`LocalDocument` rows with `source: reference`). **Admin only.** The same nested
+
+        route offers `POST bulk-upload/` (multipart `files`) and `DELETE {id}/`, both
+
+        refused with `409` once Clara is in the call and recording. Every change books a
+
+        preparation insights pass.'
+      operationId: listMeetingReferenceDocuments
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: meeting_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Paginated documents
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/LocalDocument'
+  /projects/{project_id}/meetings/calendar/status/:
+    get:
+      tags:
+      - Meetings
+      summary: Calendar status for this store
+      description: 'Whether calendar scheduling is available here (meetings enabled, the organisation
+
+        allows calendars, and at least one OAuth provider is configured on the instance),
+
+        plus the requesting user''s own calendar connections.'
+      operationId: getMeetingCalendarStatus
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+                  platforms_available:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - google_calendar
+                      - microsoft_outlook
+                  connections:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MeetingCalendarConnection'
+  /projects/{project_id}/meetings/calendar/events/:
+    get:
+      tags:
+      - Meetings
+      summary: The requesting user's upcoming events
+      description: 'Events with a meeting link in the next 14 days across the user''s connected
+
+        calendars (declined and all-day events excluded), each saying whether Clara already
+
+        joins it for this store (`meeting_id`) or for other stores (`scheduled_elsewhere`).'
+      operationId: listMeetingCalendarEvents
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MeetingCalendarEvent'
+        '403':
+          description: Calendars are not enabled for this store
+  /projects/{project_id}/meetings/calendar/events/{event_id}/schedule/:
+    parameters:
+    - $ref: '#/components/parameters/ProjectId'
+    - name: event_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    post:
+      tags:
+      - Meetings
+      summary: Clara joins this event for this store
+      description: 'Creates a scheduled meeting (source `calendar`, brief pre-filled from the event''s
+
+        description and attendees) and schedules the bot two minutes before the start. If
+
+        another store already scheduled the same event, the bot is shared. `409` when this
+
+        store already has it, `403` when the event is not the requesting user''s.'
+      operationId: scheduleMeetingCalendarEvent
+      responses:
+        '201':
+          description: Scheduled meeting
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meeting'
+        '400':
+          description: The event has no meeting link or has already started
+        '409':
+          description: Clara already joins this event for this store
+    delete:
+      tags:
+      - Meetings
+      summary: Clara no longer joins this event for this store
+      operationId: unscheduleMeetingCalendarEvent
+      responses:
+        '204':
+          description: Unscheduled (also when nothing was scheduled)
+  /projects/{project_id}/meetings/calendar/sync/:
+    post:
+      tags:
+      - Meetings
+      summary: Refresh the requesting user's calendars now
+      operationId: syncMeetingCalendars
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '202':
+          description: Sync queued per connection
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  queued:
+                    type: integer
+  /users/me/meeting-calendars/:
+    get:
+      tags:
+      - Meetings
+      summary: My calendar connections
+      description: 'The requesting user''s connected calendars (Google Calendar, Microsoft Outlook) for
+
+        Clara''s meeting scheduling, and which providers this instance can connect. The
+
+        refresh token is never stored here — Recall.ai holds it; reconnecting means a fresh
+
+        consent.'
+      operationId: listMeetingCalendarConnections
+      responses:
+        '200':
+          description: Connections
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platforms_available:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - google_calendar
+                      - microsoft_outlook
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MeetingCalendarConnection'
+  /users/me/meeting-calendars/connect/:
+    post:
+      tags:
+      - Meetings
+      summary: Start connecting a calendar
+      description: 'Returns the provider''s authorize URL for the frontend popup. The provider redirects
+
+        to `/api/v1/meetings/oauth/callback/`, which registers the calendar with Recall.ai and
+
+        bounces the popup to the frontend relay page with `calendar_connected=1` or
+
+        `calendar_error=`.'
+      operationId: connectMeetingCalendar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - platform
+              - redirect_back_to
+              properties:
+                platform:
+                  type: string
+                  enum:
+                  - google_calendar
+                  - microsoft_outlook
+                redirect_back_to:
+                  type: string
+                  format: uri
+                  description: Frontend page to return to (must be on an allowed host).
+      responses:
+        '200':
+          description: Authorize URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authorize_url:
+                    type: string
+                    format: uri
+        '400':
+          description: Provider not configured on this instance, or unsafe redirect target
+  /users/me/meeting-calendars/{id}/:
+    delete:
+      tags:
+      - Meetings
+      summary: Disconnect a calendar
+      description: Deletes the calendar on Recall.ai (its bots are unscheduled) and cancels this user's still-scheduled calendar meetings.
+      operationId: disconnectMeetingCalendar
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '204':
+          description: Disconnected
+components:
+  schemas:
+    MeetingTranscriptSegment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        participant_id:
+          type: string
+        speaker:
+          type: string
+        text:
+          type: string
+        start_ms:
+          type: integer
+        end_ms:
+          type: integer
+        started_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+    MeetingUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 300
+        brief:
+          type: string
+          maxLength: 20000
+        language:
+          type: string
+          example: fr
+          description: 'ISO code of the main language for the live transcription. Only while the meeting
+
+            is `scheduled`: the booked bot is updated with it, and once Clara is on her way to
+
+            the call the change is refused with 409.
+
+            '
+        secondary_languages:
+          type: array
+          items:
+            type: string
+          maxItems: 3
+          description: Other languages the call may switch to. Same rules as `language`.
+    MeetingCalendarConnection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        platform:
+          type: string
+          enum:
+          - google_calendar
+          - microsoft_outlook
+        platform_email:
+          type: string
+        status:
+          type: string
+          enum:
+          - connecting
+          - connected
+          - needs_reconnect
+          - disconnected
+        status_detail:
+          type: string
+        last_synced_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    MeetingInsightsResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MeetingInsight'
+        updated_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        has_context:
+          type: boolean
+          description: A brief or documents were given (without them Clara stays conservative).
+        tokens:
+          type: object
+          properties:
+            input:
+              type: integer
+            output:
+              type: integer
+        running:
+          type: boolean
+        last_run_status:
+          type:
+          - string
+          - 'null'
+        last_run_error:
+          type: string
+        auto_passes_remaining:
+          type: integer
+        can_refresh:
+          type: boolean
+    MeetingCalendarEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        meeting_url:
+          type: string
+        meeting_platform:
+          type:
+          - string
+          - 'null'
+          enum:
+          - google_meet
+          - zoom
+          - microsoft_teams
+          - null
+        attendees:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              email:
+                type: string
+        self_response:
+          type: string
+        meeting_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: The scheduled meeting in this store, when Clara already joins.
+        scheduled_elsewhere:
+          type: array
+          description: Names of other stores where Clara already joins this event.
+          items:
+            type: string
+    MeetingCreate:
+      type: object
+      required:
+      - meeting_url
+      properties:
+        meeting_url:
+          type: string
+          description: Google Meet, Zoom or Microsoft Teams link, as given.
+        title:
+          type: string
+          maxLength: 300
+        brief:
+          type: string
+          maxLength: 20000
+        scheduled_start:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: 'When the meeting itself starts. Clara is scheduled to join two minutes before it,
+
+            so a store can prepare a meeting ahead of time without connecting a calendar.
+
+            Omitted, or already past, means join now.
+
+            '
+        language:
+          type: string
+          example: fr
+          description: 'ISO code of the meeting''s main language, for Clara''s live transcription. Omitted,
+
+            the organisation''s `meeting_language`, else the creator''s preferred language, else
+
+            English. 400 when unsupported.
+
+            '
+        secondary_languages:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          maxItems: 3
+          description: 'Other languages the conversation may switch to. Omitted (or null), the
+
+            organisation''s `meeting_secondary_languages` when its `meeting_language` is the
+
+            default used, else none. 400 when unsupported or more than 3.
+
+            '
+        entry_point:
+          type: string
+          enum:
+          - ui
+          - mcp
+          default: ui
+          description: Analytics only — which surface created the meeting.
+    MeetingInsight:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ref:
+          type: integer
+          description: Stable per-meeting number the agent refers to when updating or resolving.
+        kind:
+          type: string
+          enum:
+          - summary
+          - contradiction
+          - question
+          - action
+          - takeaway
+        title:
+          type: string
+        body:
+          type: string
+        anchor_ms:
+          type:
+          - integer
+          - 'null'
+          description: Transcript offset the insight was raised from; null for pre-call insights.
+        source:
+          type: string
+          description: The store artifact the insight is grounded on, when any.
+        status:
+          type: string
+          enum:
+          - active
+          - resolved
+          - superseded
+          - dismissed
+        resolution_reason:
+          type: string
+        asked_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the administrator marked the question as asked.
+        asked_at_ms:
+          type:
+          - integer
+          - 'null'
+          description: Transcript position at that moment; Clara looks for the answer from here.
+        run_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    InterviewReferenceDocument:
+      type: object
+      description: Summary of one reference document on a draft (a `LocalDocument` whose source is `reference`).
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        processing_status:
+          type: string
+          description: pending → … → completed | failed. The draft cannot be sent or tested until every document is completed or failed.
+        source_document:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: The Sources document it was copied from, when picked from the library.
+        character_count:
+          type: integer
+        page_count:
+          type:
+          - integer
+          - 'null'
+        size_warning:
+          type:
+          - string
+          - 'null'
+          description: Warn-only guidance for a long document (about 150k characters or more); null otherwise.
+        created_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+    LocalDocument:
+      type: object
+      description: 'A file attached to a conversation, agent settings, agent session, or interview
+
+        draft. `source` says who produced it: `uploaded` (a user, in the conversation),
+
+        `generated` (the agent), or `reference` (the interviewer, before the interview —
+
+        CLA-1887). Signed file URLs are short-lived.
+
+        '
+      properties:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        name:
+          type: string
+        file:
+          type: string
+          description: Signed inline URL of the stored file.
+        type:
+          type: string
+          enum:
+          - agent_settings
+          - conversation
+          - coach_conversation
+          - agent_session
+          - cross_store_conversation
+          - interview_draft
+        agent_settings:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        conversation:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        coach_conversation:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        agent_session:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        cross_store_conversation:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        interview_draft:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        source_document:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+          description: The Sources document a reference document was copied from, when applicable.
+        claude_file_id:
+          type:
+          - string
+          - 'null'
+        source:
+          type: string
+          enum:
+          - uploaded
+          - generated
+          - reference
+          readOnly: true
+        document_text:
+          type: string
+        summary_text:
+          type: string
+        short_summary_text:
+          type: string
+        processing_status:
+          type: string
+          readOnly: true
+        page_count:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+        character_count:
+          type: integer
+          readOnly: true
+        preview_pdf_url:
+          type:
+          - string
+          - 'null'
+          readOnly: true
+          description: Signed URL of the PDF that previews the file (itself for PDFs, the parser's rendition for Office files). Only populated on the interview-draft and coach-conversation local-document routes, where a viewer renders it; null everywhere else.
+        size_warning:
+          type:
+          - string
+          - 'null'
+          readOnly: true
+        version_number:
+          type:
+          - integer
+          - 'null'
+        total_versions:
+          type:
+          - integer
+          - 'null'
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    Meeting:
+      type: object
+      description: A meeting Clara attends (or attended) as a bot (CLA-1843).
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversation_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: The transcript conversation (type `meeting`); null until the call is over and transcribed.
+        open_insights:
+          type: object
+          description: Active insights per kind (`contradiction`, `question`, `action`, `takeaway`).
+          additionalProperties:
+            type: integer
+        project:
+          type: string
+          format: uuid
+        created_by_email:
+          type:
+          - string
+          - 'null'
+          format: email
+        source:
+          type: string
+          enum:
+          - link
+          - calendar
+        platform:
+          type: string
+          enum:
+          - google_meet
+          - zoom
+          - microsoft_teams
+        meeting_url:
+          type: string
+        title:
+          type: string
+        brief:
+          type: string
+          description: What the meeting is about (markdown); Clara prepares from it before the call.
+        context_updated_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        documents:
+          type: array
+          description: Context documents attached to the meeting (`local-documents/` route).
+          items:
+            $ref: '#/components/schemas/InterviewReferenceDocument'
+        documents_warning:
+          type:
+          - string
+          - 'null'
+        shared_with_count:
+          type: integer
+          description: Other stores' meetings served by the same bot.
+        calendar_event_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        language:
+          type: string
+          example: fr
+          description: 'ISO code of the meeting''s main language. Clara''s live transcription is told it
+
+            and `secondary_languages` (open-ended detection mislabels short utterances); the
+
+            post-call transcript is re-run over the whole recording without them.
+
+            '
+        secondary_languages:
+          type: array
+          items:
+            type: string
+          maxItems: 3
+          example:
+          - en
+          description: Other languages the conversation may switch to; never the main one.
+        scheduled_start:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        scheduled_end:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        join_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+          - scheduled
+          - joining
+          - waiting_room
+          - in_call_not_recording
+          - recording
+          - ended
+          - processing
+          - ready
+          - failed
+          - cancelled
+        last_status_sub_code:
+          type: string
+        error:
+          type: string
+          description: User-facing note when something went wrong ("" otherwise).
+        is_live:
+          type: boolean
+        participants:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              is_host:
+                type: boolean
+        screenshare_events:
+          type: array
+          items:
+            type: object
+        call_started_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        call_ended_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        transcript_ready_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        last_segment_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        realtime_degraded:
+          type: boolean
+          description: Recording but no live transcript for too long.
+        recording_url:
+          type:
+          - string
+          - 'null'
+          description: Signed inline URL of our MP4 copy, once copied. Detail only; always null in list responses.
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+  parameters:
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+  responses:
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use `Authorization: Bearer <token>`. The token is either a user token / OAuth access
+
+        token, or a service-account API key (`cfk_...`). A key is valid on every endpoint and
+
+        acts as its service account, an organization member with per-store permissions.
+
+        Refused keys answer 403 with `Invalid API key.`, `API key revoked.`,
+
+        `API key expired.` or `API key disabled.`.
+
+        '
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'
+x-tagGroups:
+- name: Extractors
+  tags:
+  - Object Extractors
+  - Tag Extractors
+  - Chunks Extractors
+  - Parsing Extractors
+  - Document Filter Extractors
+  - Chunk Tag Filter Extractors
+  - Document Tag Extractors
+  - Tag Alerts Extractors
+  - Object Alerts Extractors
+  - Imported Object Extractors

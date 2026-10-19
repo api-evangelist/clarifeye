@@ -1,10 +1,104 @@
 openapi: 3.2.0
 info:
-  title: Clarifeye Conversations API
+  title: Clarifeye Platform API — Full API Documentation…
+  description: 'Complete REST API reference for the Clarifeye Platform.
+
+
+    Documents every endpoint exposed by the platform — the public surface plus
+
+    the advanced surface: pipeline customization (extraction flows, pipeline
+
+    runs, warehouse tables, document tag/metadata configuration), the pre-MCP
+
+    AI surface (agent settings, playground conversations, conversation-scoped
+
+    feedback views, notifications), and the impersonation header. New AI
+
+    integrations should consume knowledge via MCP rather than the
+
+    conversation/agent-settings endpoints documented here.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token `
+
+    - `Authorization: Bearer `
+
+
+    ## Service accounts and API keys
+
+    Integrations authenticate with an **API key** of a **service account**:
+
+    - `Authorization: Bearer ` (keys start with `cfk_`)
+
+
+    A service account is an ordinary member (role `member`) of one organization that cannot log
+
+    in. Organization admins create it and mint its keys on the organization''s *Service
+
+    accounts* page (`/organizations/{id}/service-accounts/`, `/organization-api-keys/`), and
+
+    give it access to knowledge stores with ordinary store permissions. A key is valid on every
+
+    endpoint and acts as its service account: it reaches exactly the stores, with exactly the
+
+    rights, the account was given. An account can hold several keys (each with its own name,
+
+    optional expiry and revocation), so a key can be rotated without changing identity.
+
+
+    A refused key answers **403** with one of: `Invalid API key.`, `API key revoked.`,
+
+    `API key expired.`, `API key disabled.` (the service account is disabled).
+
+
+    Any valid key may also call `POST /organizations/{id}/provision-user/` and
+
+    `POST /organizations/{id}/deprovision-user/` for its own organization (the `{id}` in the
+
+    path must be the key''s organization). The email domains these may pre-create accounts for
+
+    are configured by Clarifeye on the organization (`allowed_provisioning_domains`).
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (for a person, contact Clarifeye to enable it; org admins grant it to a service account on the organization''s Service accounts page)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+
+    **With an API key** the request fails instead (**403**) whenever impersonation cannot
+
+    happen: missing permission, unknown target, target without access to the store, target that
+
+    is itself a service account, or an endpoint outside a store. A key never silently acts as
+
+    its own service account when impersonation was asked for.'
   version: 1.0.0
   contact:
     name: Clarifeye Support
-  description: 'Operations tagged Conversations across 2 of this provider''s published API definitions: clarifeye-backoffice-openapi-original.yaml, clarifeye-openapi-original.yaml. Each path carries the servers of the definition it was published in.'
 servers:
 - url: https://eu.app.clarifeye.ai/api/v1
   description: EU
@@ -70,9 +164,55 @@ paths:
           - 'false'
       - name: text
         in: query
-        description: Search text within chat history (case-insensitive)
+        description: Search text within the conversation name or chat history (case-insensitive)
         schema:
           type: string
+      - name: created_by
+        in: query
+        description: Only conversations created by this user — `me`, a user id or an email. An unknown user returns no rows. Non-admins only ever see their own conversations, so this cannot widen their list.
+        schema:
+          type: string
+        example: me
+      - name: agent_settings
+        in: query
+        description: Only conversations run with this agent (agent settings id).
+        schema:
+          type: string
+          format: uuid
+      - name: created_after
+        in: query
+        description: Only conversations created at or after this ISO 8601 datetime.
+        schema:
+          type: string
+          format: date-time
+      - name: created_before
+        in: query
+        description: Only conversations created strictly before this ISO 8601 datetime.
+        schema:
+          type: string
+          format: date-time
+      - name: updated_after
+        in: query
+        description: Only conversations last active (updated) at or after this ISO 8601 datetime.
+        schema:
+          type: string
+          format: date-time
+      - name: updated_before
+        in: query
+        description: Only conversations last active (updated) strictly before this ISO 8601 datetime.
+        schema:
+          type: string
+          format: date-time
+      - name: ordering
+        in: query
+        description: Sort order. `-created_at` (newest first, default), `created_at` (oldest first) or `-updated_at` (most recent activity first).
+        schema:
+          type: string
+          enum:
+          - -created_at
+          - created_at
+          - -updated_at
+          default: -created_at
       - name: include_archived
         in: query
         description: Set to "true" to include archived conversations in results. Defaults to false (active conversations only).
@@ -163,11 +303,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-    servers:
-    - url: https://eu.app.clarifeye.ai/api/v1
-      description: EU
-    - url: https://us.app.clarifeye.ai/api/v1
-      description: US
   /projects/{project_id}/playground-conversations/{conversation_id}/:
     get:
       tags:
@@ -250,11 +385,6 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           $ref: '#/components/responses/NotFound'
-    servers:
-    - url: https://eu.app.clarifeye.ai/api/v1
-      description: EU
-    - url: https://us.app.clarifeye.ai/api/v1
-      description: US
   /projects/{project_id}/playground-conversations/{conversation_id}/unarchive/:
     post:
       tags:
@@ -288,11 +418,6 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-    servers:
-    - url: https://eu.app.clarifeye.ai/api/v1
-      description: EU
-    - url: https://us.app.clarifeye.ai/api/v1
-      description: US
   /projects/{project_id}/playground-conversations/{conversation_id}/permanent_delete/:
     post:
       tags:
@@ -308,7 +433,9 @@ paths:
 
         **Access Control:**
 
-        - Superusers only, or project members with `CAN_PERFORM_ADMIN_ACTIONS` permission'
+        - Admins can permanently delete any conversation
+
+        - Regular users can only permanently delete conversations they created'
       operationId: permanentDeleteConversation
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -325,29 +452,28 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden - admin permission required
+          description: Forbidden - user does not own this conversation
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
         '404':
           $ref: '#/components/responses/NotFound'
-    servers:
-    - url: https://eu.app.clarifeye.ai/api/v1
-      description: EU
-    - url: https://us.app.clarifeye.ai/api/v1
-      description: US
-  /projects/{project_id}/playground-conversations/{conversation_id}/send_message_stream/:
+  /projects/{project_id}/playground-conversations/{conversation_id}/send_message/:
     post:
       tags:
       - Conversations
-      summary: Send message (streaming)
-      description: 'Send a message and receive a streaming response using Server-Sent Events (SSE).
+      summary: Send message (async)
+      description: 'Enqueue a chat turn and return `202 Accepted`. The turn runs in a background
+
+        Celery task; poll the `poll` endpoint for progress and the final result.
+
+        This replaces the former SSE `send_message_stream` endpoint.
 
 
-        The response is a stream of newline-delimited JSON events. Use this endpoint for both
+        Use this endpoint for both initial and follow-up messages — conversation
 
-        initial messages and follow-up messages - conversation context is automatically preserved.
+        context is automatically preserved.
 
 
         **Access Control:**
@@ -359,40 +485,8 @@ paths:
 
         **Impersonation:**
 
-        - When using impersonation, the message is sent as the impersonated user
-
-
-        ## Streaming Event Types
-
-
-        | Type | Description |
-
-        |------|-------------|
-
-        | `streaming_in_progress` | Intermediate event during response generation |
-
-        | `streaming_error` | Error occurred during streaming |
-
-        | `streaming_completed` | Final event with complete chat history |
-
-
-        ## Payload Types (within streaming_in_progress)
-
-
-        | Payload Type | Description |
-
-        |--------------|-------------|
-
-        | `start_token_streaming` | Stream is starting |
-
-        | `token_streaming` | Text token being streamed |
-
-        | `tool_call_request` | Tool is being invoked |
-
-        | `tool_call` | Tool execution results |
-
-        | `reasoning` | Reasoning step |'
-      operationId: sendMessageStream
+        - When using impersonation, the message is sent as the impersonated user'
+      operationId: sendMessage
       parameters:
       - $ref: '#/components/parameters/ProjectId'
       - $ref: '#/components/parameters/ConversationId'
@@ -403,38 +497,37 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-              - message
+              description: 'Either `message` or a non-empty `newly_attached_document_ids` must be
+
+                provided. An attachments-only send (empty `message` + ids) is accepted:
+
+                the server synthesizes a short "(I''ve attached …)" message from the ids.
+
+                '
               properties:
                 message:
                   type: string
-                  description: The user message to send
+                  description: The user message to send (may be empty when files are attached)
                   example: What information do you have about product pricing?
-      responses:
-        '200':
-          description: Server-Sent Events stream
-          content:
-            text/event-stream:
-              schema:
-                type: string
-              examples:
-                streaming:
-                  summary: Example streaming response
-                  value: 'data: {"type_streaming": "streaming_in_progress", "payload": {"type": "start_token_streaming", "content": ""}}
+                newly_attached_document_ids:
+                  type: array
+                  description: 'Ids of LocalDocuments attached on the composer for this turn. The files
 
+                    already reach the agent via context files; these are also used to render
 
-                    data: {"type_streaming": "streaming_in_progress", "payload": {"type": "token_streaming", "content": "The"}}
-
-
-                    data: {"type_streaming": "streaming_in_progress", "payload": {"type": "token_streaming", "content": "The document"}}
-
-
-                    data: {"type_streaming": "streaming_in_progress", "payload": {"type": "tool_call", "tool_type": "semantic_chunks", "results": [...]}}
-
-
-                    data: {"type_streaming": "streaming_completed", "payload": {"conversation_id": "uuid", "chat_history": [...]}}
+                    clickable file chips on the user''s message in the conversation history.
 
                     '
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '202':
+          description: Turn accepted and enqueued; poll for progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationTurnPoll'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -443,11 +536,39 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-    servers:
-    - url: https://eu.app.clarifeye.ai/api/v1
-      description: EU
-    - url: https://us.app.clarifeye.ai/api/v1
-      description: US
+        '409':
+          description: A turn is already in progress for this conversation
+  /projects/{project_id}/playground-conversations/{conversation_id}/poll/:
+    get:
+      tags:
+      - Conversations
+      summary: Poll turn status
+      description: 'Return the in-flight turn state for a conversation: the current
+
+        `turn_status`, the accumulated message-level `turn_events` buffer, and
+
+        `updated_at`. Clients poll this every few seconds after `send_message`
+
+        returns `202` and re-render from the returned events. A `RUNNING` turn
+
+        whose `updated_at` has gone stale is transitioned to `failed` on read.'
+      operationId: pollConversationTurn
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ConversationId'
+      responses:
+        '200':
+          description: Current turn state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationTurnPoll'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /projects/{project_id}/playground-conversations/all-tags/:
     get:
       tags:
@@ -497,11 +618,6 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-    servers:
-    - url: https://eu.app.clarifeye.ai/api/v1
-      description: EU
-    - url: https://us.app.clarifeye.ai/api/v1
-      description: US
   /projects/{project_id}/playground-conversations/{conversation_id}/share/:
     post:
       tags:
@@ -556,11 +672,6 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           $ref: '#/components/responses/NotFound'
-    servers:
-    - url: https://eu.app.clarifeye.ai/api/v1
-      description: EU
-    - url: https://us.app.clarifeye.ai/api/v1
-      description: US
   /projects/{project_id}/playground-conversations/{conversation_id}/unshare/:
     post:
       tags:
@@ -613,13 +724,116 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           $ref: '#/components/responses/NotFound'
-    servers:
-    - url: https://eu.app.clarifeye.ai/api/v1
-      description: EU
-    - url: https://us.app.clarifeye.ai/api/v1
-      description: US
+  /projects/{project_id}/playground-conversations/{conversation_id}/retrieve-feedback/:
+    get:
+      tags:
+      - Conversations
+      summary: Retrieve conversation feedback
+      description: 'List all feedback (including text content) attached to a conversation.
+
+
+        This is the only endpoint that returns other users'' feedback content on
+
+        shared conversations — the project-level `/feedbacks/` list stays scoped
+
+        to the caller''s own feedback for non-admins.
+
+
+        **Access Control:**
+
+        - Admins can read feedback of any conversation
+
+        - Other members can read feedback of their own conversations or of shared conversations
+
+        - Supports impersonation: visibility is evaluated for the impersonated user'
+      operationId: retrieveConversationFeedback
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ConversationId'
+      - $ref: '#/components/parameters/ImpersonateEmail'
+      responses:
+        '200':
+          description: Feedback list for the conversation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Feedback'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Conversation not found or not visible to the caller
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /projects/{project_id}/clara-skills/:
+    get:
+      tags:
+      - Conversations
+      summary: List Work with Clara skills
+      description: 'The catalog of user-invocable Work with Clara skills. Skills are invoked
+
+        by sending a chat message starting with `/` (both the clara-fast
+
+        and CMA runtimes); `curated` entries are shown as cards on the empty-chat
+
+        screen. Static content — same list for every project. **Admin only**
+
+        (mirrors Work with Clara access).'
+      operationId: listClaraSkills
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - command
+                  - title
+                  - description
+                  - category
+                  - curated
+                  - example
+                  properties:
+                    command:
+                      type: string
+                      description: What the user types after the slash (e.g. `draft-interviews`).
+                    title:
+                      type: string
+                    description:
+                      type: string
+                    category:
+                      type: string
+                      description: Display grouping (e.g. Analyze, Draft, Compare, Prep, Organize).
+                    curated:
+                      type: boolean
+                      description: Shown as a suggested-action card on the empty-chat screen.
+                    example:
+                      type: string
+                      description: Composer placeholder hint once the skill chip is attached.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   parameters:
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
     Offset:
       name: offset
       in: query
@@ -636,15 +850,6 @@ components:
       schema:
         type: string
         format: uuid
-    Limit:
-      name: limit
-      in: query
-      description: Maximum number of results per page
-      schema:
-        type: integer
-        default: 100
-        minimum: 1
-        maximum: 1000
     ImpersonateEmail:
       name: X-Impersonate-Email
       in: header
@@ -659,23 +864,44 @@ components:
       schema:
         type: string
         format: email
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
       schema:
-        type: string
-        format: uuid
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
   schemas:
-    Error:
+    FeedbackStatus:
+      type: string
+      enum:
+      - to_review
+      - reviewed
+      - dismissed
+      description: "- `to_review`: Feedback pending review (default). Setting this on a closed\n  feedback reopens it and clears `reviewed_at`/`reviewed_by`.\n- `reviewed`: Feedback has been reviewed\n- `dismissed`: Closed without action (won't fix, or archived praise)\n"
+    PaginatedResponse:
       type: object
       properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
     Conversation:
       type: object
       properties:
@@ -747,36 +973,163 @@ components:
           - 'null'
           format: date-time
           description: Timestamp when the conversation was archived, null if not archived
-    ValidationError:
+    ConversationTurnPoll:
       type: object
-      additionalProperties:
-        type: array
-        items:
+      description: 'In-flight turn state returned by the async `send_message` (202) and `poll`
+
+        endpoints for playground and Work-with-Clara conversations.
+
+        '
+      properties:
+        id:
           type: string
-      example:
-        email:
-        - This field is required.
-    PaginatedResponse:
+          format: uuid
+        turn_status:
+          type: string
+          enum:
+          - idle
+          - running
+          - failed
+          description: Lifecycle of the current chat turn
+        turn_error:
+          type: string
+          description: Failure detail when turn_status is failed (empty otherwise)
+        turn_events:
+          type: array
+          description: 'Accumulated message-level events for the current turn. Each item mirrors
+
+            a former SSE frame: `{type_streaming, payload}` where type_streaming is
+
+            one of streaming_in_progress, streaming_error, streaming_completed, or
+
+            quick_replies_ready (Clara only).
+
+            '
+          items:
+            type: object
+            properties:
+              type_streaming:
+                type: string
+              payload:
+                type: object
+        updated_at:
+          type: string
+          format: date-time
+          description: Last activity timestamp; doubles as the turn staleness heartbeat
+    Feedback:
       type: object
       properties:
-        count:
-          type: integer
-          description: Total number of results
-        next:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        given_by:
+          type: object
+          description: User who submitted the feedback
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+        status:
+          $ref: '#/components/schemas/FeedbackStatus'
+        feedback:
+          type: string
+          description: Feedback text comment
+        context:
+          type: object
+          additionalProperties: true
+          description: 'Free-form context, echoed back as submitted at creation.
+
+            Conversation feedback carries conversation_id/query_id/source;
+
+            MCP interaction feedback carries user_query; direct feedback may
+
+            carry additional_details.'
+          properties:
+            conversation_id:
+              type: string
+              format: uuid
+              deprecated: true
+              description: Use the top-level `conversation` field instead
+            query_id:
+              type: integer
+              description: Query ID of the message the feedback is about (conversation feedback)
+            source:
+              type: string
+              description: PlaygroundConversation, MCP, or absent for direct API feedback
+            user_query:
+              type: string
+              description: The original user request the agent was answering (MCP interaction feedback)
+            additional_details:
+              type: string
+              description: Extra context provided alongside the feedback (direct feedback)
+        is_positive:
+          type:
+          - boolean
+          - 'null'
+          description: '- `true`: Positive feedback
+
+            - `false`: Negative feedback
+
+            - `null`: Neutral
+
+            '
+        user_message:
+          type: string
+          description: The user message that was responded to (computed field)
+        conversation_title:
+          type: string
+          description: Title of the conversation (computed field)
+        suggested_action_type:
           type:
           - string
           - 'null'
-          format: uri
-          description: URL to next page of results
-        previous:
+          description: Auto-generated suggested action type
+        suggested_action_data:
+          type: object
+          description: Auto-generated suggested action data
+        reviewed_at:
           type:
           - string
           - 'null'
-          format: uri
-          description: URL to previous page of results
-        results:
-          type: array
-          items: {}
+          format: date-time
+          description: 'When the feedback was closed. Cleared on reopen. Null for feedback closed
+
+            before this field existed.
+
+            '
+        reviewed_by:
+          type:
+          - object
+          - 'null'
+          description: User who closed it (null when closed by an unattended agent)
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+        query_id:
+          type:
+          - integer
+          - 'null'
+          description: The chat message this feedback is about (computed from context)
+        source:
+          type: string
+          description: 'Surface that raised it (computed from context): `PlaygroundConversation`,
+
+            `MCP`, `Manual`, `ObjectsExplorer`, `cross_store_conversation`, or `api`.
+
+            '
     ChatMessage:
       type: object
       description: 'A message in the conversation. The `query_id` groups all messages from a single
@@ -825,97 +1178,32 @@ components:
           type: array
           items: {}
           description: Tool results (only for tool_call messages)
-    Conversation_2:
+    Error:
       type: object
-      description: A conversation with its complete chat history.
       properties:
-        id:
+        error:
           type: string
-          format: uuid
-        name:
-          type: string
-        type:
-          type: string
-        created_by:
-          type: string
-          format: uuid
-        chat_history:
-          type: array
-          items:
-            $ref: '#/components/schemas/ChatMessage_2'
-        agent_settings:
-          type:
-          - string
-          - 'null'
-          format: uuid
-        agent_settings_name:
-          type:
-          - string
-          - 'null'
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-        tags:
-          type: array
-          items:
-            type: string
-        is_shared:
-          type: boolean
-        is_archived:
-          type: boolean
-        archived_at:
-          type:
-          - string
-          - 'null'
-          format: date-time
-    ChatMessage_2:
+          description: Error message
+      example:
+        error: User not found
+    ValidationError:
       type: object
-      description: 'A message in the conversation. The `query_id` groups all messages from a
-
-        single user interaction (user message, assistant response, tool calls).
-
-        '
-      properties:
-        role:
+      additionalProperties:
+        type: array
+        items:
           type: string
-          enum:
-          - user
-          - assistant
-        content:
-          type: string
-        type:
-          type: string
-          enum:
-          - message
-          - tool_call
-          - reasoning_flow
-        query_id:
-          type: integer
-        timestamp:
-          type: string
-          format: date-time
-        tool_type:
-          type: string
-          description: Type of tool (only for tool_call messages).
-        input_parameters:
-          type: object
-          description: Tool input parameters (only for tool_call messages).
-        results:
-          type: array
-          items: {}
-          description: Tool results (only for tool_call messages).
+      example:
+        email:
+        - This field is required.
   responses:
-    BadRequest:
-      description: Bad request - invalid parameters or request body
+    NotFound:
+      description: Not found - resource does not exist
       content:
         application/json:
           schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ValidationError'
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
     Unauthorized:
       description: Unauthorized - missing or invalid authentication
       content:
@@ -932,24 +1220,44 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: You do not have permission to perform this action.
-    NotFound:
-      description: Not found - resource does not exist
+    BadRequest:
+      description: Bad request - invalid parameters or request body
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ValidationError'
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
-      description: 'Use Authorization: Bearer <token>'
+      description: 'Use `Authorization: Bearer <token>`. The token is either a user token / OAuth access
+
+        token, or a service-account API key (`cfk_...`). A key is valid on every endpoint and
+
+        acts as its service account, an organization member with per-store permissions.
+
+        Refused keys answer 403 with `Invalid API key.`, `API key revoked.`,
+
+        `API key expired.` or `API key disabled.`.
+
+        '
     TokenAuth:
       type: apiKey
       in: header
       name: Authorization
       description: 'Use Authorization: Token <token>'
-x-refined-from:
-- clarifeye-backoffice-openapi-original.yaml
-- clarifeye-openapi-original.yaml
+x-tagGroups:
+- name: Extractors
+  tags:
+  - Object Extractors
+  - Tag Extractors
+  - Chunks Extractors
+  - Parsing Extractors
+  - Document Filter Extractors
+  - Chunk Tag Filter Extractors
+  - Document Tag Extractors
+  - Tag Alerts Extractors
+  - Object Alerts Extractors
+  - Imported Object Extractors

@@ -1,0 +1,427 @@
+openapi: 3.2.0
+info:
+  title: Clarifeye Platform API — Full API Documentation…
+  description: 'Complete REST API reference for the Clarifeye Platform.
+
+
+    Documents every endpoint exposed by the platform — the public surface plus
+
+    the advanced surface: pipeline customization (extraction flows, pipeline
+
+    runs, warehouse tables, document tag/metadata configuration), the pre-MCP
+
+    AI surface (agent settings, playground conversations, conversation-scoped
+
+    feedback views, notifications), and the impersonation header. New AI
+
+    integrations should consume knowledge via MCP rather than the
+
+    conversation/agent-settings endpoints documented here.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token `
+
+    - `Authorization: Bearer `
+
+
+    ## Service accounts and API keys
+
+    Integrations authenticate with an **API key** of a **service account**:
+
+    - `Authorization: Bearer ` (keys start with `cfk_`)
+
+
+    A service account is an ordinary member (role `member`) of one organization that cannot log
+
+    in. Organization admins create it and mint its keys on the organization''s *Service
+
+    accounts* page (`/organizations/{id}/service-accounts/`, `/organization-api-keys/`), and
+
+    give it access to knowledge stores with ordinary store permissions. A key is valid on every
+
+    endpoint and acts as its service account: it reaches exactly the stores, with exactly the
+
+    rights, the account was given. An account can hold several keys (each with its own name,
+
+    optional expiry and revocation), so a key can be rotated without changing identity.
+
+
+    A refused key answers **403** with one of: `Invalid API key.`, `API key revoked.`,
+
+    `API key expired.`, `API key disabled.` (the service account is disabled).
+
+
+    Any valid key may also call `POST /organizations/{id}/provision-user/` and
+
+    `POST /organizations/{id}/deprovision-user/` for its own organization (the `{id}` in the
+
+    path must be the key''s organization). The email domains these may pre-create accounts for
+
+    are configured by Clarifeye on the organization (`allowed_provisioning_domains`).
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (for a person, contact Clarifeye to enable it; org admins grant it to a service account on the organization''s Service accounts page)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+
+    **With an API key** the request fails instead (**403**) whenever impersonation cannot
+
+    happen: missing permission, unknown target, target without access to the store, target that
+
+    is itself a service account, or an endpoint outside a store. A key never silently acts as
+
+    its own service account when impersonation was asked for.'
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Organization API Keys
+  description: 'Superuser management of org-scoped provisioning API keys. Minting and revoking
+
+    are superuser-only; org admins can list/retrieve/reveal their own org''s keys.'
+paths:
+  /organization-api-keys/:
+    get:
+      operationId: listOrganizationApiKeys
+      tags:
+      - Organization API Keys
+      summary: List API keys (superuser → all; org admin → own org's keys)
+      description: Revoked and expired keys are listed too, with their `status`.
+      parameters:
+      - name: organization
+        in: query
+        required: false
+        description: Filter by organization UUID
+        schema:
+          type: string
+          format: uuid
+      - name: service_account
+        in: query
+        required: false
+        description: Filter by service account (user) UUID
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: API key metadata (never the secret), newest first.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/OrganizationApiKey'
+    post:
+      operationId: createOrganizationApiKey
+      tags:
+      - Organization API Keys
+      summary: Mint an API key for a service account (org admin)
+      description: The full `api_key` (prefixed `cfk_`) is returned ONCE in this response.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - service_account
+              properties:
+                service_account:
+                  type: string
+                  format: uuid
+                  description: The service account the key authenticates as.
+                name:
+                  type: string
+                expires_at:
+                  type:
+                  - string
+                  - 'null'
+                  format: date-time
+                  description: Optional; must be in the future.
+      responses:
+        '201':
+          description: Created. Includes the one-time plaintext key.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/OrganizationApiKey'
+                - type: object
+                  properties:
+                    api_key:
+                      type: string
+                      description: Full plaintext key — shown only here, once.
+        '400':
+          description: Not a service account, or `expires_at` in the past.
+        '403':
+          description: Caller is not an admin of the service account's organization.
+  /organization-api-keys/{id}/:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    get:
+      operationId: getOrganizationApiKey
+      tags:
+      - Organization API Keys
+      summary: Retrieve API key metadata (superuser or org admin)
+      responses:
+        '200':
+          description: API key metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationApiKey'
+        '403':
+          description: Caller is not an admin of the key's organization.
+    patch:
+      operationId: updateOrganizationApiKey
+      tags:
+      - Organization API Keys
+      summary: Rename or re-date an API key (superuser or org admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                expires_at:
+                  type:
+                  - string
+                  - 'null'
+                  format: date-time
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationApiKey'
+        '400':
+          description: The key is revoked, or `expires_at` is in the past.
+        '403':
+          description: Caller is not an admin of the key's organization.
+    delete:
+      operationId: revokeOrganizationApiKey
+      tags:
+      - Organization API Keys
+      summary: Revoke an API key (superuser or org admin)
+      description: 'Soft revoke: the key stops authenticating immediately (403 `API key revoked.`) and
+
+        stays listed with `status: revoked`.'
+      responses:
+        '204':
+          description: Revoked.
+        '403':
+          description: Caller is not an admin of the key's organization.
+  /organization-api-keys/{id}/reveal/:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    get:
+      operationId: revealOrganizationApiKey
+      tags:
+      - Organization API Keys
+      summary: Download the full secret (superuser or org admin)
+      responses:
+        '200':
+          description: The decrypted full key.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  api_key:
+                    type: string
+        '400':
+          description: The key is revoked.
+        '403':
+          description: Caller is not an admin of the key's organization.
+components:
+  schemas:
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    OrganizationApiKey:
+      type: object
+      description: API key metadata. Never includes the secret or its stored forms.
+      properties:
+        id:
+          type: string
+          format: uuid
+        organization:
+          type: string
+          format: uuid
+        service_account:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            display_name:
+              type: string
+        name:
+          type: string
+        key_prefix:
+          type: string
+          description: The 8 characters after `cfk_`, to recognise a key without revealing it.
+        status:
+          type: string
+          enum:
+          - active
+          - expired
+          - revoked
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type:
+          - object
+          - 'null'
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+            display_name:
+              type:
+              - string
+              - 'null'
+        expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        revoked_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        last_used_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+  parameters:
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use `Authorization: Bearer <token>`. The token is either a user token / OAuth access
+
+        token, or a service-account API key (`cfk_...`). A key is valid on every endpoint and
+
+        acts as its service account, an organization member with per-store permissions.
+
+        Refused keys answer 403 with `Invalid API key.`, `API key revoked.`,
+
+        `API key expired.` or `API key disabled.`.
+
+        '
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'
+x-tagGroups:
+- name: Extractors
+  tags:
+  - Object Extractors
+  - Tag Extractors
+  - Chunks Extractors
+  - Parsing Extractors
+  - Document Filter Extractors
+  - Chunk Tag Filter Extractors
+  - Document Tag Extractors
+  - Tag Alerts Extractors
+  - Object Alerts Extractors
+  - Imported Object Extractors

@@ -1,10 +1,104 @@
 openapi: 3.2.0
 info:
-  title: Clarifeye Invitations API
+  title: Clarifeye Platform API — Full API Documentation Invitations…
+  description: 'Complete REST API reference for the Clarifeye Platform.
+
+
+    Documents every endpoint exposed by the platform — the public surface plus
+
+    the advanced surface: pipeline customization (extraction flows, pipeline
+
+    runs, warehouse tables, document tag/metadata configuration), the pre-MCP
+
+    AI surface (agent settings, playground conversations, conversation-scoped
+
+    feedback views, notifications), and the impersonation header. New AI
+
+    integrations should consume knowledge via MCP rather than the
+
+    conversation/agent-settings endpoints documented here.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token `
+
+    - `Authorization: Bearer `
+
+
+    ## Service accounts and API keys
+
+    Integrations authenticate with an **API key** of a **service account**:
+
+    - `Authorization: Bearer ` (keys start with `cfk_`)
+
+
+    A service account is an ordinary member (role `member`) of one organization that cannot log
+
+    in. Organization admins create it and mint its keys on the organization''s *Service
+
+    accounts* page (`/organizations/{id}/service-accounts/`, `/organization-api-keys/`), and
+
+    give it access to knowledge stores with ordinary store permissions. A key is valid on every
+
+    endpoint and acts as its service account: it reaches exactly the stores, with exactly the
+
+    rights, the account was given. An account can hold several keys (each with its own name,
+
+    optional expiry and revocation), so a key can be rotated without changing identity.
+
+
+    A refused key answers **403** with one of: `Invalid API key.`, `API key revoked.`,
+
+    `API key expired.`, `API key disabled.` (the service account is disabled).
+
+
+    Any valid key may also call `POST /organizations/{id}/provision-user/` and
+
+    `POST /organizations/{id}/deprovision-user/` for its own organization (the `{id}` in the
+
+    path must be the key''s organization). The email domains these may pre-create accounts for
+
+    are configured by Clarifeye on the organization (`allowed_provisioning_domains`).
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (for a person, contact Clarifeye to enable it; org admins grant it to a service account on the organization''s Service accounts page)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+
+    **With an API key** the request fails instead (**403**) whenever impersonation cannot
+
+    happen: missing permission, unknown target, target without access to the store, target that
+
+    is itself a service account, or an endpoint outside a store. A key never silently acts as
+
+    its own service account when impersonation was asked for.'
   version: 1.0.0
   contact:
     name: Clarifeye Support
-  description: 'Operations tagged Invitations across 2 of this provider''s published API definitions: clarifeye-backoffice-openapi-original.yaml, clarifeye-openapi-original.yaml. Each path carries the servers of the definition it was published in.'
 servers:
 - url: https://eu.app.clarifeye.ai/api/v1
   description: EU
@@ -56,11 +150,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-    servers:
-    - url: https://eu.app.clarifeye.ai/api/v1
-      description: EU
-    - url: https://us.app.clarifeye.ai/api/v1
-      description: US
   /projects/{project_id}/invites/invite/:
     post:
       tags:
@@ -96,7 +185,15 @@ paths:
                   description: Permissions to grant to the user
                   example:
                   - CAN_VIEW_DATA
-                  - CAN_RUN_TASKS
+                  - CAN_PERFORM_ADMIN_ACTIONS
+                profile:
+                  allOf:
+                  - $ref: '#/components/schemas/ProjectProfile'
+                  description: 'Profile to assign to the invited user on the project.
+
+                    Defaults to `contributor` when omitted.
+
+                    '
       responses:
         '201':
           description: Invitation created successfully
@@ -118,7 +215,7 @@ paths:
 
                         '
         '400':
-          description: Bad request - invalid permissions, user already invited, or user already has access
+          description: Bad request - invalid permissions, user already invited, user already has access, or a service-account email (service accounts are managed on the organization's Service accounts page)
           content:
             application/json:
               schema:
@@ -127,12 +224,141 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-    servers:
-    - url: https://eu.app.clarifeye.ai/api/v1
-      description: EU
-    - url: https://us.app.clarifeye.ai/api/v1
-      description: US
+  /projects/{project_id}/invites/bulk-invite/:
+    post:
+      tags:
+      - Invitations
+      summary: Bulk invite users to project
+      description: 'Invite up to 100 email addresses in one call, all with the same
+
+        permissions and profile. Each email is processed independently
+
+        (partial success): existing users are added immediately, new users get
+
+        a pending invite and a signup email, and rejected addresses (invalid,
+
+        already a member, already invited, domain not allowed) are skipped
+
+        without failing the batch. Duplicates within the batch are
+
+        deduplicated case-insensitively. Requires admin permissions on the
+
+        project.'
+      operationId: bulkInviteUsers
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - emails
+              - permissions
+              properties:
+                emails:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: string
+                    format: email
+                  description: Email addresses to invite
+                  example:
+                  - alice@example.com
+                  - bob@example.com
+                permissions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PermissionType'
+                  description: Permissions granted to every invited user
+                  example:
+                  - CAN_VIEW_DATA
+                profile:
+                  allOf:
+                  - $ref: '#/components/schemas/ProjectProfile'
+                  description: 'Profile assigned to every invited user.
+
+                    Defaults to `contributor` when omitted.
+
+                    '
+      responses:
+        '200':
+          description: Per-email outcomes (returned even when some or all emails were skipped)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkInviteResponse'
+        '400':
+          description: Bad request - malformed emails list, more than 100 emails, or invalid permissions/profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /projects/{project_id}/invites/{invite_id}/:
+    patch:
+      tags:
+      - Invitations
+      summary: Edit a pending invitation
+      description: 'Change the permissions/profile a pending invitation will grant on
+
+        acceptance. Only pending invitations can be edited — accepted ones are
+
+        audit records whose live access lives on the membership, so editing one
+
+        returns 409. The email address is immutable: repointing an invitation at
+
+        a different person is a cancel-and-reinvite. Requires
+
+        CAN_PERFORM_ADMIN_ACTIONS.'
+      operationId: updateInvitation
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: invite_id
+        in: path
+        required: true
+        description: UUID of the invitation
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permissions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PermissionType'
+                profile:
+                  $ref: '#/components/schemas/ProjectProfile'
+      responses:
+        '200':
+          description: Invitation updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectInvite'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Invitation is no longer pending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     delete:
       tags:
       - Invitations
@@ -163,47 +389,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-    servers:
-    - url: https://eu.app.clarifeye.ai/api/v1
-      description: EU
-    - url: https://us.app.clarifeye.ai/api/v1
-      description: US
 components:
-  parameters:
-    Offset:
-      name: offset
-      in: query
-      description: Number of results to skip for pagination
-      schema:
-        type: integer
-        default: 0
-        minimum: 0
-    Limit:
-      name: limit
-      in: query
-      description: Maximum number of results per page
-      schema:
-        type: integer
-        default: 100
-        minimum: 1
-        maximum: 1000
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
-      schema:
-        type: string
-        format: uuid
   schemas:
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
     ProjectInvite:
       type: object
       properties:
@@ -217,6 +404,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PermissionType'
+        profile:
+          $ref: '#/components/schemas/ProjectProfile'
         status:
           $ref: '#/components/schemas/InvitationStatus'
         created_at:
@@ -227,31 +416,17 @@ components:
           format: date-time
         invited_by:
           $ref: '#/components/schemas/User'
-    InvitationStatus:
-      type: string
-      enum:
-      - pending
-      - accepted
-      - cancelled
-      description: '- `pending`: Invitation sent, awaiting response
+        assigned_interview_count:
+          type: integer
+          description: 'Interviews still waiting on this invitation. Non-zero means the
 
-        - `accepted`: User accepted the invitation
+            invitation exists to deliver an interview, so removing
 
-        - `cancelled`: Invitation was cancelled
+            CAN_TAKE_INTERVIEW would leave the invitee notified but unable to
 
-        '
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        email:
-          type: string
-          format: email
-        date_joined:
-          type: string
-          format: date-time
+            open it.
+
+            '
     PaginatedResponse:
       type: object
       properties:
@@ -273,26 +448,43 @@ components:
         results:
           type: array
           items: {}
-    PermissionType:
-      type: string
-      enum:
-      - CAN_PERFORM_ADMIN_ACTIONS
-      - CAN_VIEW_DATA
-      - CAN_RUN_TASKS
-      - CAN_VIEW_TECHNICAL_INTERFACE
-      - CAN_IMPERSONATE_OTHER_USERS
-      description: '- `CAN_PERFORM_ADMIN_ACTIONS`: Full administrative access
+    BulkInviteResult:
+      type: object
+      properties:
+        email:
+          type: string
+          description: Normalized (lowercased) email address from the request
+        status:
+          type: string
+          enum:
+          - invited_new
+          - added_existing
+          - skipped
+          description: '- `invited_new`: pending invite created, signup email sent
 
-        - `CAN_VIEW_DATA`: Read-only access to project data
+            - `added_existing`: existing user added immediately
 
-        - `CAN_RUN_TASKS`: Execute background tasks and pipelines
+            - `skipped`: nothing done, see `reason`
 
-        - `CAN_VIEW_TECHNICAL_INTERFACE`: Access to technical features
+            '
+        reason:
+          type:
+          - string
+          - 'null'
+          enum:
+          - invalid_email
+          - already_member
+          - pending_invite
+          - domain_not_allowed
+          - error
+          description: 'Why the email was skipped; null unless status is `skipped`.
 
-        - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls (contact Clarifeye to enable)
+            `error` means an unexpected failure was contained to this address so
 
-        '
-    ProjectInvite_2:
+            the rest of the batch could proceed.
+
+            '
+    User:
       type: object
       properties:
         id:
@@ -301,22 +493,43 @@ components:
         email:
           type: string
           format: email
-        permissions:
+        display_name:
+          type:
+          - string
+          - 'null'
+          description: Name to show instead of the email. Set for service accounts, null for people.
+        is_service_account:
+          type: boolean
+        date_joined:
+          type: string
+          format: date-time
+    InvitationStatus:
+      type: string
+      enum:
+      - pending
+      - accepted
+      - cancelled
+      description: '- `pending`: Invitation sent, awaiting response
+
+        - `accepted`: User accepted the invitation
+
+        - `cancelled`: Invitation was cancelled
+
+        '
+    BulkInviteResponse:
+      type: object
+      properties:
+        results:
           type: array
+          description: Per-email outcomes, in request order after deduplication
           items:
-            $ref: '#/components/schemas/PermissionType_2'
-        profile:
-          $ref: '#/components/schemas/ProjectProfile'
-        status:
-          $ref: '#/components/schemas/InvitationStatus'
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-        invited_by:
-          $ref: '#/components/schemas/User'
+            $ref: '#/components/schemas/BulkInviteResult'
+        invited_new:
+          type: integer
+        added_existing:
+          type: integer
+        skipped:
+          type: integer
     ProjectProfile:
       type: string
       enum:
@@ -338,7 +551,7 @@ components:
         - `user`: End-user profile with the most restricted UI surface
 
         '
-    PermissionType_2:
+    PermissionType:
       type: string
       enum:
       - CAN_PERFORM_ADMIN_ACTIONS
@@ -348,18 +561,53 @@ components:
 
         - `CAN_VIEW_DATA`: Read-only access to project data
 
-        - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls (contact Clarifeye to enable)
+        - `CAN_IMPERSONATE_OTHER_USERS`: Impersonate other users in API calls (for a person, contact Clarifeye to enable it; org admins grant it to a service account)
 
         '
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    ValidationError:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email:
+        - This field is required.
+  parameters:
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
   responses:
-    Unauthorized:
-      description: Unauthorized - missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Authentication credentials were not provided.
     NotFound:
       description: Not found - resource does not exist
       content:
@@ -368,6 +616,14 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: Not found.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
     Forbidden:
       description: Forbidden - insufficient permissions
       content:
@@ -376,16 +632,44 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: You do not have permission to perform this action.
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ValidationError'
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
-      description: 'Use Authorization: Bearer <token>'
+      description: 'Use `Authorization: Bearer <token>`. The token is either a user token / OAuth access
+
+        token, or a service-account API key (`cfk_...`). A key is valid on every endpoint and
+
+        acts as its service account, an organization member with per-store permissions.
+
+        Refused keys answer 403 with `Invalid API key.`, `API key revoked.`,
+
+        `API key expired.` or `API key disabled.`.
+
+        '
     TokenAuth:
       type: apiKey
       in: header
       name: Authorization
       description: 'Use Authorization: Token <token>'
-x-refined-from:
-- clarifeye-backoffice-openapi-original.yaml
-- clarifeye-openapi-original.yaml
+x-tagGroups:
+- name: Extractors
+  tags:
+  - Object Extractors
+  - Tag Extractors
+  - Chunks Extractors
+  - Parsing Extractors
+  - Document Filter Extractors
+  - Chunk Tag Filter Extractors
+  - Document Tag Extractors
+  - Tag Alerts Extractors
+  - Object Alerts Extractors
+  - Imported Object Extractors

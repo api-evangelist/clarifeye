@@ -1,14 +1,22 @@
 openapi: 3.2.0
 info:
-  title: Clarifeye Platform API — Public Interviews API
-  description: 'Forward-facing, supported REST API for new integrators of the Clarifeye Platform.
+  title: Clarifeye Platform API — Full API Documentation Interviews…
+  description: 'Complete REST API reference for the Clarifeye Platform.
 
 
-    Covers the curated public surface: authentication, knowledge management
+    Documents every endpoint exposed by the platform — the public surface plus
 
-    (documents), users & teams, signals, and tool execution. New integrations
+    the advanced surface: pipeline customization (extraction flows, pipeline
 
-    should target these endpoints.
+    runs, warehouse tables, document tag/metadata configuration), the pre-MCP
+
+    AI surface (agent settings, playground conversations, conversation-scoped
+
+    feedback views, notifications), and the impersonation header. New AI
+
+    integrations should consume knowledge via MCP rather than the
+
+    conversation/agent-settings endpoints documented here.
 
 
     ## Authentication
@@ -17,7 +25,77 @@ info:
 
     - `Authorization: Token `
 
-    - `Authorization: Bearer `'
+    - `Authorization: Bearer `
+
+
+    ## Service accounts and API keys
+
+    Integrations authenticate with an **API key** of a **service account**:
+
+    - `Authorization: Bearer ` (keys start with `cfk_`)
+
+
+    A service account is an ordinary member (role `member`) of one organization that cannot log
+
+    in. Organization admins create it and mint its keys on the organization''s *Service
+
+    accounts* page (`/organizations/{id}/service-accounts/`, `/organization-api-keys/`), and
+
+    give it access to knowledge stores with ordinary store permissions. A key is valid on every
+
+    endpoint and acts as its service account: it reaches exactly the stores, with exactly the
+
+    rights, the account was given. An account can hold several keys (each with its own name,
+
+    optional expiry and revocation), so a key can be rotated without changing identity.
+
+
+    A refused key answers **403** with one of: `Invalid API key.`, `API key revoked.`,
+
+    `API key expired.`, `API key disabled.` (the service account is disabled).
+
+
+    Any valid key may also call `POST /organizations/{id}/provision-user/` and
+
+    `POST /organizations/{id}/deprovision-user/` for its own organization (the `{id}` in the
+
+    path must be the key''s organization). The email domains these may pre-create accounts for
+
+    are configured by Clarifeye on the organization (`allowed_provisioning_domains`).
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (for a person, contact Clarifeye to enable it; org admins grant it to a service account on the organization''s Service accounts page)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+
+    **With an API key** the request fails instead (**403**) whenever impersonation cannot
+
+    happen: missing permission, unknown target, target without access to the store, target that
+
+    is itself a service account, or an endpoint outside a store. A key never silently acts as
+
+    its own service account when impersonation was asked for.'
   version: 1.0.0
   contact:
     name: Clarifeye Support
@@ -43,7 +121,16 @@ paths:
 
         - Admins see all interviews in the project.
 
-        - Other members see only interviews assigned to them or that they created.'
+        - Other members see only interviews assigned to them or that they created.
+
+
+        Results are ordered newest first, with interviews of the same campaign kept
+
+        contiguous (a campaign sorts by its own creation date, a campaign-less
+
+        interview by its own) — which is what lets clients render collapsible
+
+        campaign groups across pages.'
       operationId: listInterviews
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -54,9 +141,44 @@ paths:
           type: string
           enum:
           - me
+      - name: created_by
+        in: query
+        description: Set to "me" to return only interviews the requesting user created (whoever they were assigned to).
+        schema:
+          type: string
+          enum:
+          - me
       - name: status
         in: query
         description: Filter by status. Comma-separated for multiple values (e.g. "pending,in_progress").
+        schema:
+          type: string
+      - name: type
+        in: query
+        description: 'Filter by conversation type. `interview` returns every interview type
+
+          (standard, guided, onboarding, imported) and no meetings; `meeting`
+
+          returns the meetings Clara attended (present only once the call is over
+
+          and transcribed — a live meeting has no conversation yet); any other value
+
+          is matched exactly (e.g. `imported-interview`, `onboarding`). Omitting it
+
+          lists everything except meetings and Clara Fast sessions, which have their
+
+          own pages; both remain retrievable by id.
+
+          '
+        schema:
+          type: string
+      - name: campaign
+        in: query
+        description: 'Filter by campaign: a campaign UUID for that campaign''s interviews, or
+
+          the literal "none" for interviews without a campaign.
+
+          '
         schema:
           type: string
       - name: text
@@ -64,6 +186,26 @@ paths:
         description: Case-insensitive search over the interview name and transcript.
         schema:
           type: string
+      - name: ordering
+        in: query
+        description: 'Sort order. Omit for the default: newest first, where an interview in a
+
+          campaign sorts by its campaign''s creation date (keeping a campaign''s
+
+          interviews together) and a campaign-less one by its own.
+
+
+          `status` sorts unfinished interviews first and completed ones last,
+
+          newest first within each — intended for listing one campaign''s
+
+          interviews, where "who still hasn''t finished" is the question.
+
+          '
+        schema:
+          type: string
+          enum:
+          - status
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Offset'
       responses:
@@ -80,6 +222,168 @@ paths:
                       type: array
                       items:
                         $ref: '#/components/schemas/InterviewListItem'
+                    status_counts:
+                      type: object
+                      description: 'Number of interviews per status across the whole filtered set
+
+                        (not just the returned page). Keys are the status values
+
+                        ("pending", "in_progress", "completed"); legacy conversations
+
+                        without a status are counted under "none". Absent keys mean zero.
+
+                        '
+                      additionalProperties:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interviews/search-transcripts/:
+    get:
+      tags:
+      - Interviews
+      summary: Search interview transcripts
+      description: 'Keyword search over interview transcripts, returning short snippets that
+
+        point at where something was said (agent-oriented: read the interview
+
+        itself for the full context).
+
+
+        The query is split into whitespace-separated keywords; a message matches
+
+        when it contains any term (case-insensitive substring), so extra words
+
+        broaden rather than narrow the search and there is no phrase matching.
+
+        Punctuation is stripped from each term''s edges, and stopwords and
+
+        single-character terms are dropped — a query consisting only of those is
+
+        rejected with 400. Only conversational message turns are searched —
+
+        tool-call payloads and reasoning entries never match. Hits are ranked by distinct terms
+
+        matched, then interview recency, and capped at 3 per interview and
+
+        30 in total. All interview conversation types (onboarding, interview,
+
+        guided-interview, imported-interview) are always searched. Visibility
+
+        scoping matches the interviews list (non-admins only search their own
+
+        or assigned interviews).'
+      operationId: searchInterviewTranscripts
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: query
+        in: query
+        required: true
+        description: Search keywords (whitespace-separated; a message matches any term). Minimum 2 characters; stopwords and single-character terms are ignored.
+        schema:
+          type: string
+      - name: campaign
+        in: query
+        description: 'Filter by campaign: a campaign UUID, or "none" for interviews without a campaign.'
+        schema:
+          type: string
+      - name: interview_ids
+        in: query
+        description: Comma-separated interview UUIDs to search within.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  query:
+                    type: string
+                  terms:
+                    type: array
+                    description: The parsed search terms (unique, lowercased).
+                    items:
+                      type: string
+                  count_interviews_matched:
+                    type: integer
+                    description: Interviews with at least one matching message (before the total-hit cap).
+                  interviews_scanned:
+                    type: integer
+                    description: Candidate interviews whose transcripts were examined.
+                  scan_limit_reached:
+                    type: boolean
+                    description: 'True when more interviews matched the prefilter than could be
+
+                      scanned, so older ones were not examined at all and matches may
+
+                      be missing entirely (not merely trimmed).
+
+                      '
+                  truncated:
+                    type: boolean
+                    description: True when more matches exist than were returned (per-interview cap, total cap, or scan bound reached).
+                  hits:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        interview_id:
+                          type: string
+                          format: uuid
+                        interview_name:
+                          type:
+                          - string
+                          - 'null'
+                        type:
+                          type: string
+                        status:
+                          type:
+                          - string
+                          - 'null'
+                        campaign:
+                          type:
+                          - object
+                          - 'null'
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            name:
+                              type: string
+                        role:
+                          type:
+                          - string
+                          - 'null'
+                        speaker:
+                          type: string
+                          description: Speaker name (imported transcripts only).
+                        timestamp:
+                          type:
+                          - string
+                          - 'null'
+                        query_id:
+                          type:
+                          - integer
+                          - 'null'
+                          description: Message identifier within the transcript, matching chat_history entries.
+                        snippet:
+                          type: string
+                          description: ~300-char window around the first matched term, ellipsis-trimmed.
+                        matched_terms:
+                          type: array
+                          items:
+                            type: string
+                        interview_total_matches:
+                          type: integer
+                          description: Matching messages in this interview (at most 3 become hits).
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -103,11 +407,50 @@ paths:
         assignee and the response is the list of created interviews.
 
 
-        `write_scope` defaults to `local`. A `global` write scope requires every
+        `scheduled_send_at` delays only the invitation email — interviews are
 
-        assignee to already be a project admin and cannot be combined with
+        created and visible in-app immediately. `reminders` configures automatic
 
-        `invite_emails`.'
+        chase emails that run until the interview is completed, the cap is
+
+        reached, or an admin stops them.
+
+
+        `draft_id` marks this send as consuming a saved interview draft: the
+
+        draft is deleted in the same transaction, and its stored title is reused
+
+        when the sent topic still matches the draft''s.
+
+
+        `interview_type: "guided-interview"` creates guided (multi-topic
+
+        deep-dive) conversations structured by `topics` — an ordered list of
+
+        `{title, description, skill_id}` seeded as conversation-scoped topics at
+
+        send time (at least one is required). With a `draft_id`, the draft''s
+
+        type is authoritative (immutable), while payload `topics` override the
+
+        draft''s saved list — the form may hold unsaved edits at send time.
+
+        Guided sends reject `questions`: the topics structure the conversation,
+
+        so must-cover points belong in the `topic` (focus) text.
+
+
+        `campaign_id` / `campaign_name` group the created interviews under an
+
+        interview campaign (e.g. a workshop wave). `campaign_id` picks an existing
+
+        campaign; `campaign_name` reuses the project''s campaign with that name
+
+        (case-insensitive) or creates it. When both are absent the send falls back
+
+        to the consumed draft''s saved campaign; an explicit `campaign_id: null`
+
+        clears a drafted campaign.'
       operationId: assignInterviews
       parameters:
       - $ref: '#/components/parameters/ProjectId'
@@ -133,20 +476,169 @@ paths:
                 topic:
                   type: string
                   description: The interview focus. Used to auto-name the interview and seed its first question.
-                write_scope:
+                instructions:
                   type: string
-                  description: Whether interview edits stay local to the conversation or write to the shared knowledge store.
+                  maxLength: 4000
+                  description: 'Guided interviews only: the organiser''s rules for how Clara runs the
+
+                    session (see `InterviewDraftInput.instructions`). Stored on every
+
+                    created interview as `type_additional_parameters.interview_instructions`
+
+                    and rendered into the interviewer''s prompt; never sent to respondents.
+
+                    When a `draft_id` is set and this key is absent, the draft''s value is
+
+                    used.
+
+                    '
+                questions:
+                  type: array
+                  description: 'Optional specific topics or questions (max 10). Clara weaves them naturally
+
+                    into the open interview and covers each before closing the topic.
+
+                    '
+                  items:
+                    type: string
+                language:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'ISO language code (e.g. `fr`) the interview must be conducted in. Null
+
+                    adapts to each recipient''s own preferred language. When a `draft_id` is
+
+                    set and this field is absent, defaults to the draft''s value. Unknown
+
+                    codes are rejected (400).
+
+                    '
+                custom_message:
+                  type: string
+                  description: Optional note from the assigner; replaces the default invitation email copy.
+                custom_focus:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'Overrides the "what it''s about" focus block in invitation emails without
+
+                    changing the actual interview focus. Null shows the topic truncated to a
+
+                    teaser; empty string removes the block; text is shown verbatim. When the
+
+                    key is absent, a `draft_id` send reuses the draft''s saved value.
+
+                    '
+                  maxLength: 500
+                artifacts:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/InterviewArtifactSelection'
+                  description: 'The artifacts the interviewer gets, each with whether the respondent can
+
+                    open it (see `InterviewDraft`). When the key is absent, a `draft_id` send
+
+                    reuses the draft''s selection; with neither, the interviews get no
+
+                    artifacts.
+
+                    '
+                scheduled_send_at:
+                  type:
+                  - string
+                  - 'null'
+                  format: date-time
+                  description: Optional future time to send the invitation email (in-app visibility stays immediate).
+                reminders:
+                  type: object
+                  description: Automatic reminder settings (disabled by default).
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: false
+                    start_after_days:
+                      type: integer
+                      default: 2
+                      minimum: 1
+                      maximum: 30
+                    interval_days:
+                      type: integer
+                      default: 3
+                      minimum: 1
+                      maximum: 30
+                    max_count:
+                      type: integer
+                      default: 3
+                      minimum: 1
+                      maximum: 10
+                interview_type:
+                  type: string
                   enum:
-                  - local
-                  - global
-                  default: local
+                  - interview
+                  - guided-interview
+                  default: interview
+                  description: 'Conversation type to create. Ignored when `draft_id` is set (the
+
+                    draft''s type is authoritative).
+
+                    '
+                topics:
+                  type: array
+                  description: 'Guided interviews only: the ordered topics the interview walks
+
+                    through (max 12, at least one required for guided sends). Overrides
+
+                    a consumed draft''s saved topics when provided.
+
+                    '
+                  items:
+                    $ref: '#/components/schemas/GuidedInterviewTopic'
+                draft_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                  description: 'Optional id of a saved interview draft this send consumes. Rejected
+
+                    (400) when the draft no longer exists (already sent or deleted).
+
+                    '
+                campaign_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                  description: 'Existing campaign to group the created interviews under (must belong
+
+                    to the project). Absent falls back to the consumed draft''s saved
+
+                    campaign; an explicit null clears a drafted campaign. Wins over
+
+                    `campaign_name` when both are sent.
+
+                    '
+                campaign_name:
+                  type: string
+                  description: 'Campaign to group the created interviews under, by name: reuses the
+
+                    project''s campaign with that name (case-insensitive) or creates it.
+
+                    '
             example:
               assignee_ids:
               - 3fa85f64-5717-4562-b3fc-2c963f66afa6
               invite_emails:
               - newperson@example.com
               topic: Q4 planning and roadmap review
-              write_scope: local
+              questions:
+              - How do you weigh team vs. market vs. traction?
+              custom_message: We're building a shared playbook — your instincts are the point.
+              reminders:
+                enabled: true
+                start_after_days: 2
+                interval_days: 3
+                max_count: 3
       responses:
         '201':
           description: Interviews created and assigned
@@ -158,6 +650,199 @@ paths:
                   $ref: '#/components/schemas/Interview'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interviews/assignable-users/:
+    get:
+      tags:
+      - Interviews
+      summary: List assignable users
+      description: 'List project members who can be assigned an interview (tech/contributor
+
+        profiles and pending tech/contributor invites), flagging admins. **Admin only.**'
+      operationId: listAssignableInterviewUsers
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type:
+                          - string
+                          - 'null'
+                          format: uuid
+                          description: Member user id; null for a pending invite.
+                        email:
+                          type: string
+                          format: email
+                        is_admin:
+                          type: boolean
+                        pending_invite:
+                          type: boolean
+                          description: True when this is a not-yet-accepted invite rather than a joined member.
+                  non_interviewable_emails:
+                    type: array
+                    description: 'Emails of members who exist but can''t be interviewed (data readers).
+
+                      Out-of-process callers use this to refuse such recipients up front
+
+                      instead of failing the whole batch at send.
+
+                      '
+                    items:
+                      type: string
+                      format: email
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interviews/{interview_id}/stop-reminders/:
+    post:
+      tags:
+      - Interviews
+      summary: Stop automatic reminders
+      description: 'Permanently stop automatic reminder emails for one interview. **Admin or
+
+        assigner only.** Manual reminders stay available; reminders also stop on
+
+        completion or deletion. Returns 400 when the interview has no reminder schedule.'
+      operationId: stopInterviewReminders
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: interview_id
+        in: path
+        required: true
+        description: UUID of the interview
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Reminders stopped
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: reminders_stopped
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interviews/{interview_id}/send-now/:
+    post:
+      tags:
+      - Interviews
+      summary: Send a scheduled invitation now
+      description: 'Send a scheduled-but-unsent interview invitation immediately, skipping the
+
+        remaining wait on `scheduled_send_at`, and start the reminder clock. **Admin
+
+        or assigner only.** Returns 400 when the interview is not an interview, has
+
+        already been started, or its invitation was already sent.'
+      operationId: sendInterviewInvitationNow
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: interview_id
+        in: path
+        required: true
+        description: UUID of the interview
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Invitation sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: invitation_sent
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interviews/feed/:
+    get:
+      tags:
+      - Interviews
+      summary: List the interviews feed
+      description: 'The admin interviews page as one pageable list: each campaign is a single
+
+        row carrying its progress aggregates, and campaign-less interviews are
+
+        plain rows. Rows interleave newest first, a campaign sorting at its own
+
+        creation date and a standalone interview at its own — the same order the
+
+        interviews list uses. Campaigns without interviews are not listed.
+
+
+        **Admin only.** Filters are not supported here: a filtered or searched
+
+        view is served by the interviews list.'
+      operationId: listInterviewsFeed
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/InterviewFeedItem'
+                    status_counts:
+                      type: object
+                      description: 'Number of interviews per status across every interview in the
+
+                        project, campaign or not (not just the returned page). Keys are
+
+                        the status values; legacy conversations without a status are
+
+                        counted under "none". Absent keys mean zero.
+
+                        '
+                      additionalProperties:
+                        type: integer
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -200,133 +885,1873 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-components:
-  parameters:
-    Offset:
-      name: offset
-      in: query
-      description: Number of results to skip for pagination
-      schema:
-        type: integer
-        default: 0
-        minimum: 0
-    Limit:
-      name: limit
-      in: query
-      description: Maximum number of results per page
-      schema:
-        type: integer
-        default: 100
-        minimum: 1
-        maximum: 1000
-    ProjectId:
-      name: project_id
+    patch:
+      tags:
+      - Interviews
+      summary: Update an interview
+      description: 'Partially update an interview''s writable fields — most usefully `name`
+
+        (rename) and `campaign_id` (move the interview to another campaign of the
+
+        project, or null to remove it from its campaign, so past interviews can be
+
+        re-bucketed retroactively). Lifecycle and transcript fields are read-only.'
+      operationId: updateInterview
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: interview_id
+        in: path
+        required: true
+        description: UUID of the interview
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Interview'
+      responses:
+        '200':
+          description: Interview updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interviews/{interview_id}/artifacts/:
+    get:
+      tags:
+      - Interviews
+      summary: Artifacts shown beside an interview
+      description: 'The knowledge-store artifacts the interview''s draft chose to show its respondent,
+
+        read-only, at the latest versions the interviewer''s prompt reads (CLA-1931).
+
+        Readable by the respondent (interview-only access is enough) and by data readers.
+
+
+        Only the selected artifacts marked `show_to_respondent`. Empty when none are,
+
+        when the draft chose none, for interviews sent before the selection existed and
+
+        for onboarding — none of these show an artifact panel.'
+      operationId: listInterviewArtifacts
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: interview_id
+        in: path
+        required: true
+        description: UUID of the interview
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: The artifacts, in catalog order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                  - $ref: '#/components/schemas/ArtifactSummary'
+                  - type: object
+                    properties:
+                      payload:
+                        description: The artifact content (head version), shaped by its technical_type.
+        '404':
+          description: Not found, or not an interview the caller can open.
+  /projects/{project_id}/interviews/{interview_id}/duplicate-as-draft/:
+    post:
+      tags:
+      - Interviews
+      summary: Duplicate an interview as a draft
+      description: 'Duplicate one interview into a fresh, unsent draft. **Admin only.**
+
+
+        The draft copies the interview''s content and send settings (focus topic,
+
+        questions or guided topics, language, custom
+
+        message, reminder settings, campaign); recipients, transcript, schedule,
+
+        and lifecycle state are not copied — pick recipients on the draft and send
+
+        it via the assign endpoint. Nothing is sent by this call. Only standard and
+
+        guided interviews can be duplicated — imported transcripts return 400.'
+      operationId: duplicateInterviewAsDraft
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: interview_id
+        in: path
+        required: true
+        description: UUID of the interview to duplicate
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '201':
+          description: Draft created from the interview
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Draft created from interview
+                  draft:
+                    $ref: '#/components/schemas/InterviewDraft'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/coach-conversations/{coach_conversation_id}/local-documents/download-all/:
+    get:
+      tags:
+      - Interviews
+      summary: Download all interview files as a zip
+      description: 'Download every file uploaded during the interview as a single zip archive
+
+        (entries ordered by upload time; duplicate filenames are suffixed).
+
+
+        Non-admins can only download files from interviews assigned to them or that
+
+        they created. Returns 404 when the interview has no files.'
+      operationId: downloadAllInterviewFiles
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: coach_conversation_id
+        in: path
+        required: true
+        description: UUID of the interview (coach conversation)
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Zip archive of the interview files
+          headers:
+            Content-Disposition:
+              description: 'Attachment disposition carrying the suggested archive filename,
+
+                e.g. `attachment; filename="<interview name> - files.zip"`.
+
+                '
+              schema:
+                type: string
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/coach-conversations/{coach_conversation_id}/feedback/:
+    post:
+      tags:
+      - Interviews
+      summary: Submit post-interview feedback
+      description: 'Record the interviewee''s rating of a completed interview (types
+
+        `interview` and `guided-interview` only). Only the assignee of the
+
+        interview can submit; each interview accepts feedback once (a second
+
+        submission returns 400). Declining to answer is not persisted — the
+
+        client simply asks again on a later visit.
+
+
+        The grade and comment are Clarifeye-internal quality signals — they are
+
+        not exposed back through the API; conversations only report a
+
+        `feedback_state` of `none`/`submitted`.'
+      operationId: submitInterviewFeedback
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: coach_conversation_id
+        in: path
+        required: true
+        description: UUID of the interview (coach conversation)
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - grade
+              properties:
+                grade:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  description: Overall rating of the interview
+                comment:
+                  type: string
+                  description: Optional free-form comment
+      responses:
+        '200':
+          description: Feedback recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  feedback_state:
+                    type: string
+                    enum:
+                    - submitted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interviews/import-transcript/:
+    post:
+      tags:
+      - Interviews
+      summary: Import an external interview transcript
+      description: 'Import the transcript of an interview recorded outside the platform (e.g. a
+
+        Granola/Teams/Zoom export). **Admin only.**
+
+
+        Creates a read-only interview (type "imported-interview") holding the raw text
+
+        and enqueues an async parse that turns it into speaker-labeled `chat_history`
+
+        messages (each carrying a `speaker` name) plus inferred metadata. The response
+
+        returns immediately with `import_info.import_status = "parsing"`; poll the
+
+        interview detail endpoint until it is "ready" (`status` becomes "completed")
+
+        before reading the transcript. All metadata fields are optional — anything
+
+        omitted is inferred from the transcript; importer-supplied values always win.'
+      operationId: importInterviewTranscript
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - transcript
+              properties:
+                transcript:
+                  type: string
+                  description: The full raw transcript text, verbatim (200 to 1,500,000 characters).
+                title:
+                  type: string
+                  description: Optional interview title.
+                interview_date:
+                  type: string
+                  format: date
+                  description: Optional date the interview happened (YYYY-MM-DD).
+                participants:
+                  type: array
+                  description: Optional participant names.
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Interview created; parsing in progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interviews/{interview_id}/retry-import/:
+    post:
+      tags:
+      - Interviews
+      summary: Retry a failed transcript import
+      description: 'Re-run the async parse of an imported transcript. **Admin only.**
+
+
+        Allowed when the import failed, or when it has been stuck in "parsing" long
+
+        enough (~15 minutes) that the worker evidently died. Returns 400 for other
+
+        states and for non-imported interviews.'
+      operationId: retryInterviewTranscriptImport
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: interview_id
+        in: path
+        required: true
+        description: UUID of the imported interview
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Parse re-enqueued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interviews/{interview_id}/translate/:
+    post:
+      tags:
+      - Interviews
+      summary: Translate an interview transcript
+      description: 'Machine-translate the transcript''s message bubbles into a language, for
+
+        reviewers who do not read the interview''s language. Translations are cached
+
+        per language and reused; the call is idempotent: only messages not yet cached
+
+        in that language are translated (so re-posting on an in-progress interview
+
+        fills in the new turns) and a run already in flight is joined rather than
+
+        duplicated. Returns 202 while the translation is running and 200 once it is
+
+        complete; poll the `translations` endpoint for progress. Interview types
+
+        (`interview`, `guided-interview`, `imported-interview`) only. The translation
+
+        never appears in the interview payload itself — only the language codes of
+
+        complete translations do (`available_translations`).'
+      operationId: translateInterviewTranscript
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: interview_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - language
+              properties:
+                language:
+                  type: string
+                  description: ISO language code to translate into (e.g. `fr`, `pt-br`). Unknown codes are rejected (400).
+      responses:
+        '200':
+          description: Translation complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewTranscriptTranslation'
+        '202':
+          description: Translation running (newly started or already in flight)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewTranscriptTranslation'
+        '400':
+          description: Unknown language code, or the conversation is not an interview
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interviews/{interview_id}/translations/:
+    get:
+      tags:
+      - Interviews
+      summary: Get a cached transcript translation
+      description: 'The cached translation of the transcript in one language, as started by the
+
+        `translate` endpoint. `translations` maps each message''s key to its translated
+
+        text (see `InterviewTranscriptTranslation`); `translated_count` / `total_count`
+
+        track progress while `status` is `running`.'
+      operationId: getInterviewTranscriptTranslation
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: interview_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: language
+        in: query
+        required: true
+        schema:
+          type: string
+        description: ISO language code of the translation to fetch.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewTranscriptTranslation'
+        '400':
+          description: Missing or unknown language code
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: No translation in this language yet (call `translate` first)
+  /projects/{project_id}/interview-drafts/:
+    get:
+      tags:
+      - Interviews
+      summary: List interview drafts
+      description: 'List the project''s saved-but-unsent interview drafts, most recently
+
+        updated first. **Admin only** (like everything pre-send).
+
+
+        `view=summary` returns overview rows (`InterviewDraftSummary`) instead of
+
+        full drafts — what agent tools list; read a full draft with the detail
+
+        endpoint.'
+      operationId: listInterviewDrafts
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      - name: view
+        in: query
+        required: false
+        description: '`summary` for overview rows; omit for full drafts.'
+        schema:
+          type: string
+          enum:
+          - summary
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        anyOf:
+                        - $ref: '#/components/schemas/InterviewDraft'
+                        - $ref: '#/components/schemas/InterviewDraftSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+      - Interviews
+      summary: Create an interview draft
+      description: 'Save a draft of an interview assignment. **Admin only.**
+
+
+        A draft holds the whole assignment payload but creates no interviews and
+
+        sends nothing — it only becomes real interviews when a human sends it via
+
+        the assign endpoint (passing `draft_id`). Validation is deliberately
+
+        permissive: every field is optional, recipients may be stale, and the
+
+        schedule may be in the past — the real rules apply at send time. This is
+
+        the endpoint LLM tools use, precisely because it cannot trigger email.
+
+
+        When a `topic` is provided without a `name`, a short title is generated
+
+        from it and returned as `name` (regenerated whenever the topic changes on
+
+        update, until the draft is renamed).'
+      operationId: createInterviewDraft
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewDraftInput'
+      responses:
+        '201':
+          description: Draft created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewDraft'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interview-drafts/{draft_id}/:
+    parameters:
+    - $ref: '#/components/parameters/ProjectId'
+    - name: draft_id
       in: path
       required: true
-      description: UUID of the project
+      description: UUID of the interview draft
       schema:
         type: string
         format: uuid
+    get:
+      tags:
+      - Interviews
+      summary: Retrieve an interview draft
+      description: Retrieve one saved draft. **Admin only.**
+      operationId: getInterviewDraft
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewDraft'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Interviews
+      summary: Update an interview draft
+      description: 'Partially update a saved draft. **Admin only.** Sending `name` renames
+
+        the draft, and later topic changes keep that name; `name: ""` returns it
+
+        to a title generated from the topic. Otherwise changing the topic
+
+        regenerates the draft''s `name`, and clearing it clears the name.'
+      operationId: updateInterviewDraft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewDraftInput'
+      responses:
+        '200':
+          description: Draft updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewDraft'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+      - Interviews
+      summary: Delete an interview draft
+      description: 'Discard a saved draft. **Admin only.** Nothing was sent, so deleting a
+
+        draft has no side effects. Sending a draft (assign with `draft_id`)
+
+        deletes it automatically.'
+      operationId: deleteInterviewDraft
+      responses:
+        '204':
+          description: Draft deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interview-drafts/topic-skills/:
+    get:
+      tags:
+      - Interviews
+      summary: List guided-interview topic types
+      description: 'The topic types (`skill_id` values) a guided draft''s topics may carry, with the
+
+        human-facing label and one-line description the new-interview form shows in its
+
+        type picker. **Admin only.** `selectable` says whether a human may pick the type
+
+        in the form; non-selectable entries (`custom_topic`, i.e. "no skill") are listed
+
+        so existing drafts can label what they carry. Fixed, unpaginated list.'
+      operationId: listGuidedInterviewTopicSkills
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: The topic-type palette.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GuidedInterviewTopicSkill'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/interview-drafts/{draft_id}/test-runs/:
+    post:
+      tags:
+      - Interviews
+      summary: Start a test run of an interview draft
+      description: 'Rehearse a draft before sending it (CLA-1834). **Admin only.** Creates an
+
+        ordinary interview conversation of the draft''s type — same prompt, tools and
+
+        page as a real interview — assigned to the requesting user, linked to the draft
+
+        (`test_of_draft`) and hidden from every interview list, count and search. No
+
+        invitation, email, notification or interview analytics are produced; the run is
+
+        deleted with the draft (sending a draft deletes it). The draft is not modified.
+
+
+        `start_topic_index` (guided drafts) opens the run on that topic: earlier topics
+
+        are seeded but marked `skipped`, the interview opener is assumed to have already
+
+        happened (the first-message flow is skipped), and the run''s first turn is a
+
+        system note telling the interviewer to resume on that topic — so the run reads
+
+        as a real interview would at that point. `language` is the language the run is
+
+        conducted in and — unlike a real interview — outranks the tester''s own
+
+        preference; null keeps auto-detection.
+
+
+        During the run, the stream endpoint accepts `jump_to_topic_id` (a later open
+
+        topic of the run) to skip ahead: the topics in between are marked skipped and
+
+        the interviewer is told to transition on that turn.'
+      operationId: createInterviewDraftTestRun
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                language:
+                  type:
+                  - string
+                  - 'null'
+                  description: ISO language code the run is conducted in; null = auto-detect.
+                  example: fr
+                start_topic_index:
+                  type: integer
+                  minimum: 0
+                  default: 0
+                  description: 0-based index into the draft's `topics`; guided drafts only.
+      responses:
+        '201':
+          description: Test run created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversation_id:
+                    type: string
+                    format: uuid
+                  interview_url:
+                    type: string
+                    description: Absolute URL of the focused interview page to open (`…/interview/{project_id}/{conversation_id}`).
+        '400':
+          description: Draft not runnable (no focus / no topics, bad start index or language)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interview-drafts/{draft_id}/local-documents/:
+    get:
+      tags:
+      - Interviews
+      summary: List a draft's reference documents
+      description: 'The documents the interviewer attached to a draft to frame the interview
+
+        (CLA-1887). **Admin only.** Each is a `LocalDocument` with `source: reference`;
+
+        while `processing_status` is not `completed`/`failed` the parser is still working
+
+        and the draft cannot be sent or tested (assign / test-runs return 409).
+
+
+        The same nested route offers the standard local-document actions:
+
+        `POST bulk-upload/` (multipart `files`, names deduplicated per draft),
+
+        `DELETE {id}/`, and `GET download-all/`.'
+      operationId: listInterviewDraftReferenceDocuments
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Paginated reference documents
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/LocalDocument'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interview-drafts/{draft_id}/local-documents/attach-from-sources/:
+    post:
+      tags:
+      - Interviews
+      summary: Attach Sources documents to a draft
+      description: 'Copy library `Document`s onto the draft as reference documents and re-parse them
+
+        like a fresh upload (product decision: one consistent shape for the interviewing
+
+        agent). **Admin only.** Archived documents, documents already attached, and
+
+        over-budget batches (max 20 per call, 128 MiB) are reported in `skipped`.'
+      operationId: attachSourcesDocumentsToInterviewDraft
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - document_ids
+              properties:
+                document_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '201':
+          description: At least one document attached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferenceDocumentsAttachResult'
+        '200':
+          description: Nothing attached (everything skipped)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferenceDocumentsAttachResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interview-drafts/{draft_id}/local-documents/attach-session-files/:
+    post:
+      tags:
+      - Interviews
+      summary: Attach the caller's session files to a draft
+      description: 'Clone files from the caller''s own Work-with-Clara sessions (Clara-fast
+
+        conversation uploads or CMA session files, generated ones included) onto the
+
+        draft as reference documents. **Admin only**; files from other users'' sessions
+
+        are reported in `skipped`. CMA session files were never parsed locally, so their
+
+        clones are queued for processing.'
+      operationId: attachSessionFilesToInterviewDraft
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - local_document_ids
+              properties:
+                local_document_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '201':
+          description: At least one file attached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferenceDocumentsAttachResult'
+        '200':
+          description: Nothing attached (everything skipped)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferenceDocumentsAttachResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interview-drafts/{draft_id}/clone/:
+    post:
+      tags:
+      - Interviews
+      summary: Duplicate an interview draft
+      description: 'Duplicate a saved draft verbatim into a new draft. **Admin only.**
+
+
+        Every field is copied as-is — including recipients, schedule, reminder
+
+        settings, and campaign; the name is copied rather than regenerated since
+
+        the topic is identical. Nothing is sent by this call.'
+      operationId: cloneInterviewDraft
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: draft_id
+        in: path
+        required: true
+        description: UUID of the interview draft to duplicate
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '201':
+          description: Draft duplicated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Draft duplicated
+                  cloned_draft:
+                    $ref: '#/components/schemas/InterviewDraft'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interview-campaigns/:
+    get:
+      tags:
+      - Interviews
+      summary: List interview campaigns
+      description: 'List the project''s interview campaigns with their progress aggregates,
+
+        most recently created first. **Admin only** — the response covers every
+
+        interview in each campaign, including ones the caller cannot otherwise
+
+        see.
+
+
+        Campaigns are created lazily by passing `campaign_name` when drafting or
+
+        assigning interviews; there is no create endpoint. To list the interviews
+
+        of one campaign, filter the conversations list with
+
+        `?campaign=` (or `?campaign=none` for the interviews that
+
+        belong to no campaign).'
+      operationId: listInterviewCampaigns
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/InterviewCampaign'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interview-campaigns/{campaign_id}/:
+    parameters:
+    - $ref: '#/components/parameters/ProjectId'
+    - name: campaign_id
+      in: path
+      required: true
+      description: UUID of the interview campaign
+      schema:
+        type: string
+        format: uuid
+    get:
+      tags:
+      - Interviews
+      summary: Retrieve an interview campaign
+      description: Retrieve one campaign with its progress aggregates. **Admin only.**
+      operationId: getInterviewCampaign
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewCampaign'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Interviews
+      summary: Rename an interview campaign
+      description: 'Rename a campaign. **Admin only.** `name` is the only writable field —
+
+        campaigns cannot be created or deleted through the API. Names are unique
+
+        per project, case-insensitively; a clash returns 400.'
+      operationId: renameInterviewCampaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              properties:
+                name:
+                  type: string
+                  description: New campaign name (trimmed; must be unique in the project)
+      responses:
+        '200':
+          description: Campaign renamed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewCampaign'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/interview-campaigns/{campaign_id}/remind-all/:
+    parameters:
+    - $ref: '#/components/parameters/ProjectId'
+    - name: campaign_id
+      in: path
+      required: true
+      description: UUID of the interview campaign
+      schema:
+        type: string
+        format: uuid
+    post:
+      tags:
+      - Interviews
+      summary: Remind every unfinished interview in a campaign
+      description: 'Send a reminder (or a "finish your interview" nudge for in-progress ones)
+
+        to the assignee of each unfinished interview in the campaign. **Admin
+
+        only.**
+
+
+        Ineligible interviews are skipped rather than failing the batch:
+
+        completed interviews, imported transcripts, interviews with no assignee,
+
+        interviews assigned to the caller, and interviews whose scheduled
+
+        invitation has not been sent yet (use the interview''s send-now action for
+
+        those).'
+      operationId: remindAllInterviewCampaign
+      responses:
+        '200':
+          description: Reminders dispatched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reminded:
+                    type: integer
+                    description: Number of interviews a reminder was sent for
+                  skipped:
+                    type: integer
+                    description: Number of unfinished interviews that were not eligible
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
   schemas:
-    Error:
+    InterviewArtifactSelection:
+      type: object
+      required:
+      - slug
+      properties:
+        slug:
+          type: string
+          description: An in-scope artifact slug.
+        show_to_respondent:
+          type: boolean
+          default: false
+          description: 'Whether the respondent can also open this artifact, read-only, beside the chat
+
+            (`GET .../interviews/{id}/artifacts/`). False keeps it as the interviewer''s
+
+            background only.
+
+            '
+    ReferenceDocumentsAttachResult:
       type: object
       properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
-    Interview:
+        attached:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalDocument'
+        skipped:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type:
+                - string
+                - 'null'
+              reason:
+                type: string
+    InterviewInviteConfig:
       type: object
-      description: A structured interview conversation, including its full transcript.
+      description: 'Invitation-email customization and reminder schedule for an assigned interview.
+
+        Null for self-assigned interviews, non-interview conversations, and interviews
+
+        created before this feature existed.
+
+        '
+      readOnly: true
+      properties:
+        custom_message:
+          type: string
+          description: The assigner's note; replaces the default invitation email copy when set.
+        custom_focus:
+          type:
+          - string
+          - 'null'
+          description: 'The assigner''s override of the email''s "what it''s about" focus block. Null
+
+            means not customised (emails show the truncated topic); empty string means
+
+            the block was removed; text is shown verbatim.
+
+            '
+        scheduled_send_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the invitation email is (or was) due to be sent. Null means it was sent immediately.
+        invitation_email_sent_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the invitation email actually went out; null while a scheduled send is still pending.
+        reminders_enabled:
+          type: boolean
+        reminder_start_after_days:
+          type: integer
+        reminder_interval_days:
+          type: integer
+        reminder_max_count:
+          type: integer
+        reminders_sent:
+          type: integer
+          description: Automatic reminders sent so far (manual reminders are not counted).
+        next_reminder_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the next automatic reminder is due; null when none is scheduled.
+        reminders_stopped:
+          type: boolean
+          description: True once an admin/assigner stopped the schedule via stop-reminders.
+    ImportedInterviewInfo:
+      type: object
+      description: 'Parse-pipeline state of an imported external transcript (interviews of type
+
+        "imported-interview"). Null on every other interview type. The raw pasted
+
+        transcript is never returned — the parsed `chat_history` is the transcript.
+
+        '
+      properties:
+        import_status:
+          type: string
+          enum:
+          - parsing
+          - ready
+          - failed
+          description: '"parsing" while the async parse runs (transcript not yet readable),
+
+            "ready" once chat_history holds the speaker-labeled turns (status becomes
+
+            "completed"), "failed" when parsing errored (use retry-import).
+
+            '
+        participants:
+          type: array
+          description: Participant names (importer-supplied or inferred from the transcript).
+          items:
+            type: string
+        interview_date:
+          type:
+          - string
+          - 'null'
+          format: date
+          description: Date the conversation happened (importer-supplied or inferred).
+        error:
+          type:
+          - string
+          - 'null'
+          description: Failure detail when import_status is "failed".
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    InterviewTestRun:
+      type: object
+      description: 'A rehearsal of an unsent draft (CLA-1834): an ordinary interview conversation
+
+        the admin plays through themselves, listed only under its draft and removed
+
+        with it. Topics in `skipped_topic_ids` were deliberately left out of the run
+
+        (started later / jumped ahead) — they are choices, not gaps. On a conversation
+
+        detail (`test_run`) the object additionally carries `draft_id`, `draft_name`,
+
+        `draft_edit_url`, `draft_source_session` and a `note` for agent readers.
+
+        '
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type:
+          - string
+          - 'null'
+          enum:
+          - pending
+          - in_progress
+          - completed
+        language:
+          type:
+          - string
+          - 'null'
+          description: ISO code the run is conducted in (outranks the tester's preference); null = auto-detect.
+        started_from_topic_index:
+          type: integer
+        started_from_topic_title:
+          type:
+          - string
+          - 'null'
+        skipped_topic_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        jumps:
+          type: array
+          items:
+            type: object
+            properties:
+              from_topic_id:
+                type:
+                - string
+                - 'null'
+                format: uuid
+              to_topic_id:
+                type: string
+                format: uuid
+              at_message_count:
+                type: integer
+        message_count:
+          type: integer
+          description: Conversation-detail flavour only (drafts list runs without their transcripts).
+        draft_changed_since_start:
+          type: boolean
+          description: 'The draft''s interview-shaping fields (focus, topics, questions, language)
+
+            changed after this run began — it rehearsed a previous version. Re-saving the
+
+            draft unchanged, or starting another run, does not set it.
+
+            '
+        interview_url:
+          type: string
+          description: Absolute URL of the run's focused interview page.
+        draft_source_session:
+          allOf:
+          - $ref: '#/components/schemas/InterviewDraftSourceSession'
+          description: Conversation-detail flavour only. The session that drafted the interview, so the test page can resume it for feedback.
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    GuidedInterviewTopic:
+      type: object
+      description: 'One ordered topic of a guided interview. `title` and `description` say what THIS
+
+        topic must cover; `skill_id` is its TYPE — how the interviewer works it — and
+
+        round-trips through edits, so preserve the values you received or the topic loses
+
+        its skill-backed interview depth. Accepted values are the interview skills
+
+        (`use_case_exploration`, `use_case_context`, `document_library`,
+
+        `document_upload`, `checklist`, `custom_topic`, `guided_wrap_up`, plus ids retired from new
+
+        agendas but still carried by older drafts); an unrecognized id is rejected with
+
+        400. Omit `skill_id` for a free-form topic, driven by its own title/description
+
+        text — such a topic must then carry a non-empty `description` (400 otherwise);
+
+        a skill-backed topic may leave it blank.
+
+        '
+      required:
+      - title
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        skill_id:
+          type:
+          - string
+          - 'null'
+    InterviewCampaign:
+      type: object
+      description: 'A named group of interviews (a "wave"), with the progress aggregates the
+
+        interviews page renders. Counts cover every interview in the campaign.
+
+        '
       properties:
         id:
           type: string
           format: uuid
           readOnly: true
         name:
-          type:
-          - string
-          - 'null'
-          description: Interview title (auto-generated from the topic when not provided).
-        created_by:
           type: string
-          format: uuid
-          readOnly: true
-          description: UUID of the user who created the interview.
-        type:
-          type: string
-          description: Conversation type. Always "interview" for interviews.
-        type_additional_parameters:
-          type: object
-          description: Free-form parameters associated with the conversation type.
-        chat_history:
-          type: array
-          description: Ordered list of transcript entries (messages, tool calls, etc.).
-          items:
-            type: object
-        chat_memory:
-          type: object
-          description: Assistant memory state accumulated over the conversation.
-        local_documents:
-          type: array
-          readOnly: true
-          description: UUIDs of documents scoped locally to this interview.
-          items:
-            type: string
-            format: uuid
-        assigned_to:
-          type:
-          - string
-          - 'null'
-          format: uuid
-          readOnly: true
-          description: UUID of the assigned user (null while a pending invite has not yet joined).
-        assigned_by:
-          type:
-          - string
-          - 'null'
-          format: uuid
-          readOnly: true
-          description: UUID of the user who created the assignment.
-        assigned_to_email:
-          type:
-          - string
-          - 'null'
-          format: email
-          readOnly: true
-          description: Assignee email, falling back to the invite email for not-yet-joined invitees.
-        assigned_by_email:
-          type:
-          - string
-          - 'null'
-          format: email
-          readOnly: true
-        is_pending_invite:
-          type: boolean
-          readOnly: true
-          description: True when assigned to someone who has not yet joined the project.
-        status:
-          type: string
-          readOnly: true
-          enum:
-          - pending
-          - in_progress
-          - completed
-        write_scope:
-          type: string
-          enum:
-          - local
-          - global
-          description: Whether edits stay local to the conversation or write to the shared knowledge store.
+          description: Unique within the project, case-insensitively.
         created_at:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        interview_count:
+          type: integer
+          readOnly: true
+          description: 'Total interviews in the campaign. May exceed the sum of the per-status
+
+            counts: interviews created before statuses existed have none.
+
+            '
+        completed_count:
+          type: integer
+          readOnly: true
+        in_progress_count:
+          type: integer
+          readOnly: true
+        pending_count:
+          type: integer
+          readOnly: true
+          description: Assigned but not yet started.
+        latest_activity:
           type: string
           format: date-time
           readOnly: true
+          description: 'Most recent update across the campaign''s interviews, falling back to
+
+            the campaign''s own creation date when it has none. Interview
+
+            timestamps also move on background writes (summaries, turn state), so
+
+            treat this as approximate activity rather than message recency.
+
+            '
+        assignees:
+          type: array
+          readOnly: true
+          description: 'Up to five recipient emails, for the avatar row. Self-assigned
+
+            interviews contribute their creator.
+
+            '
+          items:
+            type: string
+            format: email
+        assignee_count:
+          type: integer
+          readOnly: true
+          description: Total distinct recipients, which may exceed `assignees` length.
+    MeetingInfo:
+      type: object
+      description: 'Set on conversations of type `meeting` — the transcript of a call Clara attended
+
+        as a bot (CLA-1843). The conversation is created post-call, so this block is always
+
+        complete when present. Every turn of such a transcript is `role: user` with a
+
+        `speaker` name and a `meeting_offset_ms`; attribute by speaker.
+
+        '
+      properties:
+        meeting_id:
+          type: string
+          format: uuid
+        platform:
+          type: string
+          enum:
+          - google_meet
+          - zoom
+          - microsoft_teams
+        participants:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              is_host:
+                type: boolean
+        duration_ms:
+          type:
+          - integer
+          - 'null'
+        started_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        url:
+          type:
+          - string
+          - 'null'
+          description: Relative in-app path of the meeting page (recording, insights).
+    InterviewReferenceDocument:
+      type: object
+      description: Summary of one reference document on a draft (a `LocalDocument` whose source is `reference`).
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        processing_status:
+          type: string
+          description: pending → … → completed | failed. The draft cannot be sent or tested until every document is completed or failed.
+        source_document:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: The Sources document it was copied from, when picked from the library.
+        character_count:
+          type: integer
+        page_count:
+          type:
+          - integer
+          - 'null'
+        size_warning:
+          type:
+          - string
+          - 'null'
+          description: Warn-only guidance for a long document (about 150k characters or more); null otherwise.
+        created_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+    ArtifactSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        title:
+          type: string
+        semantic_type:
+          $ref: '#/components/schemas/ArtifactSemanticType'
+        technical_type:
+          $ref: '#/components/schemas/ArtifactTechnicalType'
+        in_scope:
+          type: boolean
+        display_order:
+          type: integer
+        group:
+          type: string
+          description: 'Catalog group label; empty for predefined artifacts (their section derives
+
+            from `semantic_type`) and for ungrouped custom ones. "Foundation" and
+
+            "Other" are reserved for UI-derived sections and cannot be set; the four
+
+            standard section names ("Project Management", …) are NOT reserved — a
+
+            custom artifact may use one to file itself alongside the predefined
+
+            artifacts.
+
+            '
+        definition_short:
+          type: string
+        head_version_number:
+          type:
+          - integer
+          - 'null'
+        head_updated_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        version_count:
+          type: integer
+        can_delete:
+          type: boolean
+    LocalDocument:
+      type: object
+      description: 'A file attached to a conversation, agent settings, agent session, or interview
+
+        draft. `source` says who produced it: `uploaded` (a user, in the conversation),
+
+        `generated` (the agent), or `reference` (the interviewer, before the interview —
+
+        CLA-1887). Signed file URLs are short-lived.
+
+        '
+      properties:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        name:
+          type: string
+        file:
+          type: string
+          description: Signed inline URL of the stored file.
+        type:
+          type: string
+          enum:
+          - agent_settings
+          - conversation
+          - coach_conversation
+          - agent_session
+          - cross_store_conversation
+          - interview_draft
+        agent_settings:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        conversation:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        coach_conversation:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        agent_session:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        cross_store_conversation:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        interview_draft:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        source_document:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+          description: The Sources document a reference document was copied from, when applicable.
+        claude_file_id:
+          type:
+          - string
+          - 'null'
+        source:
+          type: string
+          enum:
+          - uploaded
+          - generated
+          - reference
+          readOnly: true
+        document_text:
+          type: string
+        summary_text:
+          type: string
+        short_summary_text:
+          type: string
+        processing_status:
+          type: string
+          readOnly: true
+        page_count:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+        character_count:
+          type: integer
+          readOnly: true
+        preview_pdf_url:
+          type:
+          - string
+          - 'null'
+          readOnly: true
+          description: Signed URL of the PDF that previews the file (itself for PDFs, the parser's rendition for Office files). Only populated on the interview-draft and coach-conversation local-document routes, where a viewer renders it; null everywhere else.
+        size_warning:
+          type:
+          - string
+          - 'null'
+          readOnly: true
+        version_number:
+          type:
+          - integer
+          - 'null'
+        total_versions:
+          type:
+          - integer
+          - 'null'
+    InterviewTranscriptTranslation:
+      type: object
+      description: 'Cached machine translation of an interview transcript into one language.
+
+        `translations` maps a message key to the translated text of that transcript
+
+        bubble.
+
+
+        The key is a 16-hex-character (zero-padded, lower-case) FNV-1a 64 hash over the
+
+        UTF-8 bytes of `role + US + speaker + US + content`, where `US` is the ASCII
+
+        unit separator (code point 31) and `speaker` is the empty string when absent.
+
+        Keys are computed from `chat_history` entries of type `message` with role
+
+        `user` or `assistant`, excluding panel-bound entries (`to: "panel"`) and blank
+
+        content, so identical bubbles share one key and a cache survives an in-progress
+
+        interview growing. Bubbles without an entry are not translated yet.
+
+        '
+      properties:
+        language:
+          type: string
+          description: ISO language code of the translation.
+        status:
+          type: string
+          enum:
+          - running
+          - ready
+          - failed
+        translations:
+          type: object
+          additionalProperties:
+            type: string
+          description: Message key → translated text.
+        translated_count:
+          type: integer
+          description: Current transcript messages that have a translation.
+        total_count:
+          type: integer
+          description: Current transcript messages eligible for translation.
+        error:
+          type:
+          - string
+          - 'null'
+          description: Stable failure message when `status` is `failed`; retry by calling `translate` again (already translated messages are kept).
+        updated_at:
+          type: string
+          format: date-time
+    InterviewDraft:
+      allOf:
+      - $ref: '#/components/schemas/InterviewDraftInput'
+      - type: object
+        description: 'A saved, unsent interview-assignment payload. Becomes one interview per
+
+          recipient when sent via the assign endpoint (with `draft_id`), which
+
+          also deletes the draft.
+
+          '
+        properties:
+          id:
+            type: string
+            format: uuid
+            readOnly: true
+          name:
+            type: string
+            description: 'The draft''s title: generated from the topic at save time unless set by
+
+              hand; empty when the draft has no topic and no custom name (clients show
+
+              "Untitled draft interview").
+
+              '
+          name_is_custom:
+            type: boolean
+            readOnly: true
+            description: True once the draft was named by hand; topic changes then keep its name.
+          assignee_emails:
+            type: array
+            readOnly: true
+            description: 'Emails of the member recipients in `assignee_ids`, same order; ids that
+
+              are no longer users are left out.
+
+              '
+            items:
+              type: string
+              format: email
+          campaign:
+            allOf:
+            - $ref: '#/components/schemas/InterviewCampaignRef'
+            readOnly: true
+            description: 'Campaign the interviews created from this draft will belong to; null
+
+              when none. Set via `campaign_id` / `campaign_name`.
+
+              '
+          test_runs:
+            type: array
+            readOnly: true
+            description: This draft's test runs, newest first (see `InterviewTestRun`).
+            items:
+              $ref: '#/components/schemas/InterviewTestRun'
+          source_session:
+            allOf:
+            - $ref: '#/components/schemas/InterviewDraftSourceSession'
+            readOnly: true
+          reference_documents:
+            type: array
+            readOnly: true
+            description: 'Documents the interviewer attached to frame the interview (CLA-1887),
+
+              oldest first. Managed through `interview-drafts/{id}/local-documents/`.
+
+              '
+            items:
+              $ref: '#/components/schemas/InterviewReferenceDocument'
+          reference_documents_warning:
+            type:
+            - string
+            - 'null'
+            readOnly: true
+            description: 'Warn-only guidance when the attached set is very long or large (more than 5
+
+              documents, or about 300k characters in total); null otherwise. Never blocks.
+
+              '
+          artifact_selection_warning:
+            type:
+            - string
+            - 'null'
+            readOnly: true
+            description: 'Warn-only guidance when the selected artifacts are large (about 200k
+
+              characters in total); null otherwise. Never blocks.
+
+              '
+          created_by:
+            type:
+            - string
+            - 'null'
+            format: uuid
+            readOnly: true
+          created_by_email:
+            type:
+            - string
+            - 'null'
+            format: email
+            readOnly: true
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
     InterviewListItem:
       type: object
       description: Lightweight interview representation used in list responses (omits the transcript).
@@ -378,24 +2803,57 @@ components:
         is_pending_invite:
           type: boolean
           readOnly: true
+        invite_config:
+          allOf:
+          - $ref: '#/components/schemas/InterviewInviteConfig'
+          readOnly: true
+        import_info:
+          allOf:
+          - $ref: '#/components/schemas/ImportedInterviewInfo'
+          readOnly: true
+        meeting_info:
+          allOf:
+          - $ref: '#/components/schemas/MeetingInfo'
+          readOnly: true
         status:
-          type: string
+          type:
+          - string
+          - 'null'
           readOnly: true
           enum:
           - pending
           - in_progress
           - completed
-        write_scope:
-          type: string
-          enum:
-          - local
-          - global
+          description: Null for imported interviews until their transcript parse completes.
+        campaign:
+          allOf:
+          - $ref: '#/components/schemas/InterviewCampaignRef'
+          readOnly: true
+          description: Campaign this interview belongs to; null for ad hoc interviews.
         first_message_preview:
           type: string
-          description: Truncated preview of the first user message in the transcript.
+          description: 'Truncated preview of the first user message in the transcript. For imported
+
+            transcripts this is the parse-generated summary when available (the literal
+
+            first turn of a meeting export is usually greeting noise).
+
+            '
         message_count:
           type: integer
           description: Number of conversational messages in the transcript.
+        topics_total:
+          type: integer
+          readOnly: true
+          description: 'Number of guided topics on the interview ("3/7 topics" progress on list
+
+            rows). 0 for interviews without guided topics.
+
+            '
+        topics_done:
+          type: integer
+          readOnly: true
+          description: Guided topics no longer open (resolved or dismissed).
         created_at:
           type: string
           format: date-time
@@ -404,6 +2862,333 @@ components:
           type: string
           format: date-time
           readOnly: true
+    ArtifactSemanticType:
+      type: string
+      description: 'What the artifact means in the knowledge store. Predefined types are
+
+        seeded by the platform; `custom` artifacts are user-created.
+
+        '
+      enum:
+      - brief
+      - project_plan
+      - mental_map
+      - general_knowledge
+      - playbooks
+      - library_description
+      - design_templates
+      - custom
+    GuidedInterviewTopicSkill:
+      type: object
+      description: One guided-interview topic type, as offered by the new-interview form.
+      required:
+      - id
+      - label
+      - description
+      - selectable
+      properties:
+        id:
+          type: string
+          example: use_case_exploration
+        label:
+          type: string
+          example: Concrete cases
+        description:
+          type: string
+        selectable:
+          type: boolean
+          description: Whether a human may pick this type for a topic in the form.
+    InterviewCampaignRef:
+      type: object
+      description: Nested campaign reference carried by interviews and drafts.
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+    InterviewFeedItem:
+      type: object
+      description: One row of the interviews feed — a campaign or a standalone interview.
+      required:
+      - kind
+      properties:
+        kind:
+          type: string
+          enum:
+          - campaign
+          - interview
+        campaign:
+          $ref: '#/components/schemas/InterviewCampaign'
+          description: Present when `kind` is `campaign`.
+        interview:
+          $ref: '#/components/schemas/InterviewListItem'
+          description: Present when `kind` is `interview`.
+    ArtifactTechnicalType:
+      type: string
+      description: 'Storage/editing format of the artifact''s payload — string for
+
+        `markdown` and `bpmn_xml`, object for `mental_map`, array for
+
+        `playbook_list` and `design_template_list`.
+
+        '
+      enum:
+      - markdown
+      - mental_map
+      - playbook_list
+      - design_template_list
+      - bpmn_xml
+    InterviewDraftSummary:
+      type: object
+      description: 'Overview row of a draft (`view=summary` on the list, CLA-1950). Empty values
+
+        are omitted.
+
+        '
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        interview_type:
+          type: string
+        language:
+          type: string
+        campaign:
+          type: string
+          description: Campaign name.
+        created_by_email:
+          type: string
+          format: email
+        focus_preview:
+          type: string
+          description: The draft's `topic`, cut to 200 characters.
+        topic_titles:
+          type: array
+          items:
+            type: string
+        recipients:
+          type: array
+          description: Member recipients' emails, then `invite_emails`.
+          items:
+            type: string
+            format: email
+        reference_document_count:
+          type: integer
+        artifact_count:
+          type: integer
+        test_run_count:
+          type: integer
+        latest_test_run:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+            draft_changed_since_start:
+              type: boolean
+        updated_at:
+          type: string
+          format: date-time
+    InterviewDraftInput:
+      type: object
+      description: 'Writable fields of an interview draft. Everything is optional — drafts are
+
+        deliberately permissive and only sending (assign with `draft_id`) enforces
+
+        the real assignment rules.
+
+        '
+      properties:
+        name:
+          type: string
+          description: 'The draft''s title, carried by every interview it sends. Setting it marks
+
+            the name as custom (`name_is_custom`), so topic changes no longer
+
+            regenerate it; an empty string goes back to a title generated from the topic.
+
+            '
+        topic:
+          type: string
+          description: 'The interview focus. When set, a short title is generated from it unless the
+
+            draft has a custom `name`.
+
+            '
+        instructions:
+          type: string
+          maxLength: 4000
+          description: 'Guided drafts only: optional rules for HOW Clara runs the session — how
+
+            thorough to be, moves to avoid, item-by-item passes, the shape of the close.
+
+            Read by the interviewer only; never part of the invitation email, the
+
+            notification, or the respondent''s screen (the focus is what respondents see).
+
+            Partial by design: where an instruction conflicts with Clara''s default
+
+            interviewing rules the instruction wins; where it is silent the defaults
+
+            apply. Non-empty on a legacy `interview` draft is rejected (400).
+
+            '
+        interview_type:
+          type: string
+          enum:
+          - interview
+          - guided-interview
+          default: interview
+          description: 'Which conversation type the draft fans out to when sent. Set at creation
+
+            (form type cards, or the scoping conversation''s draft tool) and immutable
+
+            afterwards — updates that change it are rejected (400).
+
+            '
+        questions:
+          type: array
+          description: 'Optional specific topics or questions (max 10). Rejected on
+
+            guided-interview drafts — their `topics` structure the conversation.
+
+            '
+          items:
+            type: string
+        topics:
+          type: array
+          description: 'Guided drafts only (rejected otherwise): the ordered, editable topics the
+
+            interview walks through (max 12). The scoping conversation''s draft tool
+
+            pre-seeds them from the standard guide.
+
+            '
+          items:
+            $ref: '#/components/schemas/GuidedInterviewTopic'
+        assignee_ids:
+          type: array
+          description: UUIDs of project members to interview. May go stale; re-validated at send.
+          items:
+            type: string
+            format: uuid
+        invite_emails:
+          type: array
+          description: Emails of people not yet on the project. Nobody is contacted until the draft is sent.
+          items:
+            type: string
+            format: email
+        language:
+          type:
+          - string
+          - 'null'
+          description: 'ISO language code (e.g. `fr`) offered to each recipient as the interview
+
+            language; they can change it for their own interview when they start. Null (the
+
+            default) offers each recipient their own preferred language. Unsupported codes
+
+            are rejected (400).
+
+            '
+        custom_message:
+          type: string
+          description: Optional note replacing the default invitation email copy.
+        custom_focus:
+          type:
+          - string
+          - 'null'
+          description: 'Overrides the "what it''s about" focus block in invitation emails without
+
+            changing the interview focus. Null (the default) shows the topic truncated
+
+            to a teaser; empty string removes the block; text is shown verbatim.
+
+            '
+          maxLength: 500
+        artifacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/InterviewArtifactSelection'
+          description: 'Knowledge-store artifacts whose content the interviewer gets in her prompt,
+
+            each with whether the respondent can also open it. Empty (the default) means
+
+            none — the interviewer then knows only the focus, topics and reference
+
+            documents. Slugs are normalised (trimmed, lowercased, first pick kept); an
+
+            unknown or out-of-scope slug is rejected (400). Resolved at interview time
+
+            against the latest versions, so an artifact removed from scope later simply
+
+            drops out. Replacing the list replaces the visibility too.
+
+            '
+        scheduled_send_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        reminders_enabled:
+          type: boolean
+          default: false
+        reminder_start_after_days:
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 2
+        reminder_interval_days:
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 3
+        reminder_max_count:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 3
+        source_agent_session_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          writeOnly: true
+          description: 'Creation only: the CMA Clara session drafting this (passed by the agent via
+
+            the MCP `draft_interviews` tool). Must be one of the caller''s own Clara
+
+            sessions scoped to this project, else 400. Ignored on update. In-process
+
+            Clara records its conversation directly; both read back as `source_session`.
+
+            '
+        campaign_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          writeOnly: true
+          description: 'Existing campaign (of the same project) to group the draft''s interviews
+
+            under; null removes the draft from its campaign. Wins over
+
+            `campaign_name` when both are sent.
+
+            '
+        campaign_name:
+          type: string
+          writeOnly: true
+          description: 'Campaign to group the draft''s interviews under, by name: reuses the
+
+            project''s campaign with that name (case-insensitive) or creates it.
+
+            '
     ValidationError:
       type: object
       additionalProperties:
@@ -413,36 +3198,436 @@ components:
       example:
         email:
         - This field is required.
-    PaginatedResponse:
+    Interview:
+      type: object
+      description: A structured interview conversation, including its full transcript.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type:
+          - string
+          - 'null'
+          description: Interview title (auto-generated from the topic when not provided).
+        created_by:
+          type: string
+          format: uuid
+          readOnly: true
+          description: UUID of the user who created the interview.
+        created_by_email:
+          type:
+          - string
+          - 'null'
+          format: email
+          readOnly: true
+          description: Email of the user who created the interview (the importer, for imported interviews).
+        type:
+          type: string
+          description: 'Conversation type: "interview" (standard mono-topic), "guided-interview"
+
+            (a multi-topic deep-dive whose ordered topics come from the sent draft or
+
+            assign payload; its focus text lives in
+
+            `type_additional_parameters.interview_focus`), or "imported-interview"
+
+            (a read-only transcript of an interview recorded outside the platform,
+
+            created via the import-transcript endpoint).
+
+            '
+        type_additional_parameters:
+          type: object
+          description: Free-form parameters associated with the conversation type.
+        chat_history:
+          type: array
+          description: Ordered list of transcript entries (messages, tool calls, etc.).
+          items:
+            type: object
+        chat_participants:
+          type: object
+          readOnly: true
+          description: 'Users who submitted at least one user turn, keyed by user id (each user entry
+
+            carries a `user_id`). Can differ from `assigned_to` when an admin finishes an
+
+            interview assigned to someone else.
+
+            '
+          additionalProperties:
+            type: object
+            properties:
+              email:
+                type: string
+                format: email
+        chat_memory:
+          type: object
+          description: Assistant memory state accumulated over the conversation.
+        local_documents:
+          type: array
+          readOnly: true
+          description: 'Files attached to this interview (ordered by upload time). Only the id, name and
+
+            source are included; resolve a fresh signed download URL via the project-level
+
+            local-documents detail endpoint. Both `uploaded` files and `generated` files
+
+            (produced by an agent in the conversation) can be imported into the Sources
+
+            library.
+
+            '
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              source:
+                type: string
+                enum:
+                - uploaded
+                - generated
+        assigned_to:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+          description: UUID of the assigned user (null while a pending invite has not yet joined).
+        assigned_by:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+          description: UUID of the user who created the assignment.
+        assigned_to_email:
+          type:
+          - string
+          - 'null'
+          format: email
+          readOnly: true
+          description: Assignee email, falling back to the invite email for not-yet-joined invitees.
+        assigned_by_email:
+          type:
+          - string
+          - 'null'
+          format: email
+          readOnly: true
+        is_pending_invite:
+          type: boolean
+          readOnly: true
+          description: True when assigned to someone who has not yet joined the project.
+        invite_config:
+          allOf:
+          - $ref: '#/components/schemas/InterviewInviteConfig'
+          readOnly: true
+        interview_focus:
+          type:
+          - object
+          - 'null'
+          readOnly: true
+          description: 'The seeded interview topic and optional specific questions, for rendering the
+
+            in-chat intro card. Null for non-interviews and interviews without a topic.
+
+            For guided interviews this is read from
+
+            `type_additional_parameters.interview_focus` (they have no focus issue).
+
+            '
+          properties:
+            topic:
+              type: string
+            instructions:
+              type: string
+              description: 'Guided interviews only: the organiser''s rules for how Clara runs the
+
+                session (read from `type_additional_parameters.interview_instructions`).
+
+                Interviewer-only — never included in invitation emails or shown on the
+
+                respondent''s screen. Empty when none were set.
+
+                '
+            questions:
+              type: array
+              items:
+                type: string
+        topics:
+          type: array
+          readOnly: true
+          description: 'Guided interviews only: the ordered topic agenda seeded at send time,
+
+            with per-topic progress. Empty for every other interview type.
+
+            '
+          items:
+            type: object
+            properties:
+              topic_id:
+                type: string
+                format: uuid
+                description: The topic row's id (the value `jump_to_topic_id` takes on a test run).
+              title:
+                type: string
+              description:
+                type: string
+              status:
+                type: string
+                enum:
+                - open
+                - resolved
+                - dismissed
+                - skipped
+                description: '"open" while the topic still has to be covered; "resolved" or
+
+                  "dismissed" once it no longer is. The interview auto-completes
+
+                  when no topic is left open. "skipped" (test runs only): the tester
+
+                  deliberately left the topic out — a choice, not a gap.
+
+                  '
+              skill_id:
+                type:
+                - string
+                - 'null'
+                description: Standard-guide skill backing the topic; null for custom topics.
+        campaign:
+          allOf:
+          - $ref: '#/components/schemas/InterviewCampaignRef'
+          readOnly: true
+          description: Campaign this interview belongs to; null for ad hoc interviews.
+        campaign_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          writeOnly: true
+          description: 'PATCH-only: move the interview to another campaign of the project (or
+
+            null to remove it from its campaign), so past interviews can be
+
+            re-bucketed retroactively.
+
+            '
+        campaign_name:
+          type: string
+          writeOnly: true
+          description: 'PATCH-only alternative to `campaign_id`: move the interview to the
+
+            campaign with this name, creating it if the project has none (matched
+
+            case-insensitively). `campaign_id` wins when both are sent.
+
+            '
+        is_first_interview:
+          type: boolean
+          readOnly: true
+          description: 'True while the requesting user has never started an assigned interview in this
+
+            project. Drives the intro card''s expanded "how it works" explainer.
+
+            '
+        import_info:
+          allOf:
+          - $ref: '#/components/schemas/ImportedInterviewInfo'
+          readOnly: true
+        meeting_info:
+          allOf:
+          - $ref: '#/components/schemas/MeetingInfo'
+          readOnly: true
+        conversation_summary:
+          type: string
+          readOnly: true
+          description: Background-generated summary of the conversation ("" until generated).
+        feedback_state:
+          type: string
+          readOnly: true
+          enum:
+          - none
+          - submitted
+          description: 'Whether the interviewee has rated this interview. Drives whether the
+
+            post-interview feedback prompt is shown. The grade and comment
+
+            themselves are Clarifeye-internal and are never returned.
+
+            '
+        test_run:
+          allOf:
+          - $ref: '#/components/schemas/InterviewTestRun'
+          readOnly: true
+          description: 'Set when this conversation is a test run of an unsent draft (CLA-1834);
+
+            null for real interviews. Adds `draft_id`, `draft_name`, `draft_edit_url`.
+
+            '
+        available_translations:
+          type: array
+          readOnly: true
+          description: 'ISO codes of the languages this transcript has a complete cached machine
+
+            translation in (see the `translate` / `translations` endpoints). The
+
+            translated text itself is never part of the interview payload.
+
+            '
+          items:
+            type: string
+        language:
+          type:
+          - string
+          - 'null'
+          readOnly: true
+          description: 'ISO language code the assigner set for this interview (null = adapt to the
+
+            respondent). Fixed by the assign / test-run endpoints; the respondent''s own
+
+            choice goes through `respondent_language`.
+
+            '
+        respondent_language:
+          type:
+          - string
+          - 'null'
+          description: 'ISO language code the respondent picked for this interview — on the type-or-talk
+
+            card before Clara''s first message (CLA-1884), or later from the language selector
+
+            (CLA-1933). Outranks every other language candidate for both the text prompt and
+
+            the voice agent; never written back to the user''s preference. A change applies to
+
+            the next typed reply or the next call (a call in progress keeps its language).
+
+            PATCHable only by the person answering or a project admin (403 otherwise), and
+
+            only until the interview is completed (400 otherwise). Null clears it
+
+            (auto-detect); unsupported codes are rejected (400).
+
+            '
+        default_language:
+          type:
+          - string
+          - 'null'
+          readOnly: true
+          description: 'Detail payload only. The ISO code the interview would be conducted in for the
+
+            requesting user if `respondent_language` is left alone — respondent pick, else
+
+            the user''s preferred language, else their org-membership language, else
+
+            `language`; null when nothing resolves (Clara mirrors the respondent).
+
+            '
+        live_voice_available:
+          type:
+          - boolean
+          - 'null'
+          readOnly: true
+          description: 'Detail payload only (CLA-1784). Whether the organization owning THIS knowledge
+
+            store may take interviews as calls: the instance-wide `LIVE_VOICE_ENABLED` +
+
+            ElevenLabs key ANDed with the org''s `allow_live_voice`. Store-scoped, unlike the
+
+            `instance_flags.live_voice_enabled` twin on the user payload, which answers for
+
+            the reader''s *active* org — a respondent who also belongs to an org of their own
+
+            has a different one. Null outside detail payloads; treat null as "not asked",
+
+            never as "off". `POST .../voice-call/` returns 503 when this is false.
+
+            '
+        status:
+          type:
+          - string
+          - 'null'
+          readOnly: true
+          enum:
+          - pending
+          - in_progress
+          - completed
+          description: Null for imported interviews until their transcript parse completes.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    Error:
       type: object
       properties:
-        count:
-          type: integer
-          description: Total number of results
-        next:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    InterviewDraftSourceSession:
+      type: object
+      description: 'The Clara session that created a draft (provenance, SET_NULL on both ends).
+
+        `kind` decides the route a client builds: `clara_fast` = in-process Work with
+
+        Clara conversation (`/agent/clara-fast?conversation_id=`), `cma` = Managed-Agents
+
+        Clara session (`/agent/clara?session_id=`), `coach` = any other coach
+
+        conversation (e.g. scoping), recorded but not linked from the test page.
+
+        '
+      properties:
+        kind:
+          type: string
+          enum:
+          - clara_fast
+          - cma
+          - coach
+        id:
+          type: string
+          format: uuid
+        name:
           type:
           - string
           - 'null'
-          format: uri
-          description: URL to next page of results
-        previous:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to previous page of results
-        results:
-          type: array
-          items: {}
+  parameters:
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
   responses:
-    BadRequest:
-      description: Bad request - invalid parameters or request body
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ValidationError'
     Unauthorized:
       description: Unauthorized - missing or invalid authentication
       content:
@@ -467,13 +3652,44 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: You do not have permission to perform this action.
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ValidationError'
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
-      description: 'Use Authorization: Bearer <token>'
+      description: 'Use `Authorization: Bearer <token>`. The token is either a user token / OAuth access
+
+        token, or a service-account API key (`cfk_...`). A key is valid on every endpoint and
+
+        acts as its service account, an organization member with per-store permissions.
+
+        Refused keys answer 403 with `Invalid API key.`, `API key revoked.`,
+
+        `API key expired.` or `API key disabled.`.
+
+        '
     TokenAuth:
       type: apiKey
       in: header
       name: Authorization
       description: 'Use Authorization: Token <token>'
+x-tagGroups:
+- name: Extractors
+  tags:
+  - Object Extractors
+  - Tag Extractors
+  - Chunks Extractors
+  - Parsing Extractors
+  - Document Filter Extractors
+  - Chunk Tag Filter Extractors
+  - Document Tag Extractors
+  - Tag Alerts Extractors
+  - Object Alerts Extractors
+  - Imported Object Extractors

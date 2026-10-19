@@ -1,0 +1,377 @@
+openapi: 3.2.0
+info:
+  title: Clarifeye Platform API — Full API Documentation Connectors…
+  description: 'Complete REST API reference for the Clarifeye Platform.
+
+
+    Documents every endpoint exposed by the platform — the public surface plus
+
+    the advanced surface: pipeline customization (extraction flows, pipeline
+
+    runs, warehouse tables, document tag/metadata configuration), the pre-MCP
+
+    AI surface (agent settings, playground conversations, conversation-scoped
+
+    feedback views, notifications), and the impersonation header. New AI
+
+    integrations should consume knowledge via MCP rather than the
+
+    conversation/agent-settings endpoints documented here.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token `
+
+    - `Authorization: Bearer `
+
+
+    ## Service accounts and API keys
+
+    Integrations authenticate with an **API key** of a **service account**:
+
+    - `Authorization: Bearer ` (keys start with `cfk_`)
+
+
+    A service account is an ordinary member (role `member`) of one organization that cannot log
+
+    in. Organization admins create it and mint its keys on the organization''s *Service
+
+    accounts* page (`/organizations/{id}/service-accounts/`, `/organization-api-keys/`), and
+
+    give it access to knowledge stores with ordinary store permissions. A key is valid on every
+
+    endpoint and acts as its service account: it reaches exactly the stores, with exactly the
+
+    rights, the account was given. An account can hold several keys (each with its own name,
+
+    optional expiry and revocation), so a key can be rotated without changing identity.
+
+
+    A refused key answers **403** with one of: `Invalid API key.`, `API key revoked.`,
+
+    `API key expired.`, `API key disabled.` (the service account is disabled).
+
+
+    Any valid key may also call `POST /organizations/{id}/provision-user/` and
+
+    `POST /organizations/{id}/deprovision-user/` for its own organization (the `{id}` in the
+
+    path must be the key''s organization). The email domains these may pre-create accounts for
+
+    are configured by Clarifeye on the organization (`allowed_provisioning_domains`).
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (for a person, contact Clarifeye to enable it; org admins grant it to a service account on the organization''s Service accounts page)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+
+    **With an API key** the request fails instead (**403**) whenever impersonation cannot
+
+    happen: missing permission, unknown target, target without access to the store, target that
+
+    is itself a service account, or an endpoint outside a store. A key never silently acts as
+
+    its own service account when impersonation was asked for.'
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Connectors
+paths:
+  /projects/{project_id}/connections/{connection_id}/import-preview/:
+    parameters:
+    - $ref: '#/components/parameters/ProjectId'
+    - name: connection_id
+      in: path
+      required: true
+      description: UUID of the connection
+      schema:
+        type: string
+        format: uuid
+    post:
+      operationId: previewConnectionImport
+      tags:
+      - Connectors
+      summary: Start a dry-run count of what an import would do
+      description: 'Starts a background task that enumerates provider metadata (no downloads) for the
+
+        given folder/file selection and diffs it against already-imported documents. Poll
+
+        `import-preview-status` with the returned `task_id` for progress and the result.
+
+        An empty selection falls back to the connection''s stored selection. Enumeration is
+
+        budgeted (file, request, and wall-clock caps): when `truncated` is true,
+
+        `to_create`/`to_update` are partial lower bounds and `to_delete` is null (a partial
+
+        enumeration cannot prove a file was removed).
+
+        Counts respect the connection''s file-type rules and the platform supported-type
+
+        baseline (blocked files stay in `total_remote` but not `to_create`), and
+
+        archived documents are excluded from every count (the sync leaves them alone).'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                folders:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ConnectionSelectionItem'
+                files:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ConnectionSelectionItem'
+      responses:
+        '202':
+          description: Count started
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - task_id
+                properties:
+                  task_id:
+                    type: string
+                    description: Pass to import-preview-status
+        '403':
+          description: Site not allowed by the organization's allowlist, or not a project member
+        '501':
+          description: The connection's provider does not support import preview (only SharePoint does)
+  /projects/{project_id}/connections/{connection_id}/import-preview-status/:
+    parameters:
+    - $ref: '#/components/parameters/ProjectId'
+    - name: connection_id
+      in: path
+      required: true
+      description: UUID of the connection
+      schema:
+        type: string
+        format: uuid
+    get:
+      operationId: getConnectionImportPreviewStatus
+      tags:
+      - Connectors
+      summary: Poll a dry-run import count
+      parameters:
+      - name: task_id
+        in: query
+        required: true
+        description: The `task_id` returned by import-preview
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Current state of the count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportPreviewStatus'
+        '400':
+          description: Missing task_id
+        '404':
+          description: The task belongs to another connection
+  /projects/{project_id}/connections/{connection_id}/set-file-type-rules/:
+    parameters:
+    - $ref: '#/components/parameters/ProjectId'
+    - name: connection_id
+      in: path
+      required: true
+      description: UUID of the connection
+      schema:
+        type: string
+        format: uuid
+    post:
+      operationId: setConnectionFileTypeRules
+      tags:
+      - Connectors
+      summary: Set the file-type allow/deny rules for a connection
+      description: 'Stores the connection''s file-type rules (any provider). Rules gate creation of NEW
+
+        documents from the next sync: `allow` imports only the listed extensions, `deny`
+
+        imports everything except them. Already-imported documents keep receiving updates
+
+        and delete-propagation regardless of rules. File types the platform can''t parse
+
+        (audio/video, .xml, .url, …) are always skipped (platform baseline, independent of
+
+        these rules). New connections are created with an `allow` rule for document types. Extensions are normalized
+
+        (lowercased, leading dots stripped, deduplicated). Only the connection owner may
+
+        call this.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectionFileTypeRules'
+      responses:
+        '200':
+          description: Updated connection (rules stored under `params.file_type_rules`)
+        '400':
+          description: Invalid extension, or `allow` mode with an empty list (would block everything)
+        '403':
+          description: Not the connection owner
+components:
+  schemas:
+    ConnectionSelectionItem:
+      type: object
+      required:
+      - id
+      properties:
+        id:
+          type: string
+          description: Provider item id (Graph drive-item id / Drive file id)
+        name:
+          type: string
+        drive_id:
+          type:
+          - string
+          - 'null'
+          description: SharePoint document library the item lives in (null = site default)
+    ImportPreview:
+      type: object
+      description: Dry-run diff of what starting an import would do with a selection.
+      properties:
+        to_create:
+          type: integer
+        to_update:
+          type: integer
+        unchanged:
+          type: integer
+          description: Already-synced files the import will skip as up to date.
+        to_delete:
+          type:
+          - integer
+          - 'null'
+          description: Null when truncated — a partial enumeration cannot prove deletions.
+        total_remote:
+          type: integer
+          description: Distinct files enumerated under the selection (post-dedupe)
+        truncated:
+          type: boolean
+          description: True when an enumeration budget (items/requests/time) was hit
+        cap:
+          type: integer
+          description: The file cap in force
+    ConnectionFileTypeRules:
+      type: object
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - allow
+          - deny
+          description: allow = only import the listed types; deny = import everything except them
+        extensions:
+          type: array
+          maxItems: 100
+          items:
+            type: string
+            description: Bare file extension, e.g. "pdf" (leading dot tolerated on input)
+    ImportPreviewStatus:
+      type: object
+      required:
+      - state
+      - counted
+      properties:
+        state:
+          type: string
+          enum:
+          - pending
+          - running
+          - done
+          - failed
+        counted:
+          type: integer
+          description: Files found so far (running) or in total (done)
+        result:
+          $ref: '#/components/schemas/ImportPreview'
+          description: Present when state is done
+        error:
+          type: string
+          description: Present when state is failed
+  parameters:
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use `Authorization: Bearer <token>`. The token is either a user token / OAuth access
+
+        token, or a service-account API key (`cfk_...`). A key is valid on every endpoint and
+
+        acts as its service account, an organization member with per-store permissions.
+
+        Refused keys answer 403 with `Invalid API key.`, `API key revoked.`,
+
+        `API key expired.` or `API key disabled.`.
+
+        '
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'
+x-tagGroups:
+- name: Extractors
+  tags:
+  - Object Extractors
+  - Tag Extractors
+  - Chunks Extractors
+  - Parsing Extractors
+  - Document Filter Extractors
+  - Chunk Tag Filter Extractors
+  - Document Tag Extractors
+  - Tag Alerts Extractors
+  - Object Alerts Extractors
+  - Imported Object Extractors

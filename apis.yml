@@ -165,16 +165,6 @@ apis:
   properties:
   - type: OpenAPI
     url: openapi/clarifeye-pipeline-runs-api-openapi.yml
-- aid: clarifeye:clarifeye-signals-api
-  name: Clarifeye Signals API
-  description: Submit signals about the project's content for domain experts to review
-  humanURL: https://docs.clarifeye.ai/api-reference
-  baseURL: https://eu.app.clarifeye.ai/api/v1
-  tags:
-  - Signals
-  properties:
-  - type: OpenAPI
-    url: openapi/clarifeye-signals-api-openapi.yml
 - aid: clarifeye:clarifeye-tables-api
   name: Clarifeye Tables API
   description: Perform CRUD operations on warehouse tables
@@ -207,6 +197,263 @@ apis:
   properties:
   - type: OpenAPI
     url: openapi/clarifeye-users-api-openapi.yml
+- aid: clarifeye:clarifeye-artifacts-api
+  name: Clarifeye Artifacts API
+  description: >-
+    Knowledge-store artifact catalog — list artifacts, create/edit custom
+
+    artifacts, manage scope membership, read and publish versions, configure
+
+    the cohesion guide, and export/import the whole catalog. For type-aware
+
+    reads and edits of artifact content, prefer the
+
+    `read-write-*-artifact` tool endpoints.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Artifacts
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-artifacts-api-openapi.yml
+- aid: clarifeye:clarifeye-chunk-tag-filter-extractors-api
+  name: Clarifeye Chunk Tag Filter Extractors API
+  description: >-
+    Restrict a downstream pipeline branch to chunks carrying specific tags.
+
+    Update auto-creates a new version when the filter changes.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Chunk Tag Filter Extractors
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-chunk-tag-filter-extractors-api-openapi.yml
+- aid: clarifeye:clarifeye-chunks-api
+  name: Clarifeye Chunks API
+  description: The Chunks API from Clarifeye — 1 operation(s) for chunks.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Chunks
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-chunks-api-openapi.yml
+- aid: clarifeye:clarifeye-chunks-extractors-api
+  name: Clarifeye Chunks Extractors API
+  description: >-
+    Segment parsed documents into chunks for downstream processing.
+
+    Update auto-creates a new `ChunksExtractorVersion` when version-bearing
+
+    fields change.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Chunks Extractors
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-chunks-extractors-api-openapi.yml
+- aid: clarifeye:clarifeye-connectors-api
+  name: Clarifeye Connectors API
+  description: The Connectors API from Clarifeye — 3 operation(s) for connectors.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Connectors
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-connectors-api-openapi.yml
+- aid: clarifeye:clarifeye-design-system-templates-api
+  name: Clarifeye Design System Templates API
+  description: Reference/example files attached to a design template.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Design System Templates
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-design-system-templates-api-openapi.yml
+- aid: clarifeye:clarifeye-document-filter-extractors-api
+  name: Clarifeye Document Filter Extractors API
+  description: >-
+    Restrict a downstream pipeline branch to documents matching a filter.
+
+    Update auto-creates a new version when the filter changes.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Document Filter Extractors
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-document-filter-extractors-api-openapi.yml
+- aid: clarifeye:clarifeye-document-tag-extractors-api
+  name: Clarifeye Document Tag Extractors API
+  description: >-
+    Apply a flat set of metadata tags to each document. Update auto-creates
+
+    a new version when version-bearing fields change.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Document Tag Extractors
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-document-tag-extractors-api-openapi.yml
+- aid: clarifeye:clarifeye-external-mcp-api
+  name: Clarifeye External MCP API
+  description: The External MCP API from Clarifeye — 9 operation(s) for external mcp.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - External MCP
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-external-mcp-api-openapi.yml
+- aid: clarifeye:clarifeye-imported-object-extractors-api
+  name: Clarifeye Imported Object Extractors API
+  description: >-
+    Hold objects imported from an external system (rather than extracted by
+
+    an LLM). Useful for hydrating the warehouse with data produced outside
+
+    the platform.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Imported Object Extractors
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-imported-object-extractors-api-openapi.yml
+- aid: clarifeye:clarifeye-meetings-api
+  name: Clarifeye Meetings API
+  description: >-
+    Meetings Clara attends as a bot (Recall.ai) — live transcript, live insights, recording, and calendar
+    scheduling (CLA-1843). Store admins only.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Meetings
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-meetings-api-openapi.yml
+- aid: clarifeye:clarifeye-object-alerts-extractors-api
+  name: Clarifeye Object Alerts Extractors API
+  description: >-
+    Run LLM-based alerts over already-extracted object rows. Update auto-creates
+
+    a new version when version-bearing fields change.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Object Alerts Extractors
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-object-alerts-extractors-api-openapi.yml
+- aid: clarifeye:clarifeye-object-extractors-api
+  name: Clarifeye Object Extractors API
+  description: >-
+    Extract structured data (instances of a Pydantic model) from chunks or
+
+    blocks of documents. Update auto-creates a new `ObjectExtractorVersion`
+
+    when version-bearing fields change.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Object Extractors
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-object-extractors-api-openapi.yml
+- aid: clarifeye:clarifeye-organization-api-keys-api
+  name: Clarifeye Organization API Keys API
+  description: >-
+    Superuser management of org-scoped provisioning API keys. Minting and revoking
+
+    are superuser-only; org admins can list/retrieve/reveal their own org's keys.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Organization API Keys
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-organization-api-keys-api-openapi.yml
+- aid: clarifeye:clarifeye-parsing-extractors-api
+  name: Clarifeye Parsing Extractors API
+  description: >-
+    Convert source documents to text blocks via the parsing pipeline.
+
+    Update auto-creates a new `ParsingExtractorVersion` when version-bearing
+
+    fields change.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Parsing Extractors
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-parsing-extractors-api-openapi.yml
+- aid: clarifeye:clarifeye-projects-api
+  name: Clarifeye Projects API
+  description: The Projects API from Clarifeye — 10 operation(s) for projects.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Projects
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-projects-api-openapi.yml
+- aid: clarifeye:clarifeye-service-accounts-api
+  name: Clarifeye Service Accounts API
+  description: The Service Accounts API from Clarifeye — 5 operation(s) for service accounts.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Service Accounts
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-service-accounts-api-openapi.yml
+- aid: clarifeye:clarifeye-tag-alerts-extractors-api
+  name: Clarifeye Tag Alerts Extractors API
+  description: >-
+    Run LLM-based alerts over already-extracted tag rows. Update auto-creates
+
+    a new version when version-bearing fields change.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Tag Alerts Extractors
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-tag-alerts-extractors-api-openapi.yml
+- aid: clarifeye:clarifeye-tag-extractors-api
+  name: Clarifeye Tag Extractors API
+  description: >-
+    Apply hierarchical metadata tags to chunks or documents using an LLM.
+
+    Update auto-creates a new `TagExtractorVersion` when version-bearing
+
+    fields change.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - Tag Extractors
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-tag-extractors-api-openapi.yml
+- aid: clarifeye:clarifeye-user-provisioning-api
+  name: Clarifeye User Provisioning API
+  description: >-
+    Pre-create and de-provision org users via an org-scoped API key
+
+    (`Authorization: Bearer <key>`). The organization is resolved from the key.
+  humanURL: https://docs.clarifeye.ai/api-reference
+  baseURL: https://eu.app.clarifeye.ai/api/v1
+  tags:
+  - User Provisioning
+  properties:
+  - type: OpenAPI
+    url: openapi/clarifeye-user-provisioning-api-openapi.yml
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com

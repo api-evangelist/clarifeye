@@ -1,7 +1,101 @@
 openapi: 3.2.0
 info:
-  title: Clarifeye Platform Feedback API
-  description: REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
+  title: Clarifeye Platform API — Full API Documentation Feedback API
+  description: 'Complete REST API reference for the Clarifeye Platform.
+
+
+    Documents every endpoint exposed by the platform — the public surface plus
+
+    the advanced surface: pipeline customization (extraction flows, pipeline
+
+    runs, warehouse tables, document tag/metadata configuration), the pre-MCP
+
+    AI surface (agent settings, playground conversations, conversation-scoped
+
+    feedback views, notifications), and the impersonation header. New AI
+
+    integrations should consume knowledge via MCP rather than the
+
+    conversation/agent-settings endpoints documented here.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token `
+
+    - `Authorization: Bearer `
+
+
+    ## Service accounts and API keys
+
+    Integrations authenticate with an **API key** of a **service account**:
+
+    - `Authorization: Bearer ` (keys start with `cfk_`)
+
+
+    A service account is an ordinary member (role `member`) of one organization that cannot log
+
+    in. Organization admins create it and mint its keys on the organization''s *Service
+
+    accounts* page (`/organizations/{id}/service-accounts/`, `/organization-api-keys/`), and
+
+    give it access to knowledge stores with ordinary store permissions. A key is valid on every
+
+    endpoint and acts as its service account: it reaches exactly the stores, with exactly the
+
+    rights, the account was given. An account can hold several keys (each with its own name,
+
+    optional expiry and revocation), so a key can be rotated without changing identity.
+
+
+    A refused key answers **403** with one of: `Invalid API key.`, `API key revoked.`,
+
+    `API key expired.`, `API key disabled.` (the service account is disabled).
+
+
+    Any valid key may also call `POST /organizations/{id}/provision-user/` and
+
+    `POST /organizations/{id}/deprovision-user/` for its own organization (the `{id}` in the
+
+    path must be the key''s organization). The email domains these may pre-create accounts for
+
+    are configured by Clarifeye on the organization (`allowed_provisioning_domains`).
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (for a person, contact Clarifeye to enable it; org admins grant it to a service account on the organization''s Service accounts page)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+
+    **With an API key** the request fails instead (**403**) whenever impersonation cannot
+
+    happen: missing permission, unknown target, target without access to the store, target that
+
+    is itself a service account, or an endpoint outside a store. A key never silently acts as
+
+    its own service account when impersonation was asked for.'
   version: 1.0.0
   contact:
     name: Clarifeye Support
@@ -15,7 +109,7 @@ security:
 - TokenAuth: []
 tags:
 - name: Feedback
-  description: Submit feedback on conversation messages
+  description: Submit and review feedback — standalone (content-only), agent-submitted (MCP), or linked to a conversation message
 paths:
   /projects/{project_id}/feedbacks/:
     get:
@@ -52,11 +146,39 @@ paths:
         description: Filter by feedback status
         schema:
           $ref: '#/components/schemas/FeedbackStatus'
+      - name: sentiment
+        in: query
+        description: 'Which sentiment bucket to return. `actionable` means negative **or** neutral —
+
+          everything that is work to review. Feedback submitted without `is_positive` is
+
+          neutral, so filtering on `is_positive=false` alone hides it. An unknown value is
+
+          a 400.
+
+          '
+        schema:
+          type: string
+          enum:
+          - actionable
+          - positive
+          - all
       - name: is_positive
         in: query
-        description: Filter by sentiment
+        description: Filter by raw sentiment; overrides `sentiment` when both are given. Prefer `sentiment`.
         schema:
           type: boolean
+      - name: conversation
+        in: query
+        description: Only feedback linked to this playground conversation
+        schema:
+          type: string
+          format: uuid
+      - name: query_id
+        in: query
+        description: Only feedback about this chat message (used to restore thumb state)
+        schema:
+          type: integer
       - name: search
         in: query
         description: Search in feedback text or user email (case-insensitive)
@@ -88,8 +210,14 @@ paths:
     post:
       tags:
       - Feedback
-      summary: Submit feedback on a message
-      description: 'Provide feedback on a specific message in a conversation.
+      summary: Submit feedback
+      description: 'Submit feedback. The simplest form is direct feedback about content:
+
+        just the feedback text and optional `context.additional_details`, with
+
+        no conversation attached. Feedback can also be linked to a playground
+
+        conversation message, or submitted by an agent through MCP.
 
 
         **Impersonation:**
@@ -111,7 +239,7 @@ paths:
         | Neutral | `null` | Neutral or no sentiment |
 
 
-        ## Query ID
+        ## Query ID (conversation feedback only)
 
 
         The `query_id` identifies a specific user query and all related responses.
@@ -139,27 +267,76 @@ paths:
                 feedback:
                   type: string
                   description: Text comment (can be empty for quick feedback)
-                  example: This answer was helpful and accurate
+                  example: We need to cover the EU refund rules in the knowledge base
                 context:
-                  type: object
-                  required:
-                  - conversation_id
-                  - query_id
-                  - source
-                  properties:
-                    conversation_id:
-                      type: string
-                      format: uuid
-                      description: ID of the conversation
-                    query_id:
-                      type: integer
-                      description: Query ID of the message to provide feedback on
-                      example: 0
-                    source:
-                      type: string
-                      enum:
-                      - PlaygroundConversation
-                      description: Source of the feedback
+                  anyOf:
+                  - title: Direct feedback
+                    description: 'Feedback about content itself, not linked to a
+
+                      conversation. Just the feedback text plus optional
+
+                      additional details. Agents submitting through MCP set
+
+                      source=MCP and type=direct_feedback; plain API callers
+
+                      can omit both.'
+                    type: object
+                    additionalProperties: true
+                    properties:
+                      additional_details:
+                        type: string
+                        description: 'Optional extra context provided alongside the
+
+                          feedback. Displayed in the review UI. Do not include
+
+                          user_query for this mode.'
+                      source:
+                        type: string
+                        enum:
+                        - MCP
+                        description: Only set when submitted by an agent through MCP
+                      type:
+                        type: string
+                        enum:
+                        - direct_feedback
+                  - title: Interaction feedback (MCP)
+                    type: object
+                    additionalProperties: true
+                    required:
+                    - source
+                    properties:
+                      source:
+                        type: string
+                        enum:
+                        - MCP
+                      type:
+                        type: string
+                        description: Feedback type (e.g. user_dissatisfaction, missing_playbook)
+                        example: user_dissatisfaction
+                      user_query:
+                        type: string
+                        description: The original user request the agent was answering (verbatim) — not the corrective/feedback message.
+                        example: Generate document X
+                  - title: Conversation feedback
+                    type: object
+                    required:
+                    - conversation_id
+                    - query_id
+                    - source
+                    properties:
+                      conversation_id:
+                        type: string
+                        format: uuid
+                        description: ID of the conversation
+                      query_id:
+                        type: integer
+                        description: Query ID of the message to provide feedback on
+                        example: 0
+                      source:
+                        type: string
+                        enum:
+                        - PlaygroundConversation
+                        description: Source of the feedback
                 is_positive:
                   type:
                   - boolean
@@ -172,6 +349,23 @@ paths:
 
                     '
                   example: true
+            examples:
+              direct_feedback:
+                summary: Feedback with additional details (not linked to a conversation)
+                value:
+                  feedback: We need to cover the EU refund rules in the knowledge base
+                  is_positive: false
+                  context:
+                    additional_details: Several customer calls last week asked about EU refunds and we had nothing to point them to.
+              conversation_feedback:
+                summary: Feedback on a playground conversation message
+                value:
+                  feedback: This answer was helpful and accurate
+                  is_positive: true
+                  context:
+                    source: PlaygroundConversation
+                    conversation_id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                    query_id: 0
       responses:
         '201':
           description: Feedback submitted successfully
@@ -364,6 +558,23 @@ paths:
         description: Filter by conversation status (based on feedback statuses)
         schema:
           $ref: '#/components/schemas/FeedbackStatus'
+      - name: sentiment
+        in: query
+        description: 'Sentiment bucket, applied before the per-conversation counts are computed — so a
+
+          conversation holding only positive feedback disappears from the review buckets
+
+          rather than appearing with a count of zero. `actionable` is negative **or**
+
+          neutral. An unknown value is a 400.
+
+          '
+        schema:
+          type: string
+          enum:
+          - actionable
+          - positive
+          - all
       - name: search
         in: query
         description: Search in feedback text or user email (case-insensitive)
@@ -440,6 +651,14 @@ paths:
                   format: uuid
                   description: ID of the conversation whose feedbacks should be marked as reviewed
                   example: 123e4567-e89b-12d3-a456-426614174000
+                status:
+                  allOf:
+                  - $ref: '#/components/schemas/FeedbackStatus'
+                  description: 'Status to apply. Defaults to `reviewed`; `to_review` reopens the whole
+
+                    conversation. Positive feedback is never touched by this endpoint.
+
+                    '
             example:
               conversation_id: 123e4567-e89b-12d3-a456-426614174000
       responses:
@@ -500,42 +719,46 @@ paths:
             application/json:
               schema:
                 type: object
+                description: 'Counts for the signals dashboard. "Actionable" means negative **or**
+
+                  neutral: positive feedback is praise and never enters the review queue,
+
+                  and a hand-written signal carries no sentiment yet is still work.
+
+                  '
                 properties:
-                  to_review:
+                  total:
                     type: integer
-                    description: Total count of individual feedbacks with status "to_review"
+                    description: Every visible feedback, any status or sentiment
+                    example: 120
+                  needs_review:
+                    type: integer
+                    description: Actionable feedback still at "to_review" — the work tile
                     example: 28
                   reviewed:
                     type: integer
-                    description: Total count of individual feedbacks with status "reviewed"
-                    example: 45
+                    description: Actionable feedback with status "reviewed"
+                    example: 40
+                  dismissed:
+                    type: integer
+                    description: Actionable feedback with status "dismissed"
+                    example: 5
+                  positive:
+                    type: integer
+                    description: Positive feedback, any status
+                    example: 30
+                  mine_to_review:
+                    type: integer
+                    description: Open work assigned to the caller
+                    example: 3
+                  unassigned_to_review:
+                    type: integer
+                    description: Open work with no assignee
+                    example: 20
                   conversations_to_review:
                     type: integer
-                    description: Count of conversations with at least one unreviewed feedback
+                    description: Conversations holding at least one actionable open feedback
                     example: 12
-                  conversations_reviewed:
-                    type: integer
-                    description: Count of conversations where ALL feedbacks are reviewed
-                    example: 8
-                  ungrouped_to_review:
-                    type: integer
-                    description: Count of feedbacks without a conversation that are "to_review"
-                    example: 4
-                  ungrouped_reviewed:
-                    type: integer
-                    description: Count of feedbacks without a conversation that are "reviewed"
-                    example: 2
-              examples:
-                ungrouped:
-                  summary: Individual feedback counts
-                  value:
-                    to_review: 8
-                    reviewed: 15
-                grouped:
-                  summary: Conversation counts
-                  value:
-                    to_review: 3
-                    reviewed: 7
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -544,6 +767,14 @@ paths:
           $ref: '#/components/responses/NotFound'
 components:
   parameters:
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
     Offset:
       name: offset
       in: query
@@ -552,15 +783,6 @@ components:
         type: integer
         default: 0
         minimum: 0
-    Limit:
-      name: limit
-      in: query
-      description: Maximum number of results per page
-      schema:
-        type: integer
-        default: 100
-        minimum: 1
-        maximum: 1000
     ImpersonateEmail:
       name: X-Impersonate-Email
       in: header
@@ -575,23 +797,23 @@ components:
       schema:
         type: string
         format: email
-    ProjectId:
-      name: project_id
-      in: path
-      required: true
-      description: UUID of the project
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
       schema:
-        type: string
-        format: uuid
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
   schemas:
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Error message
-      example:
-        error: User not found
+    FeedbackStatus:
+      type: string
+      enum:
+      - to_review
+      - reviewed
+      - dismissed
+      description: "- `to_review`: Feedback pending review (default). Setting this on a closed\n  feedback reopens it and clears `reviewed_at`/`reviewed_by`.\n- `reviewed`: Feedback has been reviewed\n- `dismissed`: Closed without action (won't fix, or archived praise)\n"
     ConversationFeedbackGroup:
       type: object
       description: A group of feedbacks from the same playground conversation
@@ -626,6 +848,10 @@ components:
           type: integer
           description: Number of feedbacks with status "reviewed" in this conversation
           example: 1
+        dismissed_count:
+          type: integer
+          description: Number of feedbacks with status "dismissed" in this conversation
+          example: 0
         feedbacks:
           type: array
           description: All feedbacks from this conversation, ordered by most recently updated first (by `updated_at` field)
@@ -660,6 +886,27 @@ components:
         feedback_count: 4
         latest_updated_at: '2026-02-26T10:30:00Z'
         has_unreviewed: true
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
     Feedback:
       type: object
       properties:
@@ -689,7 +936,14 @@ components:
           description: Feedback text comment
         context:
           type: object
-          description: Legacy context object (conversation_id is now available as a direct field)
+          additionalProperties: true
+          description: 'Free-form context, echoed back as submitted at creation.
+
+            Conversation feedback carries conversation_id/query_id/source;
+
+            MCP interaction feedback carries user_query; direct feedback may
+
+            carry additional_details.'
           properties:
             conversation_id:
               type: string
@@ -698,8 +952,16 @@ components:
               description: Use the top-level `conversation` field instead
             query_id:
               type: integer
+              description: Query ID of the message the feedback is about (conversation feedback)
             source:
               type: string
+              description: PlaygroundConversation, MCP, or absent for direct API feedback
+            user_query:
+              type: string
+              description: The original user request the agent was answering (MCP interaction feedback)
+            additional_details:
+              type: string
+              description: Extra context provided alongside the feedback (direct feedback)
         is_positive:
           type:
           - boolean
@@ -725,6 +987,48 @@ components:
         suggested_action_data:
           type: object
           description: Auto-generated suggested action data
+        reviewed_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: 'When the feedback was closed. Cleared on reopen. Null for feedback closed
+
+            before this field existed.
+
+            '
+        reviewed_by:
+          type:
+          - object
+          - 'null'
+          description: User who closed it (null when closed by an unattended agent)
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+        query_id:
+          type:
+          - integer
+          - 'null'
+          description: The chat message this feedback is about (computed from context)
+        source:
+          type: string
+          description: 'Surface that raised it (computed from context): `PlaygroundConversation`,
+
+            `MCP`, `Manual`, `ObjectsExplorer`, `cross_store_conversation`, or `api`.
+
+            '
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
     ValidationError:
       type: object
       additionalProperties:
@@ -734,46 +1038,15 @@ components:
       example:
         email:
         - This field is required.
-    PaginatedResponse:
-      type: object
-      properties:
-        count:
-          type: integer
-          description: Total number of results
-        next:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to next page of results
-        previous:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: URL to previous page of results
-        results:
-          type: array
-          items: {}
-    FeedbackStatus:
-      type: string
-      enum:
-      - to_review
-      - reviewed
-      description: '- `to_review`: Feedback pending review (default)
-
-        - `reviewed`: Feedback has been reviewed
-
-        '
   responses:
-    BadRequest:
-      description: Bad request - invalid parameters or request body
+    NotFound:
+      description: Not found - resource does not exist
       content:
         application/json:
           schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ValidationError'
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
     Unauthorized:
       description: Unauthorized - missing or invalid authentication
       content:
@@ -790,21 +1063,44 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             error: You do not have permission to perform this action.
-    NotFound:
-      description: Not found - resource does not exist
+    BadRequest:
+      description: Bad request - invalid parameters or request body
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found.
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ValidationError'
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
-      description: 'Use Authorization: Bearer <token>'
+      description: 'Use `Authorization: Bearer <token>`. The token is either a user token / OAuth access
+
+        token, or a service-account API key (`cfk_...`). A key is valid on every endpoint and
+
+        acts as its service account, an organization member with per-store permissions.
+
+        Refused keys answer 403 with `Invalid API key.`, `API key revoked.`,
+
+        `API key expired.` or `API key disabled.`.
+
+        '
     TokenAuth:
       type: apiKey
       in: header
       name: Authorization
       description: 'Use Authorization: Token <token>'
+x-tagGroups:
+- name: Extractors
+  tags:
+  - Object Extractors
+  - Tag Extractors
+  - Chunks Extractors
+  - Parsing Extractors
+  - Document Filter Extractors
+  - Chunk Tag Filter Extractors
+  - Document Tag Extractors
+  - Tag Alerts Extractors
+  - Object Alerts Extractors
+  - Imported Object Extractors

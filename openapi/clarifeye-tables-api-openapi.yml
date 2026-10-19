@@ -1,7 +1,101 @@
 openapi: 3.2.0
 info:
-  title: Clarifeye Platform Tables API
-  description: REST API for the Clarifeye Platform - Document intelligence and AI-powered analysis.
+  title: Clarifeye Platform API — Full API Documentation Tables API
+  description: 'Complete REST API reference for the Clarifeye Platform.
+
+
+    Documents every endpoint exposed by the platform — the public surface plus
+
+    the advanced surface: pipeline customization (extraction flows, pipeline
+
+    runs, warehouse tables, document tag/metadata configuration), the pre-MCP
+
+    AI surface (agent settings, playground conversations, conversation-scoped
+
+    feedback views, notifications), and the impersonation header. New AI
+
+    integrations should consume knowledge via MCP rather than the
+
+    conversation/agent-settings endpoints documented here.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token `
+
+    - `Authorization: Bearer `
+
+
+    ## Service accounts and API keys
+
+    Integrations authenticate with an **API key** of a **service account**:
+
+    - `Authorization: Bearer ` (keys start with `cfk_`)
+
+
+    A service account is an ordinary member (role `member`) of one organization that cannot log
+
+    in. Organization admins create it and mint its keys on the organization''s *Service
+
+    accounts* page (`/organizations/{id}/service-accounts/`, `/organization-api-keys/`), and
+
+    give it access to knowledge stores with ordinary store permissions. A key is valid on every
+
+    endpoint and acts as its service account: it reaches exactly the stores, with exactly the
+
+    rights, the account was given. An account can hold several keys (each with its own name,
+
+    optional expiry and revocation), so a key can be rotated without changing identity.
+
+
+    A refused key answers **403** with one of: `Invalid API key.`, `API key revoked.`,
+
+    `API key expired.`, `API key disabled.` (the service account is disabled).
+
+
+    Any valid key may also call `POST /organizations/{id}/provision-user/` and
+
+    `POST /organizations/{id}/deprovision-user/` for its own organization (the `{id}` in the
+
+    path must be the key''s organization). The email domains these may pre-create accounts for
+
+    are configured by Clarifeye on the organization (`allowed_provisioning_domains`).
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (for a person, contact Clarifeye to enable it; org admins grant it to a service account on the organization''s Service accounts page)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+
+    **With an API key** the request fails instead (**403**) whenever impersonation cannot
+
+    happen: missing permission, unknown target, target without access to the store, target that
+
+    is itself a service account, or an endpoint outside a store. A key never silently acts as
+
+    its own service account when impersonation was asked for.'
   version: 1.0.0
   contact:
     name: Clarifeye Support
@@ -17,36 +111,56 @@ tags:
 - name: Tables
   description: Perform CRUD operations on warehouse tables
 paths:
-  /projects/{project_id}/tables/{table_id}/data-operations/:
+  /projects/{project_id}/tables/{table_id}/extractor-table-retrieval/:
     post:
       tags:
       - Tables
-      summary: Execute data operations
-      description: 'Execute CRUD operations on table data.
+      summary: Read extractor output rows
+      description: 'Read-only retrieval of rows produced by a specific
+
+        `ExtractorVersion`, joining the warehouse table with
+
+        `HydrationComputation` records.
 
 
-        **Operations:**
+        **What it returns:** rows from `{table_id}` whose `computation_hash`
 
-        - `read`: Retrieve records with optional filtering and pagination
+        belongs to a `HydrationComputation` with the given
 
-        - `create`: Insert new records
+        `extractor_version_id` (and matching `lineage`, when provided). By
 
-        - `update`: Update existing records (use `override` for full replacement)
+        default only rows still considered "live" (`deleted IS NULL` on the
 
-        - `delete`: Remove records matching filters
+        physical table and the hydration computation not soft-deleted) are
+
+        returned.
+
+
+        **Write operations are not supported** by this endpoint.
 
 
         **Filtering:**
 
-        Use the `filters` parameter to filter records by field values.
+        Keys are column names with
 
-        Example: `{"document_id": "550e8400-e29b-41d4-a716-446655440000"}`
+        optional Django-style lookups (`__in`, `__gte`, `__lte`, `__isnull`).
+
+        The frontend-only key `processing_options`, if present, is ignored
+
+        server-side.
 
 
-        **Column Selection:**
+        **Lineage:**
 
-        Use the `columns` parameter to specify which fields to return in the response.'
-      operationId: dataOperations
+        Optional list of `{node_id, computation_hash}` entries that narrows
+
+        results to a specific upstream computation path in the extraction-flow
+
+        DAG. Omit to retrieve all rows produced by the extractor version.
+
+
+        **Permissions:** `CAN_VIEW_DATA` on the project.'
+      operationId: extractorTableRetrieval
       parameters:
       - $ref: '#/components/parameters/ProjectId'
       - $ref: '#/components/parameters/TableId'
@@ -55,67 +169,238 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DataOperationRequest'
+              $ref: '#/components/schemas/ExtractorTableRetrievalRequest'
             examples:
-              read:
-                summary: Read with filters
+              read_objects_for_document:
+                summary: All objects produced by an extractor version for one document
+                description: 'Fetch every row produced by `extractor_version_id` for a
+
+                  single document — the typical query for displaying the
+
+                  outputs of one extraction step on one file.
+
+                  '
                 value:
-                  operation: read
+                  extractor_version_id: d2846094-89fe-4db9-8f39-14607da40063
                   filters:
-                    document_id: 550e8400-e29b-41d4-a716-446655440000
+                    document_id: 82c71787-37e9-42ca-a995-982e2ed53169
                   columns:
                   - id
-                  - content
+                  - json_object
+                  - object_bbox
                   - document_id
-                  limit: 50
+                  - min_page
+                  - max_page
+                  limit: 500
                   offset: 0
-              create:
-                summary: Create records
+              read_single_object_by_id:
+                summary: Fetch one row by primary key
                 value:
-                  operation: create
-                  data:
-                  - field1: value1
-                    field2: value2
-              update:
-                summary: Update records
-                value:
-                  operation: update
+                  extractor_version_id: d2846094-89fe-4db9-8f39-14607da40063
                   filters:
-                    id: 550e8400-e29b-41d4-a716-446655440000
-                  data:
-                  - field1: updated_value
-                  override: false
-              delete:
-                summary: Delete by filter
+                    document_id: 82c71787-37e9-42ca-a995-982e2ed53169
+                    id: 02a29e44-ccc8-4e39-b608-82b8b9509cf5
+                  columns:
+                  - id
+                  - json_object
+                  - object_bbox
+                  - document_id
+                  - min_page
+                  - max_page
+                  limit: 1
+                  offset: 0
+              read_with_page_range:
+                summary: Filter on a page range
+                description: 'Restrict the result set to rows whose bbox falls on page 1
+
+                  (using Django-style `__gte` / `__lte` lookups).
+
+                  '
                 value:
-                  operation: delete
+                  extractor_version_id: d2846094-89fe-4db9-8f39-14607da40063
                   filters:
-                    document_id: 550e8400-e29b-41d4-a716-446655440000
+                    document_id: 82c71787-37e9-42ca-a995-982e2ed53169
+                    min_page__gte: 1
+                    max_page__lte: 1
+                  columns:
+                  - id
+                  - json_object
+                  - object_bbox
+                  - document_id
+                  - min_page
+                  - max_page
+                  limit: 500
+                  offset: 0
+              read_with_lineage:
+                summary: Narrow by upstream lineage
+                description: 'Only return rows produced via a specific upstream
+
+                  computation path — useful when the same extractor version
+
+                  has multiple branches in the extraction-flow DAG.
+
+                  '
+                value:
+                  extractor_version_id: d2846094-89fe-4db9-8f39-14607da40063
+                  filters:
+                    document_id: 82c71787-37e9-42ca-a995-982e2ed53169
+                  lineage:
+                  - node_id: 7a3f2c4e-1c1d-4a5f-9b8a-1e2d3c4b5a60
+                    computation_hash: 4b2f8c1d9e0a7f6b5c4d3e2f1a0b9c8d
+                  columns:
+                  - id
+                  - json_object
+                  limit: 100
+                  offset: 0
+              read_include_deleted:
+                summary: Include soft-deleted rows
+                description: 'Return rows whose hydration computation has been
+
+                  soft-deleted (e.g. for audit / debugging).
+
+                  '
+                value:
+                  extractor_version_id: d2846094-89fe-4db9-8f39-14607da40063
+                  filters:
+                    document_id: 82c71787-37e9-42ca-a995-982e2ed53169
+                  include_deleted_rows: true
+                  columns:
+                  - id
+                  - json_object
+                  - document_id
+                  limit: 500
+                  offset: 0
       responses:
         '200':
-          description: Operation executed successfully
+          description: Rows retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataOperationResponse'
+                $ref: '#/components/schemas/ExtractorTableRetrievalResponse'
         '400':
-          description: Invalid operation or missing required fields
+          description: 'Bad request — for example `extractor_version_id` is missing, or
+
+            `lineage` is not a list.
+
+            '
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataOperationErrorResponse'
+                $ref: '#/components/schemas/Error'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataOperationErrorResponse'
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
+    ExtractorTableRetrievalLineageEntry:
+      type: object
+      description: 'A single step in the upstream lineage path of a `HydrationComputation`.
+
+        Each entry identifies an upstream extraction-flow node and the exact
+
+        `computation_hash` produced by that node.
+
+        '
+      properties:
+        node_id:
+          type: string
+          format: uuid
+          description: UUID of the upstream extraction-flow node.
+        computation_hash:
+          type: string
+          description: Computation hash produced by `node_id`.
+      required:
+      - node_id
+      - computation_hash
+    ExtractorTableRetrievalRequest:
+      type: object
+      required:
+      - extractor_version_id
+      properties:
+        extractor_version_id:
+          type: string
+          format: uuid
+          description: 'UUID of the `ExtractorVersion` whose output rows should be
+
+            returned. Rows are joined with `HydrationComputation` records on
+
+            their `computation_hash`.
+
+            '
+        filters:
+          type: object
+          description: 'Column-level filters. Keys are column names with optional
+
+            Django-style lookups (e.g. `document_id`, `min_page__gte`,
+
+            `max_page__lte`, `deleted__isnull`). The reserved key
+
+            `processing_options` (used by the frontend for display only) is
+
+            stripped server-side.
+
+            '
+          additionalProperties: true
+          example:
+            document_id: 82c71787-37e9-42ca-a995-982e2ed53169
+            min_page__gte: 1
+            max_page__lte: 1
+        columns:
+          type: array
+          description: 'Column names to return in each row. Omit (or send `[]`) to return
+
+            every column of the underlying physical table.
+
+            '
+          items:
+            type: string
+          example:
+          - id
+          - json_object
+          - object_bbox
+          - document_id
+          - min_page
+          - max_page
+        lineage:
+          type:
+          - array
+          - 'null'
+          description: 'Optional list of `{node_id, computation_hash}` entries restricting
+
+            the result set to a specific upstream computation path. Send `null`
+
+            or omit to retrieve all rows for the extractor version.
+
+            '
+          items:
+            $ref: '#/components/schemas/ExtractorTableRetrievalLineageEntry'
+        include_deleted_rows:
+          type: boolean
+          default: false
+          description: 'When `true`, also return rows whose `HydrationComputation` has
+
+            been soft-deleted (`deleted_at IS NOT NULL`) and rows where the
+
+            table''s `deleted` flag is set. Defaults to `false`.
+
+            '
+        limit:
+          type: integer
+          default: 100
+          description: Maximum number of rows to return.
+        offset:
+          type: integer
+          default: 0
+          description: Number of rows to skip for pagination.
     Error:
       type: object
       properties:
@@ -124,115 +409,38 @@ components:
           description: Error message
       example:
         error: User not found
-    DataOperationResponse:
+    ExtractorTableRetrievalResponse:
       type: object
-      description: Response from a data operation
-      properties:
-        data:
-          type: array
-          description: Array of result records (for read operations)
-          items:
-            type: object
-            additionalProperties: true
-        count:
-          type: integer
-          description: Total number of affected/returned records
-        success:
-          type: boolean
-          description: Whether the operation completed successfully
-    DataOperationErrorResponse:
-      type: object
-      description: Error response from a data operation
-      properties:
-        errors:
-          type: array
-          description: Array of error messages
-          items:
-            type: string
-        error:
-          type: string
-          description: Single error message
-    DataOperationType:
-      type: string
-      enum:
-      - read
-      - create
-      - update
-      - delete
-      description: 'Type of data operation:
+      description: 'Wrapper around the paginated list of rows produced by the requested
 
-        - `read`: Retrieve records with optional filtering
-
-        - `create`: Insert new records
-
-        - `update`: Update existing records
-
-        - `delete`: Remove records
+        `ExtractorVersion`.
 
         '
-    DataOperationRequest:
-      type: object
-      required:
-      - operation
       properties:
-        operation:
-          $ref: '#/components/schemas/DataOperationType'
-        data:
-          type: array
-          description: Array of records for create/update operations
-          items:
-            type: object
-            additionalProperties: true
-        filters:
+        result:
           type: object
-          description: 'Dictionary of field-value pairs to filter records.
-
-            Example: `{"document_id": "550e8400-e29b-41d4-a716-446655440000"}`
-
-            '
-          additionalProperties: true
-        columns:
-          type: array
-          description: List of column names to include in the response
-          items:
-            type: string
-          example:
-          - id
-          - content
-          - document_id
-        override:
-          type: boolean
-          description: For update operations, whether to fully replace records
-          default: false
-        table_version_id:
-          type: string
-          format: uuid
-          description: Optional UUID to target a specific table version
-        limit:
-          type: integer
-          description: Maximum number of records to return (for read operations)
-          default: 100
-        offset:
-          type: integer
-          description: Number of records to skip for pagination (for read operations)
-          default: 0
-  responses:
-    Unauthorized:
-      description: Unauthorized - missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Authentication credentials were not provided.
-    Forbidden:
-      description: Forbidden - insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: You do not have permission to perform this action.
+          properties:
+            results:
+              type: array
+              description: The rows matching the request.
+              items:
+                type: object
+                additionalProperties: true
+            total:
+              type: integer
+              description: Total number of matching rows (ignoring `limit` / `offset`).
+            limit:
+              type: integer
+              description: Echo of the `limit` used to compute this page.
+            offset:
+              type: integer
+              description: Echo of the `offset` used to compute this page.
+            has_next:
+              type: boolean
+              description: True when `offset + limit < total`.
+            has_previous:
+              type: boolean
+              description: True when `offset > 0`.
   parameters:
     ProjectId:
       name: project_id
@@ -250,13 +458,61 @@ components:
       schema:
         type: string
         format: uuid
+  responses:
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
-      description: 'Use Authorization: Bearer <token>'
+      description: 'Use `Authorization: Bearer <token>`. The token is either a user token / OAuth access
+
+        token, or a service-account API key (`cfk_...`). A key is valid on every endpoint and
+
+        acts as its service account, an organization member with per-store permissions.
+
+        Refused keys answer 403 with `Invalid API key.`, `API key revoked.`,
+
+        `API key expired.` or `API key disabled.`.
+
+        '
     TokenAuth:
       type: apiKey
       in: header
       name: Authorization
       description: 'Use Authorization: Token <token>'
+x-tagGroups:
+- name: Extractors
+  tags:
+  - Object Extractors
+  - Tag Extractors
+  - Chunks Extractors
+  - Parsing Extractors
+  - Document Filter Extractors
+  - Chunk Tag Filter Extractors
+  - Document Tag Extractors
+  - Tag Alerts Extractors
+  - Object Alerts Extractors
+  - Imported Object Extractors

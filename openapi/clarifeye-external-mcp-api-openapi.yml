@@ -1,0 +1,716 @@
+openapi: 3.2.0
+info:
+  title: Clarifeye Platform API — Full API Documentation External…
+  description: 'Complete REST API reference for the Clarifeye Platform.
+
+
+    Documents every endpoint exposed by the platform — the public surface plus
+
+    the advanced surface: pipeline customization (extraction flows, pipeline
+
+    runs, warehouse tables, document tag/metadata configuration), the pre-MCP
+
+    AI surface (agent settings, playground conversations, conversation-scoped
+
+    feedback views, notifications), and the impersonation header. New AI
+
+    integrations should consume knowledge via MCP rather than the
+
+    conversation/agent-settings endpoints documented here.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token `
+
+    - `Authorization: Bearer `
+
+
+    ## Service accounts and API keys
+
+    Integrations authenticate with an **API key** of a **service account**:
+
+    - `Authorization: Bearer ` (keys start with `cfk_`)
+
+
+    A service account is an ordinary member (role `member`) of one organization that cannot log
+
+    in. Organization admins create it and mint its keys on the organization''s *Service
+
+    accounts* page (`/organizations/{id}/service-accounts/`, `/organization-api-keys/`), and
+
+    give it access to knowledge stores with ordinary store permissions. A key is valid on every
+
+    endpoint and acts as its service account: it reaches exactly the stores, with exactly the
+
+    rights, the account was given. An account can hold several keys (each with its own name,
+
+    optional expiry and revocation), so a key can be rotated without changing identity.
+
+
+    A refused key answers **403** with one of: `Invalid API key.`, `API key revoked.`,
+
+    `API key expired.`, `API key disabled.` (the service account is disabled).
+
+
+    Any valid key may also call `POST /organizations/{id}/provision-user/` and
+
+    `POST /organizations/{id}/deprovision-user/` for its own organization (the `{id}` in the
+
+    path must be the key''s organization). The email domains these may pre-create accounts for
+
+    are configured by Clarifeye on the organization (`allowed_provisioning_domains`).
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (for a person, contact Clarifeye to enable it; org admins grant it to a service account on the organization''s Service accounts page)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+
+    **With an API key** the request fails instead (**403**) whenever impersonation cannot
+
+    happen: missing permission, unknown target, target without access to the store, target that
+
+    is itself a service account, or an endpoint outside a store. A key never silently acts as
+
+    its own service account when impersonation was asked for.'
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: External MCP
+paths:
+  /projects/{project_id}/mcp-servers/:
+    get:
+      tags:
+      - External MCP
+      summary: List a knowledge store's external MCP servers
+      description: Project members can read; only project admins can create/edit.
+      operationId: listMcpServers
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Servers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MCPServer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+      - External MCP
+      summary: Register an external MCP server (admin)
+      description: Creates a server and synchronously syncs its tool catalog (all tools start disabled). ``url`` and ``auth_mode`` are immutable after creation. The ``oauth_client_secret`` is write-only. API keys are per-user (set on the account endpoint), never on the server.
+      operationId: createMcpServer
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MCPServerCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MCPServer'
+        '400':
+          description: Validation error (reserved name/URL, bad URL, unknown tool)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/mcp-servers/{id}/:
+    patch:
+      tags:
+      - External MCP
+      summary: Update an external MCP server (admin)
+      description: Edit name, enable/disable, tool allowlist, or rotate the OAuth client secret. ``url`` and ``auth_mode`` are immutable.
+      operationId: updateMcpServer
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MCPServerUpdate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MCPServer'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+      - External MCP
+      summary: Remove an external MCP server (admin)
+      operationId: deleteMcpServer
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/mcp-servers/{id}/sync_tools/:
+    post:
+      tags:
+      - External MCP
+      summary: Re-sync an MCP server's tool catalog (admin)
+      description: Re-fetches the server's tools using the admin's own credential (OAuth) or the shared API key. Newly discovered tools start disabled; removed tools drop out of the allowlist. Rate limited.
+      operationId: syncMcpServerTools
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Updated server with refreshed catalog
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MCPServer'
+        '400':
+          description: Sync failed (e.g. admin_connection_required for an OAuth server not yet connected)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/mcp-servers/connection-status/:
+    get:
+      tags:
+      - External MCP
+      summary: Current user's connection status per enabled server
+      description: Drives the connect banner and empty-state connector prompt. Separate from the job-execution poll path.
+      operationId: mcpServerConnectionStatus
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: surface
+        in: query
+        required: false
+        description: Restrict to servers enabled for this agent surface.
+        schema:
+          type: string
+          enum:
+          - chat
+          - tasks
+          - work_with_clara
+      responses:
+        '200':
+          description: Per-server status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    server_id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    url:
+                      type: string
+                    auth_mode:
+                      type: string
+                      enum:
+                      - oauth
+                      - api_key
+                      - none
+                    requires_user_connection:
+                      type: boolean
+                    user_connection_status:
+                      type:
+                      - string
+                      - 'null'
+                      enum:
+                      - connected
+                      - expired
+                      - revoked
+                      - error
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /users/me/mcp-connections/:
+    get:
+      tags:
+      - External MCP
+      summary: List my external MCP connections
+      description: The current user's OAuth connections to external MCP servers, one per distinct server URL, grouped across all knowledge stores the user belongs to. Never returns tokens or client secrets.
+      operationId: listUserMcpConnections
+      responses:
+        '200':
+          description: Connections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserMCPConnection'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /users/me/mcp-connections/initiate/:
+    post:
+      tags:
+      - External MCP
+      summary: Begin an external MCP OAuth connection
+      description: Starts the OAuth authorization-code flow for an enabled OAuth MCP server the user can access. Returns the authorization URL for the frontend to open in a popup. Rate limited.
+      operationId: initiateUserMcpConnection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - url
+              - redirect_back_to
+              properties:
+                url:
+                  type: string
+                  description: MCP server URL (must match an enabled OAuth server in one of the user's stores).
+                redirect_back_to:
+                  type: string
+                  description: Same-origin frontend URL to return to after the dance (validated against the redirect allowlist).
+      responses:
+        '200':
+          description: Authorization URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authorize_url:
+                    type: string
+        '400':
+          description: Unsafe redirect, unknown server, or discovery/registration failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /users/me/mcp-connections/{id}/reconnect/:
+    post:
+      tags:
+      - External MCP
+      summary: Re-authorize an existing MCP connection
+      operationId: reconnectUserMcpConnection
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - redirect_back_to
+              properties:
+                redirect_back_to:
+                  type: string
+      responses:
+        '200':
+          description: Authorization URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authorize_url:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/me/mcp-connections/set-api-key/:
+    post:
+      tags:
+      - External MCP
+      summary: Set the current user's API key for an api_key MCP server
+      description: Stores the user's own API key for an enabled api_key server in one of their knowledge stores (encrypted at rest) and pushes it to their vault. Credentials are per-user; there is no shared store-level key.
+      operationId: setUserMcpApiKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - url
+              - api_key
+              properties:
+                url:
+                  type: string
+                api_key:
+                  type: string
+                  writeOnly: true
+      responses:
+        '200':
+          description: The updated connection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMCPConnection'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /users/me/mcp-connections/{id}/revoke/:
+    post:
+      tags:
+      - External MCP
+      summary: Revoke an external MCP connection
+      description: Best-effort remote token revocation, removes the Anthropic vault credential, and marks the connection revoked.
+      operationId: revokeUserMcpConnection
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Revoked connection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMCPConnection'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+  responses:
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ValidationError'
+  schemas:
+    UserMCPConnection:
+      type: object
+      description: A user's credential for one external MCP server URL (account-scoped, no secrets exposed). All non-`none` modes are per-user. A synthesized row (a server the user could connect but hasn't) has a null `id` and status `not_connected`.
+      properties:
+        id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        normalized_url:
+          type: string
+        status:
+          type: string
+          enum:
+          - connected
+          - expired
+          - revoked
+          - error
+          - not_connected
+        auth_mode:
+          type:
+          - string
+          - 'null'
+          enum:
+          - oauth
+          - api_key
+          - none
+          description: Auth mode of the servers using this URL; null for an orphaned connection.
+        has_api_key:
+          type: boolean
+          description: True when this is an api_key connection with a key stored.
+        server_names:
+          type: array
+          items:
+            type: string
+          description: Names of the enabled servers (across the user's stores) that use this URL.
+        store_names:
+          type: array
+          items:
+            type: string
+        in_use:
+          type: boolean
+          description: False when no enabled server in any of the user's stores still references this URL.
+        connected_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        last_refreshed_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        token_expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+    MCPServerUpdate:
+      type: object
+      description: Editable fields for a server. ``url`` and ``auth_mode`` are immutable and cannot be changed after creation. The client secret is write-only.
+      properties:
+        name:
+          type: string
+        is_enabled:
+          type: boolean
+        enabled_for_chat:
+          type: boolean
+        enabled_for_tasks:
+          type: boolean
+        enabled_for_work_with_clara:
+          type: boolean
+        enabled_tools:
+          type: array
+          items:
+            type: string
+        oauth_client_id:
+          type: string
+        oauth_client_secret:
+          type: string
+          writeOnly: true
+    MCPServerCreate:
+      type: object
+      description: Fields for creating a server. The client secret is write-only.
+      required:
+      - name
+      - url
+      - auth_mode
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+        auth_mode:
+          type: string
+          enum:
+          - oauth
+          - api_key
+          - none
+        is_enabled:
+          type: boolean
+        enabled_for_chat:
+          type: boolean
+        enabled_for_tasks:
+          type: boolean
+        enabled_for_work_with_clara:
+          type: boolean
+        enabled_tools:
+          type: array
+          items:
+            type: string
+        oauth_client_id:
+          type: string
+        oauth_client_secret:
+          type: string
+          writeOnly: true
+    MCPServer:
+      type: object
+      description: A knowledge-store-level external MCP server registration. Secrets are never returned.
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        url:
+          type: string
+          description: Immutable after creation.
+        auth_mode:
+          type: string
+          enum:
+          - oauth
+          - api_key
+          - none
+        is_enabled:
+          type: boolean
+        enabled_for_chat:
+          type: boolean
+          description: Available to internal playground chat agents (default true).
+        enabled_for_tasks:
+          type: boolean
+          description: Available to CMA Task agents (default true).
+        enabled_for_work_with_clara:
+          type: boolean
+          description: Available to Work-with-Clara agents (default true).
+        tool_catalog:
+          type: array
+          description: Synced tools; each is {name, description, annotations, input_schema}.
+          items:
+            type: object
+        enabled_tools:
+          type: array
+          description: Allowlist of tool names exposed to agents (all disabled by default).
+          items:
+            type: string
+        oauth_client_id:
+          type: string
+        last_synced_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        last_sync_error:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    ValidationError:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email:
+        - This field is required.
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use `Authorization: Bearer <token>`. The token is either a user token / OAuth access
+
+        token, or a service-account API key (`cfk_...`). A key is valid on every endpoint and
+
+        acts as its service account, an organization member with per-store permissions.
+
+        Refused keys answer 403 with `Invalid API key.`, `API key revoked.`,
+
+        `API key expired.` or `API key disabled.`.
+
+        '
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'
+x-tagGroups:
+- name: Extractors
+  tags:
+  - Object Extractors
+  - Tag Extractors
+  - Chunks Extractors
+  - Parsing Extractors
+  - Document Filter Extractors
+  - Chunk Tag Filter Extractors
+  - Document Tag Extractors
+  - Tag Alerts Extractors
+  - Object Alerts Extractors
+  - Imported Object Extractors

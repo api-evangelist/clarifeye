@@ -1,0 +1,833 @@
+openapi: 3.2.0
+info:
+  title: Clarifeye Platform API — Full API Documentation Projects API
+  description: 'Complete REST API reference for the Clarifeye Platform.
+
+
+    Documents every endpoint exposed by the platform — the public surface plus
+
+    the advanced surface: pipeline customization (extraction flows, pipeline
+
+    runs, warehouse tables, document tag/metadata configuration), the pre-MCP
+
+    AI surface (agent settings, playground conversations, conversation-scoped
+
+    feedback views, notifications), and the impersonation header. New AI
+
+    integrations should consume knowledge via MCP rather than the
+
+    conversation/agent-settings endpoints documented here.
+
+
+    ## Authentication
+
+    All endpoints require authentication. Include the Authorization header in every request using either format:
+
+    - `Authorization: Token `
+
+    - `Authorization: Bearer `
+
+
+    ## Service accounts and API keys
+
+    Integrations authenticate with an **API key** of a **service account**:
+
+    - `Authorization: Bearer ` (keys start with `cfk_`)
+
+
+    A service account is an ordinary member (role `member`) of one organization that cannot log
+
+    in. Organization admins create it and mint its keys on the organization''s *Service
+
+    accounts* page (`/organizations/{id}/service-accounts/`, `/organization-api-keys/`), and
+
+    give it access to knowledge stores with ordinary store permissions. A key is valid on every
+
+    endpoint and acts as its service account: it reaches exactly the stores, with exactly the
+
+    rights, the account was given. An account can hold several keys (each with its own name,
+
+    optional expiry and revocation), so a key can be rotated without changing identity.
+
+
+    A refused key answers **403** with one of: `Invalid API key.`, `API key revoked.`,
+
+    `API key expired.`, `API key disabled.` (the service account is disabled).
+
+
+    Any valid key may also call `POST /organizations/{id}/provision-user/` and
+
+    `POST /organizations/{id}/deprovision-user/` for its own organization (the `{id}` in the
+
+    path must be the key''s organization). The email domains these may pre-create accounts for
+
+    are configured by Clarifeye on the organization (`allowed_provisioning_domains`).
+
+
+    ## Impersonation
+
+
+    Certain endpoints support user impersonation for creating or listing data on behalf of other users.
+
+    This is useful for integrating external systems that need to attribute actions to specific users.
+
+
+    **Header:** `X-Impersonate-Email`
+
+
+    **Required Permission:** `CAN_IMPERSONATE_OTHER_USERS` (for a person, contact Clarifeye to enable it; org admins grant it to a service account on the organization''s Service accounts page)
+
+
+    **Behavior:**
+
+    - If the header is provided and the impersonator has the required permission, the action is performed as the target user
+
+    - If the target user is not found, the request proceeds as the original authenticated user
+
+    - If the target user does not have access to the project, the request proceeds as the original authenticated user
+
+    - If the impersonator lacks the `CAN_IMPERSONATE_OTHER_USERS` permission, the header is ignored
+
+
+    **With an API key** the request fails instead (**403**) whenever impersonation cannot
+
+    happen: missing permission, unknown target, target without access to the store, target that
+
+    is itself a service account, or an endpoint outside a store. A key never silently acts as
+
+    its own service account when impersonation was asked for.'
+  version: 1.0.0
+  contact:
+    name: Clarifeye Support
+servers:
+- url: https://eu.app.clarifeye.ai/api/v1
+  description: EU
+- url: https://us.app.clarifeye.ai/api/v1
+  description: US
+security:
+- BearerAuth: []
+- TokenAuth: []
+tags:
+- name: Projects
+paths:
+  /projects/{project_id}/home-summary/:
+    get:
+      tags:
+      - Projects
+      summary: Home dashboard summary
+      description: 'Everything the Standard-interface Home dashboard needs in one call: document
+
+        count and last-added timestamp, plus the caller''s open (pending or in-progress)
+
+        interviews. For project admins the response additionally includes the team''s
+
+        pending interviews and the count of feedbacks awaiting review; these fields are
+
+        omitted entirely for non-admin members. Available to all project members.'
+      operationId: getHomeSummary
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - is_admin
+                - doc_count
+                - artifact_count
+                - member_count
+                - my_interviews
+                properties:
+                  is_admin:
+                    type: boolean
+                    description: Whether the caller has admin permissions on the project.
+                  doc_count:
+                    type: integer
+                    description: Number of active documents in the project.
+                  artifact_count:
+                    type: integer
+                    description: 'Total filled knowledge artifacts: every playbook and design template,
+
+                      plus one for each non-empty singleton artifact (brief, general
+
+                      knowledge, library description, mental map).
+
+                      '
+                  member_count:
+                    type: integer
+                    description: Number of registered project members (pending invitees excluded).
+                  my_interviews:
+                    type: array
+                    description: 'Every interview the caller still has to finish, oldest first:
+
+                      interviews assigned to them plus interview-type conversations they
+
+                      created without an assignee (self-run open interviews and the
+
+                      onboarding interview). Excludes completed interviews and plain
+
+                      conversations.
+
+                      '
+                    items:
+                      $ref: '#/components/schemas/HomeSummaryInterview'
+                  team_pending_interviews:
+                    type: array
+                    description: 'Admin only. Pending interviews assigned to other members or pending
+
+                      invitees, oldest first. Omitted for non-admins.
+
+                      '
+                    items:
+                      allOf:
+                      - $ref: '#/components/schemas/HomeSummaryInterview'
+                      - type: object
+                        properties:
+                          assigned_to_email:
+                            type:
+                            - string
+                            - 'null'
+                          assigned_to_invite_email:
+                            type:
+                            - string
+                            - 'null'
+                          invite_config:
+                            allOf:
+                            - $ref: '#/components/schemas/InterviewInviteConfig'
+                            description: 'Email/reminder settings + scheduler state, same shape as on
+
+                              interview objects. Null for rows without a config.
+
+                              '
+                  feedbacks_to_review:
+                    type: integer
+                    description: Admin only. Count of feedbacks with status `to_review`. Omitted for non-admins.
+                  pending_invite_count:
+                    type: integer
+                    description: 'Admin only. Count of pending (not yet accepted or cancelled) invites to
+
+                      the project. Drives the Home "invite your team" prompt; accepted invites
+
+                      are already reflected in `member_count`. Omitted for non-admins.
+
+                      '
+                  team_interview_count:
+                    type: integer
+                    description: 'Admin only. Interviews ever assigned to someone other than the caller
+
+                      (a member or a pending invitee), any status, excluding onboarding.
+
+                      Zero means the caller has never assigned an interview to their team —
+
+                      Home shows an "assign interviews" prompt. Omitted for non-admins.
+
+                      '
+                  signal_count:
+                    type: integer
+                    description: 'Admin only. Count of feedbacks ever recorded for the project, any
+
+                      status (`feedbacks_to_review` only counts open ones). Zero means no
+
+                      signal has ever existed — Home shows a "put your knowledge to work"
+
+                      prompt. Omitted for non-admins.
+
+                      '
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/favourite/:
+    post:
+      tags:
+      - Projects
+      summary: Favourite a knowledge store
+      description: 'Mark the project (knowledge store) as a favourite of the calling user.
+
+        Favourites are per-user: they sort the store first in the project list
+
+        (`is_favourite` is exposed on each listed project) and star it in the
+
+        knowledge-store switcher. Idempotent — favouriting an already-favourited
+
+        store succeeds without change. Available to all project members.'
+      operationId: favouriteProject
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: The updated project, with `is_favourite` set to `true`.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/unfavourite/:
+    post:
+      tags:
+      - Projects
+      summary: Unfavourite a knowledge store
+      description: 'Remove the calling user''s favourite mark from the project (knowledge
+
+        store). Idempotent — unfavouriting a store that is not favourited
+
+        succeeds without change. Available to all project members.'
+      operationId: unfavouriteProject
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: The updated project, with `is_favourite` set to `false`.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/knowledge-changelog/:
+    get:
+      tags:
+      - Projects
+      summary: List knowledge changelog entries
+      description: 'List the project''s knowledge changelog entries, most recent first. Each entry
+
+        records a change to the project''s knowledge (artifact edits, API ontology/playbook
+
+        changes, document uploads/syncs). Read-only. Admin-only: the feed aggregates
+
+        edits by all project members, so it requires CAN_PERFORM_ADMIN_ACTIONS.'
+      operationId: listKnowledgeChangelog
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      - name: artifact_slug
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Only entries about this artifact (matches `details.artifact_slug`).
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/KnowledgeChangelogEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /projects/{project_id}/list-knowledge/:
+    get:
+      tags:
+      - Projects
+      summary: List knowledge artifact catalog
+      description: 'Catalog overview for a knowledge store: `cohesion_guide`, `document_count`
+
+        (number of active documents in the library), plus `artifacts[]` (one row
+
+        per in-scope artifact with slug, title, semantic_type, technical_type, group,
+
+        purpose, and either full LIST `content` or a LIST `content_overview` summary).
+
+        Knowledge Store tags/objects are served separately by `library-tags-objects`.'
+      operationId: listProjectKnowledge
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: snapshot_id
+        in: query
+        required: false
+        description: 'Optional artifact snapshot to read from. Defaults to the project''s
+
+          live in-scope-latest snapshot.
+
+          '
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cohesion_guide:
+                    type: string
+                  document_count:
+                    type: integer
+                    description: Number of documents currently in the library (active only).
+                  artifacts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        slug:
+                          type: string
+                        title:
+                          type: string
+                        semantic_type:
+                          type: string
+                        technical_type:
+                          type: string
+                        group:
+                          type: string
+                          description: 'Catalog section. Predefined artifacts group by function
+
+                            ("Project Management", "Knowledge capture", "AI orchestration",
+
+                            "Data & documents"); custom ones report the curator''s group
+
+                            name — which may be one of those standard names — and "Other"
+
+                            when ungrouped. Derived, unlike the raw `group` column on
+
+                            ArtifactSummary.
+
+                            '
+                        purpose:
+                          type: string
+                        content:
+                          description: Full LIST payload when the type has no summary (e.g. markdown)
+                        content_overview:
+                          description: LIST summary when the type exposes one (playbooks, mental map, …)
+                additionalProperties: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/library-tags-objects/:
+    get:
+      tags:
+      - Projects
+      summary: Get warehouse tags and object schema
+      description: 'Returns markdown sections `tag_hierarchies`, `document_tags`, and
+
+        `knowledge_graph_objects` for retrieval filtering.'
+      operationId: libraryTagsObjects
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/read-write-markdown-artifact/:
+    post:
+      tags:
+      - Projects
+      summary: Read or edit a markdown catalog artifact
+      description: 'Invoke the markdown artifact tool. Body must include `slug` (in-scope markdown
+
+        artifact) plus tool kwargs (`action=get|edit`, …). Reads require view permission;
+
+        writes require admin.'
+      operationId: readWriteMarkdownArtifact
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - slug
+              - action
+              properties:
+                slug:
+                  type: string
+                action:
+                  type: string
+              additionalProperties: true
+      responses:
+        '200':
+          description: Tool result
+        '400':
+          description: Invalid request
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/read-write-playbook-list-artifact/:
+    post:
+      tags:
+      - Projects
+      summary: Read or edit a playbook_list catalog artifact
+      description: 'Invoke the playbook_list artifact tool. Body must include `slug` plus tool kwargs
+
+        (`action=list|get`, `identifier`, `changes`, …). Reads require view permission;
+
+        writes require admin.'
+      operationId: readWritePlaybookListArtifact
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - slug
+              properties:
+                slug:
+                  type: string
+              additionalProperties: true
+      responses:
+        '200':
+          description: Tool result
+        '400':
+          description: Invalid request
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/read-write-mental-map-artifact/:
+    post:
+      tags:
+      - Projects
+      summary: Read or edit a mental_map catalog artifact
+      description: 'Invoke the mental_map artifact tool. Body must include `slug` plus tool kwargs
+
+        (`action=get`, `changes`, …). Reads require view permission; writes require admin.'
+      operationId: readWriteMentalMapArtifact
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - slug
+              properties:
+                slug:
+                  type: string
+              additionalProperties: true
+      responses:
+        '200':
+          description: Tool result
+        '400':
+          description: Invalid request
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/read-write-design-template-list-artifact/:
+    post:
+      tags:
+      - Projects
+      summary: Read or edit a design_template_list catalog artifact
+      description: 'Invoke the design_template_list artifact tool. Body must include `slug` plus tool
+
+        kwargs (`action=list|get|upsert|delete`, …). Reads require view permission;
+
+        writes require admin.'
+      operationId: readWriteDesignTemplateListArtifact
+      parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - slug
+              - action
+              properties:
+                slug:
+                  type: string
+                action:
+                  type: string
+              additionalProperties: true
+      responses:
+        '200':
+          description: Tool result
+        '400':
+          description: Invalid request
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      description: UUID of the project
+      schema:
+        type: string
+        format: uuid
+    Offset:
+      name: offset
+      in: query
+      description: Number of results to skip for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of results per page
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+  responses:
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not found.
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication credentials were not provided.
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: You do not have permission to perform this action.
+  schemas:
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of results
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to next page of results
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to previous page of results
+        results:
+          type: array
+          items: {}
+    HomeSummaryInterview:
+      type: object
+      description: A lightweight interview row for the Home dashboard.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type:
+          - string
+          - 'null'
+        status:
+          type:
+          - string
+          - 'null'
+          description: 'Null for self-started interviews that have not been formally started
+
+            (legacy self-run rows and the onboarding interview before completion).
+
+            '
+          enum:
+          - pending
+          - in_progress
+        type:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        self_started:
+          type: boolean
+          description: 'True when the conversation has no assignee at all (self-run interviews and
+
+            the onboarding interview) — the Home UI labels these "Started by you".
+
+            '
+    KnowledgeChangelogEntry:
+      type: object
+      description: 'An append-only record of a change to a project''s knowledge (mental map,
+
+        playbook, brief, API ontology change, or document upload/sync). Read-only:
+
+        entries originate from internal events, never from API clients.
+
+        '
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+          description: Human-readable summary (embeds the source and, where known, the user's email).
+        details:
+          type: object
+          readOnly: true
+          additionalProperties: true
+          description: Structured event payload (e.g. document-upload counts). May be empty.
+        user_email:
+          type:
+          - string
+          - 'null'
+          format: email
+          readOnly: true
+          description: Email of the user who made the change; null for automated events or deleted users.
+        artifact_version_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+          description: 'The artifact version this entry records, when the change was an artifact
+
+            edit; null for non-artifact events or when the version was deleted.
+
+            '
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: User not found
+    InterviewInviteConfig:
+      type: object
+      description: 'Invitation-email customization and reminder schedule for an assigned interview.
+
+        Null for self-assigned interviews, non-interview conversations, and interviews
+
+        created before this feature existed.
+
+        '
+      readOnly: true
+      properties:
+        custom_message:
+          type: string
+          description: The assigner's note; replaces the default invitation email copy when set.
+        custom_focus:
+          type:
+          - string
+          - 'null'
+          description: 'The assigner''s override of the email''s "what it''s about" focus block. Null
+
+            means not customised (emails show the truncated topic); empty string means
+
+            the block was removed; text is shown verbatim.
+
+            '
+        scheduled_send_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the invitation email is (or was) due to be sent. Null means it was sent immediately.
+        invitation_email_sent_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the invitation email actually went out; null while a scheduled send is still pending.
+        reminders_enabled:
+          type: boolean
+        reminder_start_after_days:
+          type: integer
+        reminder_interval_days:
+          type: integer
+        reminder_max_count:
+          type: integer
+        reminders_sent:
+          type: integer
+          description: Automatic reminders sent so far (manual reminders are not counted).
+        next_reminder_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the next automatic reminder is due; null when none is scheduled.
+        reminders_stopped:
+          type: boolean
+          description: True once an admin/assigner stopped the schedule via stop-reminders.
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Use `Authorization: Bearer <token>`. The token is either a user token / OAuth access
+
+        token, or a service-account API key (`cfk_...`). A key is valid on every endpoint and
+
+        acts as its service account, an organization member with per-store permissions.
+
+        Refused keys answer 403 with `Invalid API key.`, `API key revoked.`,
+
+        `API key expired.` or `API key disabled.`.
+
+        '
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Use Authorization: Token <token>'
+x-tagGroups:
+- name: Extractors
+  tags:
+  - Object Extractors
+  - Tag Extractors
+  - Chunks Extractors
+  - Parsing Extractors
+  - Document Filter Extractors
+  - Chunk Tag Filter Extractors
+  - Document Tag Extractors
+  - Tag Alerts Extractors
+  - Object Alerts Extractors
+  - Imported Object Extractors
