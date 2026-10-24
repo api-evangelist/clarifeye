@@ -399,6 +399,8 @@ apis:
   humanURL: https://docs.clarifeye.ai/api-reference
   baseURL: https://eu.app.clarifeye.ai/api/v1
   tags:
+  - Project
+  tags_raw:
   - Projects
   properties:
   - type: OpenAPI
