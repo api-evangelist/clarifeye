@@ -64,6 +64,157 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-Clarifeye is a company surfaced as a portfolio company of eqt-ventures and added to the API Evangelist network as a stub for enrichment. Sector: artificial-intelligence. This profile is a lead awaiting the enrichment pipeline.
+Clarifeye is an AI-native knowledge infrastructure platform that captures the undocumented knowledge locked in people's heads. Its AI interviewer, Clara, runs document-aware interviews with subject-matter experts, surfaces contradictions, and structures the results into versioned, reusable knowledge artifacts — briefs, playbooks, mental maps, and ontologies. That captured knowledge is exposed to AI clients such as Claude, ChatGPT, and Microsoft Copilot through a hosted Model Context Protocol (MCP) server and a REST API, so agents answer grounded in an organization's own logic with references back to source. Clarifeye targets regulated industries where undocumented processes create key-person risk, offers EU and US data localization with PII redaction at ingestion, and is SOC 2 Type II certified. Backed by EQT Ventures.
 
-Backed by: eqt-ventures — https://www.clarifeye.ai/
+**Areas:** Company · Artificial Intelligence · Knowledge Management · MCP · Document Intelligence · Agents · Enterprise AI · Retrieval
+
+## Clarifeye on APIs.io
+
+Everything profiled for Clarifeye is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/clarifeye/](https://apis.io/providers/clarifeye/)** — or go straight to one of the APIs or properties below.
+
+### APIs (13)
+
+- [Clarifeye Agent Settings API](https://apis.io/apis/clarifeye/clarifeye-agent-settings-api/) — Manage AI agent configurations
+- [Clarifeye Conversations API](https://apis.io/apis/clarifeye/clarifeye-conversations-api/) — Create and interact with AI-powered conversations
+- [Clarifeye Documents API](https://apis.io/apis/clarifeye/clarifeye-documents-api/) — Manage documents within a project
+- [Clarifeye Extraction Flows API](https://apis.io/apis/clarifeye/clarifeye-extraction-flows-api/) — Manage extraction flows (auto-sync DAGs) — list, run, inspect statistics, update, and publish
+- [Clarifeye Feedback API](https://apis.io/apis/clarifeye/clarifeye-feedback-api/) — Submit feedback on conversation messages
+- [Clarifeye Interviews API](https://apis.io/apis/clarifeye/clarifeye-interviews-api/) — Assign and review structured interview conversations
+- [Clarifeye Invitations API](https://apis.io/apis/clarifeye/clarifeye-invitations-api/) — Manage project invitations
+- [Clarifeye Notifications API](https://apis.io/apis/clarifeye/clarifeye-notifications-api/) — Manage project-scoped notifications for users
+- [Clarifeye Pipeline Runs API](https://apis.io/apis/clarifeye/clarifeye-pipeline-runs-api/) — Inspect pipeline runs queued by extraction flows or other pipeline triggers — list runs and fetch the details/status of a single run
+- [Clarifeye Signals API](https://apis.io/apis/clarifeye/clarifeye-signals-api/) — Submit signals about the project's content for domain experts to review
+- [Clarifeye Tables API](https://apis.io/apis/clarifeye/clarifeye-tables-api/) — Perform CRUD operations on warehouse tables
+- [Clarifeye Tools API](https://apis.io/apis/clarifeye/clarifeye-tools-api/) — Execute configured AI tools with custom parameters
+- [Clarifeye Users API](https://apis.io/apis/clarifeye/clarifeye-users-api/) — Manage users within a project
+
+### Published properties
+
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
+
+#### MCP servers (1)
+
+Model Context Protocol servers that expose the API to agents.
+
+- [clarifeye](https://apis.io/servers/clarifeye/clarifeye/)
+
+#### Agentic access (1)
+
+Which operations an agent can call, which act, and which need a human in the loop.
+
+- [Clarifeye Agentic Access](https://apis.io/agentic-access/clarifeye/clarifeye-agentic-access/)
+
+#### Collections (13)
+
+Postman and Open Collection request collections.
+
+- [Clarifeye Platform Agent Settings API](https://apis.io/collections/clarifeye/open-clarifeye-agent-settings-api/)
+- [Clarifeye Platform Agent Settings Conversations API](https://apis.io/collections/clarifeye/open-clarifeye-conversations-api/)
+- [Clarifeye Platform Agent Settings Documents API](https://apis.io/collections/clarifeye/open-clarifeye-documents-api/)
+- [Clarifeye Platform Agent Settings Extraction Flows API](https://apis.io/collections/clarifeye/open-clarifeye-extraction-flows-api/)
+- [Clarifeye Platform Agent Settings Feedback API](https://apis.io/collections/clarifeye/open-clarifeye-feedback-api/)
+- [Clarifeye Platform Agent Settings Interviews API](https://apis.io/collections/clarifeye/open-clarifeye-interviews-api/)
+- [Clarifeye Platform Agent Settings Invitations API](https://apis.io/collections/clarifeye/open-clarifeye-invitations-api/)
+- [Clarifeye Platform Agent Settings Notifications API](https://apis.io/collections/clarifeye/open-clarifeye-notifications-api/)
+- [Clarifeye Platform Agent Settings Pipeline Runs API](https://apis.io/collections/clarifeye/open-clarifeye-pipeline-runs-api/)
+- [Clarifeye Platform Agent Settings Signals API](https://apis.io/collections/clarifeye/open-clarifeye-signals-api/)
+- [Clarifeye Platform Agent Settings Tables API](https://apis.io/collections/clarifeye/open-clarifeye-tables-api/)
+- [Clarifeye Platform Agent Settings Tools API](https://apis.io/collections/clarifeye/open-clarifeye-tools-api/)
+- [Clarifeye Platform Agent Settings Users API](https://apis.io/collections/clarifeye/open-clarifeye-users-api/)
+
+#### Overlays (2)
+
+OpenAPI overlays, including conversational phrasing for each operation.
+
+- [Clarifeye Backoffice Overlay](https://apis.io/overlays/clarifeye/clarifeye-backoffice-overlay/)
+- [Clarifeye Public Overlay](https://apis.io/overlays/clarifeye/clarifeye-public-overlay/)
+
+#### Security (2)
+
+Authentication, trust centre, and vulnerability disclosure.
+
+- [Clarifeye Authentication](https://apis.io/security/clarifeye/clarifeye-authentication/)
+- [Clarifeye Domain Security](https://apis.io/security/clarifeye/clarifeye-domain-security/)
+
+#### OAuth scopes (1)
+
+The permissions the API asks for.
+
+- [Clarifeye Scopes](https://apis.io/scopes/clarifeye/clarifeye-scopes/)
+
+#### Plans and pricing (1)
+
+Published plans, tiers and prices.
+
+- [Clarifeye Plans Pricing](https://apis.io/plans/clarifeye/clarifeye-plans-pricing/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
+
+- [Website](https://www.clarifeye.ai/)
+- [Documentation](https://docs.clarifeye.ai/)
+- [Getting started](https://docs.clarifeye.ai/guides/quickstart)
+- [API reference](https://docs.clarifeye.ai/api-reference)
+- [Pricing](https://www.clarifeye.ai/pricing)
+- [Sign up](https://us.app.clarifeye.ai/)
+- [Support](https://www.clarifeye.ai/contact-us)
+- [Blog](https://www.clarifeye.ai/blog)
+- [Compliance](https://www.clarifeye.ai/technology)
+- [Terms of service](https://www.clarifeye.ai/legal/terms-of-service)
+- [Privacy policy](https://www.clarifeye.ai/legal/privacy-policy)
+
+## API Evangelist rating
+
+**Kin Score 50.9** — developing · rubric 0.25.0 · scored 2026-10-23
+
+| Facet | Score |
+|---|---|
+| Discoverability | 75.0 |
+| Contract quality | 50.9 |
+| Contract governance | 18.2 |
+| Operational transparency | 0.0 |
+| Developer ergonomics | 58.9 |
+| Access clarity | 71.1 |
+
+**Agent readiness 52.1** — agent-ready (gated down from agent-native)
+
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | derived (partial credit) |
+| Reversibility Documented | documented (partial credit) |
+| MCP Server | verified |
+| Auth Clarity | served (partial credit) |
+| Idempotency | — |
+| Error Semantics | verified |
+| OpenAPI Examples | partial |
+| Rate Limit Signal | — |
+| Event Surface Described | — |
+| Agent Skills | derived (partial credit) |
+| Well Known Catalog | — |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | — |
+| Delegated Identity | served (partial credit) |
+| Protected Resource Metadata | verified |
+| Dynamic Client Registration | yes |
+| Agentic Commerce | — |
+| Pagination Ratio | — |
+| Operation Distinctiveness | distinct |
+
+**Regulatory alignment 36.4** — Horizontal (data, software, accessibility, platform)
+
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/clarifeye/](https://apis.io/providers/clarifeye/).
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for Clarifeye: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/clarifeye/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
